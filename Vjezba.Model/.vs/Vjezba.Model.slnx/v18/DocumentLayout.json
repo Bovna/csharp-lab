@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "E:\\Bovna\\Documents\\GitHub\\csharp-lab\\Vjezba.Model\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{50134E7F-F6DE-4935-87EC-481132B12483}|Vjezba.Model\\Vjezba.Model.csproj|e:\\bovna\\documents\\github\\csharp-lab\\vjezba.model\\vjezba.model\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{50134E7F-F6DE-4935-87EC-481132B12483}|Vjezba.Model\\Vjezba.Model.csproj|solutionrelative:vjezba.model\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{2A878439-EDAB-2EE4-F22B-7EF80C3B31A4}|Vjezba.Model\\Vjezba.Model.csproj|e:\\bovna\\documents\\github\\csharp-lab\\vjezba.model\\vjezba.model\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2A878439-EDAB-2EE4-F22B-7EF80C3B31A4}|Vjezba.Model\\Vjezba.Model.csproj|solutionrelative:vjezba.model\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +26,7 @@
               "RelativeToolTip": "Vjezba.Model\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-31T15:29:32.054Z",
+              "WhenOpened": "2026-03-31T16:01:12.132Z",
               "EditorCaption": ""
             }
           ]

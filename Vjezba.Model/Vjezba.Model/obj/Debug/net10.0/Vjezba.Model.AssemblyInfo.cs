@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Vjezba.Model")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+616ac591b78c0418f5d996d1af8ff24f529632cd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b2bf096907f47ce92a74e7567e73d5e826f4ed4")]
 [assembly: System.Reflection.AssemblyProductAttribute("Vjezba.Model")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Vjezba.Model")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
