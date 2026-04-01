@@ -3,13 +3,13 @@
     "UserPromptSubmit": [
       {
         "type": "command",
-        "command": "powershell.exe -ExecutionPolicy Bypass -File \".github/hooks/log-agent-activity.ps1\" -EventType \"UserPromptSubmit\""
+        "command": "powershell.exe -ExecutionPolicy Bypass -File \".github/hooks/agent_log.txt\" -EventType \"UserPromptSubmit\""
       }
     ],
     "PreToolUse": [
       {
         "type": "command",
-        "command": "powershell.exe -ExecutionPolicy Bypass -File \".github/hooks/log-agent-activity.ps1\" -EventType \"PreToolUse\""
+        "command": "powershell.exe -ExecutionPolicy Bypass -File \".github/hooks/agent_log.txt\" -EventType \"PreToolUse\""
       }
     ]
   }
