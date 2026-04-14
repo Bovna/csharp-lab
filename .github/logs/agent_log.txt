@@ -1,7 +1,7 @@
 ﻿{
-    "timestamp":  "2026-04-14T16:44:44.675Z",
+    "timestamp":  "2026-04-14T16:50:19.624Z",
     "hook_event_name":  "UserPromptSubmit",
-    "prompt":  "Pozdrav"
+    "prompt":  "Test za logiranje agenta"
 }
 
 
