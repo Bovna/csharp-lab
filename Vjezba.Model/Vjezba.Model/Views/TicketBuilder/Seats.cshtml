@@ -1,0 +1,113 @@
+@model Vjezba.Model.Models.ViewModels.TicketBuilderSeatPageViewModel
+@{
+    ViewData["Title"] = "Ticket Builder - Sjedala";
+    var groupedSeats = Model.Seats
+        .GroupBy(s => s.RowLabel)
+        .OrderBy(g => g.Key)
+        .ToList();
+}
+
+<div class="tb-page">
+    <div class="tb-header">
+        <h1>@Model.MovieTitle</h1>
+        <p>Korak 4/4: klikni sjedalo za prikaz cijene ulaznice</p>
+        <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
+    </div>
+
+    <div class="tb-step-line">
+        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
+        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2
+            Film</a>
+            <a class="tb-step" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
+               asp-route-movieId="@Model.MovieId">3 Projekcija</a>
+            <span class="tb-step active">4 Sjedalo</span>
+        </div>
+
+        <div class="tb-seat-layout">
+            <div class="tb-screen">PLATNO</div>
+
+            <div class="tb-seat-grid">
+                @foreach (var row in groupedSeats)
+                {
+                    <div class="tb-seat-row">
+                        <span class="tb-row-label">@row.Key</span>
+
+                        @foreach (var seat in row.OrderBy(s => s.SeatNumber))
+                        {
+                            var status = Model.SeatStatuses.TryGetValue(seat.Id, out var seatStatus)
+                                ? seatStatus
+                                : "available";
+                            var seatTypeLower = seat.SeatType.ToLowerInvariant();
+                            var seatTypeClass = seatTypeLower switch
+                            {
+                                "vip" => "seat-vip",
+                                "couple" => "seat-couple",
+                                _ => "seat-standard"
+                            };
+                            var statusClass = status == "taken" ? "seat-taken" : string.Empty;
+
+                            <button type="button" class="tb-seat @seatTypeClass @statusClass" data-seat-id="@seat.Id"
+                                    data-seat-label="@seat.RowLabel@seat.SeatNumber" data-seat-type="@seat.SeatType"
+                                    data-seat-status="@status" data-is-3d="@(Model.Is3D ? "1" : "0")">
+                                @seat.RowLabel@seat.SeatNumber
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="tb-legend">
+                <span><i class="tb-seat seat-standard"></i> Standard</span>
+                <span><i class="tb-seat seat-vip"></i> VIP</span>
+                <span><i class="tb-seat seat-couple"></i> Couple</span>
+                <span><i class="tb-seat seat-taken"></i> Zauzeto</span>
+            </div>
+
+            <div id="tb-price-panel" class="tb-price-panel">
+                Odaberi sjedalo za prikaz cijene.
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            (() => {
+                const panel = document.getElementById("tb-price-panel");
+                const seats = document.querySelectorAll(".tb-seat[data-seat-id]");
+
+                function calculatePrice(type, is3D) {
+                    const normalized = (type || "standard").toLowerCase();
+                    let basePrice = 7.50;
+
+                    if (normalized === "vip") {
+                        basePrice = 11.00;
+                    } else if (normalized === "couple") {
+                        basePrice = 13.50;
+                    }
+
+                    if (is3D) {
+                        basePrice += 2.00;
+                    }
+
+                    return basePrice;
+                }
+
+                seats.forEach((seat) => {
+                    seat.addEventListener("click", () => {
+                        const seatLabel = seat.dataset.seatLabel || "";
+                        const seatType = seat.dataset.seatType || "Standard";
+                        const seatStatus = seat.dataset.seatStatus || "available";
+                        const is3D = seat.dataset.is3d === "1";
+
+                        if (seatStatus === "taken") {
+                            panel.textContent = `${seatLabel} je zauzeto. Odaberi drugo sjedalo.`;
+                            return;
+                        }
+
+                        const price = calculatePrice(seatType, is3D).toFixed(2);
+                        panel.textContent = `${seatLabel} | Tip: ${seatType} | Cijena: ${price} EUR`;
+                    });
+                });
+            })();
+        </script>
+    }

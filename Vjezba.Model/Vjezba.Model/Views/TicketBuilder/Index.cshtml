@@ -1,0 +1,29 @@
+@model Vjezba.Model.Models.ViewModels.TicketBuilderCinemaListViewModel
+@{
+    ViewData["Title"] = "Ticket Builder - Kina";
+}
+
+<div class="tb-page">
+    <div class="tb-header">
+        <h1>Ticket Builder</h1>
+        <p>Korak 1/4: odaberi kino</p>
+    </div>
+
+    <div class="tb-step-line">
+        <span class="tb-step active">1 Kino</span>
+        <span class="tb-step">2 Film</span>
+        <span class="tb-step">3 Projekcija</span>
+        <span class="tb-step">4 Sjedalo</span>
+    </div>
+
+    <div class="tb-grid-cards">
+        @foreach (var cinema in Model.Cinemas)
+        {
+            <a class="tb-card-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@cinema.Id">
+                <strong>@cinema.Name</strong>
+                <span>@cinema.City</span>
+                <small>@cinema.Street @cinema.HouseNumber</small>
+            </a>
+        }
+    </div>
+</div>

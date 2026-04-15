@@ -1,0 +1,109 @@
+@model Vjezba.Model.Models.Entities.Hall
+
+@{
+    ViewData["Title"] = "Detalji dvorane";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="h3 mb-0">@Model.Name</h1>
+                <a asp-action="Index" class="btn btn-outline-secondary">Natrag na popis</a>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">ID</dt>
+                        <dd class="col-sm-8">@Model.Id</dd>
+
+                        <dt class="col-sm-4">Naziv dvorane</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+
+                        <dt class="col-sm-4">Kino</dt>
+                        <dd class="col-sm-8">@(Model.Cinema?.Name ?? "-")</dd>
+
+                        <dt class="col-sm-4">Kapacitet</dt>
+                        <dd class="col-sm-8">@Model.Capacity</dd>
+
+                        <dt class="col-sm-4">3D podrska</dt>
+                        <dd class="col-sm-8">@(Model.Supports3D ? "Da" : "Ne")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header">Sjedala</div>
+                <div class="card-body p-0">
+                    @if (Model.Seats.Count == 0)
+                    {
+                        <div class="p-3 text-muted">Nema sjedala za prikaz.</div>
+                    }
+                    else
+                    {
+                        <table class="table table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Red</th>
+                                    <th>Broj sjedala</th>
+                                    <th>Oznaka</th>
+                                    <th>Tip</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var seat in Model.Seats)
+                                {
+                                    <tr>
+                                        <td>@seat.Id</td>
+                                        <td>@seat.RowLabel</td>
+                                        <td>@seat.SeatNumber</td>
+                                        <td>@seat.RowLabel@seat.SeatNumber</td>
+                                        <td>@seat.SeatType</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-3">
+                <div class="card-header">Projekcije</div>
+                <div class="card-body p-0">
+                    @if (Model.Screenings.Count == 0)
+                    {
+                        <div class="p-3 text-muted">Nema projekcija za prikaz.</div>
+                    }
+                    else
+                    {
+                        <table class="table table-striped mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Film</th>
+                                    <th>Pocetak</th>
+                                    <th>Zavrsetak</th>
+                                    <th>3D</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var screening in Model.Screenings)
+                                {
+                                    <tr>
+                                        <td>@screening.Id</td>
+                                        <td>@(screening.Movie?.Title ?? "-")</td>
+                                        <td>@screening.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td>@screening.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td>@(screening.Is3D ? "Da" : "Ne")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -10,5 +10,4 @@ public class Ticket
     public Screening? Screening { get; set; }
     public Seat? Seat { get; set; }
     public Customer? Customer { get; set; }
-
 }

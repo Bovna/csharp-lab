@@ -6,6 +6,6 @@ public class Screening
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public bool Is3D { get; set; }
-
     public Movie? Movie { get; set; }
+    public Hall? Hall { get; set; }
 }
