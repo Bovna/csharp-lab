@@ -2612,3 +2612,17 @@
                    }
 }
 
+{
+    "timestamp":  "2026-04-15T18:57:55.032Z",
+    "hook_event_name":  "PreToolUse",
+    "session_id":  "69500730-95d1-45ad-8a73-5d52939e2d0c",
+    "transcript_path":  "c:\\Users\\evilp\\AppData\\Roaming\\Code\\User\\workspaceStorage\\ea94ef946c896d57713c433e964cfe77\\GitHub.copilot-chat\\transcripts\\69500730-95d1-45ad-8a73-5d52939e2d0c.jsonl",
+    "tool_use_id":  "call_1AjxNESwA6bD9LyuqS8Fprqq__vscode-1776277118703",
+    "cwd":  "c:\\Users\\evilp\\source\\repos\\csharp-lab",
+    "tool_name":  "memory",
+    "tool_input":  {
+                       "command":  "view",
+                       "path":  "/memories/repo/csharp-lab.md"
+                   }
+}
+
