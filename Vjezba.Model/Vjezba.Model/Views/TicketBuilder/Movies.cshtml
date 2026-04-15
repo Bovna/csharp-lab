@@ -1,0 +1,37 @@
+@model Vjezba.Model.Models.ViewModels.TicketBuilderMovieListViewModel
+@{
+    ViewData["Title"] = "Ticket Builder - Filmovi";
+}
+
+<div class="tb-page">
+    <div class="tb-header">
+        <h1>@Model.CinemaName</h1>
+        <p>Korak 2/4: odaberi film</p>
+    </div>
+
+    <div class="tb-step-line">
+        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
+        <span class="tb-step active">2 Film</span>
+        <span class="tb-step">3 Projekcija</span>
+        <span class="tb-step">4 Sjedalo</span>
+    </div>
+
+    @if (!Model.Movies.Any())
+    {
+        <p>Nema dostupnih filmova za ovo kino.</p>
+    }
+    else
+    {
+        <div class="tb-grid-cards">
+            @foreach (var movie in Model.Movies)
+            {
+                <a class="tb-card-link" asp-controller="TicketBuilder" asp-action="Screenings"
+                       asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@movie.Id">
+                    <strong>@movie.Title</strong>
+                    <span>@movie.Genre | @movie.DurationMinutes min</span>
+                    <small>@movie.Language | @movie.AgeRating</small>
+                </a>
+            }
+        </div>
+    }
+</div>

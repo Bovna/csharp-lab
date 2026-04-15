@@ -6,4 +6,5 @@ public class Seat
     public string RowLabel { get; set; } = string.Empty;
     public int SeatNumber { get; set; }
     public SeatType SeatType { get; set; }
+    public Hall? Hall { get; set; }
 }

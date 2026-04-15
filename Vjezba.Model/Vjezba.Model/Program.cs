@@ -1,7 +1,16 @@
+using Vjezba.Model.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<CinemaMockRepository>();
+builder.Services.AddSingleton<CustomerMockRepository>();
+builder.Services.AddSingleton<HallMockRepository>();
+builder.Services.AddSingleton<MovieMockRepository>();
+builder.Services.AddSingleton<ScreeningMockRepository>();
+builder.Services.AddSingleton<SeatMockRepository>();
+builder.Services.AddSingleton<TicketMockRepository>();
 
 var app = builder.Build();
 
@@ -24,6 +33,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-Vjezba.Model.MainData.initialOutput();
+//Vjezba.Model.Main.initialOutput();
 
-app.Run();
+app.Run()

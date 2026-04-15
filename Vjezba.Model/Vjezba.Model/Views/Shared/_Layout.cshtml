@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="hr">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,22 +9,89 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Vjezba.Model.styles.css" asp-append-version="true" />
 </head>
+
 <body>
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+
+        var uiControllerLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Home"] = "Pocetna",
+            ["Cinema"] = "Kina",
+            ["Customer"] = "Kupci",
+            ["Hall"] = "Dvorane",
+            ["Movie"] = "Filmovi",
+            ["Screening"] = "Projekcije",
+            ["Seat"] = "Sjedala",
+            ["Ticket"] = "Ulaznice",
+            ["TicketBuilder"] = "Ticket Builder"
+        };
+
+        var uiActionLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Index"] = "Pregled",
+            ["Details"] = "Detalji",
+            ["Privacy"] = "Privatnost"
+        };
+
+        var currentControllerLabel = uiControllerLabels.TryGetValue(currentController, out var controllerLabel)
+            ? controllerLabel
+            : currentController;
+
+        var currentActionLabel = uiActionLabels.TryGetValue(currentAction, out var actionLabel)
+            ? actionLabel
+            : currentAction;
+    }
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Vjezba.Model</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark @(currentController == "Home" && currentAction == "Index" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Home" asp-action="Index">Pocetna</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark @(currentController == "Cinema" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Cinema" asp-action="Index">Kina</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Customer" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Customer" asp-action="Index">Kupci</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Hall" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Hall" asp-action="Index">Dvorane</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Movie" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Movie" asp-action="Index">Filmovi</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Screening" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Screening" asp-action="Index">Projekcije</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Seat" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Seat" asp-action="Index">Sjedala</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Ticket" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Ticket" asp-action="Index">Ulaznice</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "TicketBuilder" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="TicketBuilder" asp-action="Index">Ticket Builder</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark @(currentController == "Home" && currentAction == "Privacy" ? "active fw-semibold" : "")"
+                               asp-area="" asp-controller="Home" asp-action="Privacy">Privatnost</a>
                         </li>
                     </ul>
                 </div>
@@ -31,6 +99,40 @@
         </nav>
     </header>
     <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb bg-light rounded px-3 py-2 border">
+                @if (currentController == "Home" && currentAction == "Index")
+                {
+                    <li class="breadcrumb-item active" aria-current="page">Pocetna</li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item">
+                        <a asp-area="" asp-controller="Home" asp-action="Index">Pocetna</a>
+                    </li>
+
+                    if (!string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <li class="breadcrumb-item active" aria-current="page">@currentControllerLabel</li>
+                        }
+                        else
+                        {
+                            <li class="breadcrumb-item">
+                                <a asp-area="" asp-controller="@currentController" asp-action="Index">@currentControllerLabel</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">@currentActionLabel</li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="breadcrumb-item active" aria-current="page">@currentActionLabel</li>
+                    }
+                }
+            </ol>
+        </nav>
+
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
@@ -38,7 +140,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Vjezba.Model - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - Vjezba.Model - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privatnost</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -46,4 +148,5 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

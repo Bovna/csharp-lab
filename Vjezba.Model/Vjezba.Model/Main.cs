@@ -2,7 +2,7 @@ using Vjezba.Model.Models.Entities;
 
 namespace Vjezba.Model;
 
-public static class MainData
+public static class Main
 {
     public static readonly List<Cinema> Cinemas =
     [
@@ -11,7 +11,8 @@ public static class MainData
             Id = 1,
             Name = "CineStar Branimir",
             City = "Zagreb",
-            Address = "Branimirova 29",
+            Street = "Branimirova",
+            HouseNumber = "29",
             PostalCode = "10000",
             Email = "branimir@cinestar.hr",
             Phone = "+385 1 111 222",
@@ -146,7 +147,8 @@ public static class MainData
             Id = 2,
             Name = "Kino Europa",
             City = "Rijeka",
-            Address = "Korzo 14",
+            Street = "Korzo",
+            HouseNumber = "14",
             PostalCode = "51000",
             Email = "info@kinoeuropa.hr",
             Phone = "+385 51 333 444",
@@ -261,7 +263,8 @@ public static class MainData
             Id = 3,
             Name = "Arena Cinema",
             City = "Osijek",
-            Address = "Sjenjak 6",
+            Street = "Sjenjak",
+            HouseNumber = "6",
             PostalCode = "31000",
             Email = "kontakt@arenacinema.hr",
             Phone = "+385 31 555 666",
@@ -486,7 +489,7 @@ public static class MainData
         foreach (var cinema in Cinemas)
         {
             Console.WriteLine($"Kino: {cinema.Name} ({cinema.City})");
-            Console.WriteLine($"Adresa: {cinema.Address}, {cinema.PostalCode}");
+            Console.WriteLine($"Adresa: {cinema.Street} {cinema.HouseNumber}, {cinema.PostalCode}");
             Console.WriteLine($"Dvorana: {cinema.Halls.Count}");
 
             foreach (var hall in cinema.Halls)
