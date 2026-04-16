@@ -107,7 +107,7 @@ public class TicketMockRepository
         new Ticket
         {
             Id = 9,
-            TicketNumber = "ST-2026-0303",
+            TicketNumber = "ZD-2026-0501",
             PurchasedAt = new DateTime(2026, 4, 15, 10, 45, 0),
             Price = 9.50m,
             Status = TicketStatus.Cancelled,
@@ -118,7 +118,7 @@ public class TicketMockRepository
         new Ticket
         {
             Id = 10,
-            TicketNumber = "ZG-2026-0401",
+            TicketNumber = "ZD-2026-0502",
             PurchasedAt = new DateTime(2026, 4, 16, 11, 20, 0),
             Price = 12.50m,
             Status = TicketStatus.Active,
@@ -129,7 +129,7 @@ public class TicketMockRepository
         new Ticket
         {
             Id = 11,
-            TicketNumber = "ZG-2026-0402",
+            TicketNumber = "ZD-2026-0503",
             PurchasedAt = new DateTime(2026, 4, 16, 12, 10, 0),
             Price = 7.20m,
             Status = TicketStatus.Active,
@@ -140,7 +140,7 @@ public class TicketMockRepository
         new Ticket
         {
             Id = 12,
-            TicketNumber = "VZ-2026-0501",
+            TicketNumber = "ZD-2026-0504",
             PurchasedAt = new DateTime(2026, 4, 16, 18, 25, 0),
             Price = 8.90m,
             Status = TicketStatus.Active,
@@ -151,7 +151,7 @@ public class TicketMockRepository
         new Ticket
         {
             Id = 13,
-            TicketNumber = "ZD-2026-0502",
+            TicketNumber = "ZD-2026-0505",
             PurchasedAt = new DateTime(2026, 4, 16, 19, 40, 0),
             Price = 10.20m,
             Status = TicketStatus.Used,

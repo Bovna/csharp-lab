@@ -4,57 +4,60 @@
     ViewData["Title"] = "Detalji ulaznice";
 }
 
-<div class="container py-4">
+<div class="container py-4 animate-fade-in-up">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h3 mb-0">Ulaznica @Model.TicketNumber</h1>
-                <a asp-action="Index" class="btn btn-outline-secondary">Natrag na popis</a>
-            </div>
+        <div class="col-12 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+                    Ulaznica @Model.TicketNumber</h1>
+                    <a asp-action="Index" class="cinema-btn-secondary">Natrag na popis</a>
+                </div>
 
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">@Model.Id</dd>
+                <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="cinema-card-header">Detalji ulaznice</div>
+                    <div class="cinema-card-body">
+                        <dl class="cinema-details-list">
+                            <dt>ID</dt>
+                            <dd>@Model.Id</dd>
 
-                        <dt class="col-sm-4">Broj ulaznice</dt>
-                        <dd class="col-sm-8">@Model.TicketNumber</dd>
+                            <dt>Broj ulaznice</dt>
+                            <dd>@Model.TicketNumber</dd>
 
-                        <dt class="col-sm-4">Kupac</dt>
-                        <dd class="col-sm-8">@(Model.Customer is null ? "-" : $"{Model.Customer.FirstName} {Model.Customer.LastName}")</dd>
+                            <dt>Kupac</dt>
+                            <dd>@(Model.Customer is null ? "-" : $"{Model.Customer.FirstName} {Model.Customer.LastName}")
+                            </dd>
 
-                        <dt class="col-sm-4">Film</dt>
-                        <dd class="col-sm-8">@(Model.Screening?.Movie?.Title ?? "-")</dd>
+                            <dt>Film</dt>
+                            <dd>@(Model.Screening?.Movie?.Title ?? "-")</dd>
 
-                        <dt class="col-sm-4">Kino</dt>
-                        <dd class="col-sm-8">@(Model.Screening?.Hall?.Cinema?.Name ?? "-")</dd>
+                            <dt>Kino</dt>
+                            <dd>@(Model.Screening?.Hall?.Cinema?.Name ?? "-")</dd>
 
-                        <dt class="col-sm-4">Dvorana</dt>
-                        <dd class="col-sm-8">@(Model.Screening?.Hall?.Name ?? "-")</dd>
+                            <dt>Dvorana</dt>
+                            <dd>@(Model.Screening?.Hall?.Name ?? "-")</dd>
 
-                        <dt class="col-sm-4">Sjedalo</dt>
-                        <dd class="col-sm-8">@(Model.Seat is null ? "-" : $"{Model.Seat.RowLabel}{Model.Seat.SeatNumber}")</dd>
+                            <dt>Sjedalo</dt>
+                            <dd>@(Model.Seat is null ? "-" : $"{Model.Seat.RowLabel}{Model.Seat.SeatNumber}")</dd>
 
-                        <dt class="col-sm-4">Kupnja</dt>
-                        <dd class="col-sm-8">@Model.PurchasedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                            <dt>Kupnja</dt>
+                            <dd>@Model.PurchasedAt.ToString("dd.MM.yyyy HH:mm")</dd>
 
-                        <dt class="col-sm-4">Cijena</dt>
-                        <dd class="col-sm-8">@Model.Price.ToString("0.00") EUR</dd>
+                            <dt>Cijena</dt>
+                            <dd>@Model.Price.ToString("0.00") EUR</dd>
 
-                        <dt class="col-sm-4">Status</dt>
-                        <dd class="col-sm-8">
-                            @(Model.Status switch
-                            {
-                                Vjezba.Model.Models.Entities.TicketStatus.Active => "Aktivna",
-                                Vjezba.Model.Models.Entities.TicketStatus.Cancelled => "Otkazana",
-                                Vjezba.Model.Models.Entities.TicketStatus.Used => "Iskoristena",
-                                _ => Model.Status.ToString()
-                            })
-                        </dd>
-                    </dl>
+                            <dt>Status</dt>
+                            <dd>
+                                @(Model.Status switch
+                                {
+                                    Vjezba.Model.Models.Entities.TicketStatus.Active => "Aktivna",
+                                    Vjezba.Model.Models.Entities.TicketStatus.Cancelled => "Otkazana",
+                                    Vjezba.Model.Models.Entities.TicketStatus.Used => "Iskoristena",
+                                    _ => Model.Status.ToString()
+                                })
+                            </dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>

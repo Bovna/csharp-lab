@@ -1,0 +1,36 @@
+:root {
+  --tb-color-bg-base: #111111;
+  --tb-color-bg-surface: #1e1e1e;
+  --tb-color-bg-surface-hover: #2a2a2a;
+  --tb-color-accent: #10b981; /* Default emerald green */
+  --tb-color-accent-hover: #059669;
+  --tb-color-accent-focus: #34d399;
+  --tb-color-text-primary: #e5e7eb;
+  --tb-color-text-muted: #9ca3af;
+  --tb-color-border: #374151;
+
+  --tb-color-seat-standard: #4b5563;
+  --tb-color-seat-vip: #8b5cf6;
+  --tb-color-seat-couple: #ec4899;
+  --tb-color-seat-taken: #ef4444;
+  --tb-color-seat-selected: var(--tb-color-accent);
+
+  --tb-space-1: 0.25rem;
+  --tb-space-2: 0.5rem;
+  --tb-space-3: 0.75rem;
+  --tb-space-4: 1rem;
+  --tb-space-6: 1.5rem;
+  --tb-space-8: 2rem;
+  --tb-space-12: 3rem;
+
+  --tb-radius-sm: 4px;
+  --tb-radius-md: 8px;
+  --tb-radius-lg: 12px;
+  --tb-radius-full: 9999px;
+
+  --tb-shadow-card:
+    0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+
+  --tb-transition-fast: 150ms ease-in-out;
+  --tb-transition-normal: 250ms ease-out;
+}

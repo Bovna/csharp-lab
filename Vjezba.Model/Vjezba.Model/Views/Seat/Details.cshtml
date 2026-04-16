@@ -4,85 +4,39 @@
     ViewData["Title"] = "Detalji sjedala";
 }
 
-<div class="container py-4">
+<div class="container py-4 animate-fade-in-up">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h3 mb-0">Sjedalo @Model.RowLabel@Model.SeatNumber</h1>
-                <a asp-action="Index" class="btn btn-outline-secondary">Natrag na popis</a>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">@Model.Id</dd>
-
-                        <dt class="col-sm-4">Kino</dt>
-                        <dd class="col-sm-8">@(Model.Hall?.Cinema?.Name ?? "-")</dd>
-
-                        <dt class="col-sm-4">Dvorana</dt>
-                        <dd class="col-sm-8">@(Model.Hall?.Name ?? "-")</dd>
-
-                        <dt class="col-sm-4">Red</dt>
-                        <dd class="col-sm-8">@Model.RowLabel</dd>
-
-                        <dt class="col-sm-4">Broj sjedala</dt>
-                        <dd class="col-sm-8">@Model.SeatNumber</dd>
-
-                        <dt class="col-sm-4">Tip sjedala</dt>
-                        <dd class="col-sm-8">@Model.SeatType</dd>
-                    </dl>
+        <div class="col-12 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+                    Sjedalo @Model.RowLabel@Model.SeatNumber</h1>
+                    <a asp-action="Index" class="cinema-btn-secondary">Natrag na popis</a>
                 </div>
-            </div>
 
-            <div class="card shadow-sm mt-3">
-                <div class="card-header">Ulaznice za sjedalo</div>
-                <div class="card-body p-0">
-                    @if (Model.Tickets.Count == 0)
-                    {
-                        <div class="p-3 text-muted">Sjedalo trenutno nema povezanih ulaznica.</div>
-                    }
-                    else
-                    {
-                        <table class="table table-striped mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Broj ulaznice</th>
-                                    <th>Film</th>
-                                    <th>Kino</th>
-                                    <th>Dvorana</th>
-                                    <th>Kupnja</th>
-                                    <th>Cijena (EUR)</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var ticket in Model.Tickets)
-                                {
-                                    <tr>
-                                        <td>@ticket.TicketNumber</td>
-                                        <td>@(ticket.Screening?.Movie?.Title ?? "-")</td>
-                                        <td>@(ticket.Screening?.Hall?.Cinema?.Name ?? "-")</td>
-                                        <td>@(ticket.Screening?.Hall?.Name ?? "-")</td>
-                                        <td>@ticket.PurchasedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                                        <td>@ticket.Price.ToString("0.00")</td>
-                                        <td>
-                                            @(ticket.Status switch
-                                            {
-                                                Vjezba.Model.Models.Entities.TicketStatus.Active => "Aktivna",
-                                                Vjezba.Model.Models.Entities.TicketStatus.Cancelled => "Otkazana",
-                                                Vjezba.Model.Models.Entities.TicketStatus.Used => "Iskoristena",
-                                                _ => ticket.Status.ToString()
-                                            })
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
+                <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="cinema-card-header">Detalji sjedala</div>
+                    <div class="cinema-card-body">
+                        <dl class="cinema-details-list">
+                            <dt>ID</dt>
+                            <dd>@Model.Id</dd>
+
+                            <dt>Kino</dt>
+                            <dd>@(Model.Hall?.Cinema?.Name ?? "-")</dd>
+
+                            <dt>Dvorana</dt>
+                            <dd>@(Model.Hall?.Name ?? "-")</dd>
+
+                            <dt>Red</dt>
+                            <dd>@Model.RowLabel</dd>
+
+                            <dt>Broj sjedala</dt>
+                            <dd>@Model.SeatNumber</dd>
+
+                            <dt>Tip sjedala</dt>
+                            <dd>@Model.SeatType</dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>

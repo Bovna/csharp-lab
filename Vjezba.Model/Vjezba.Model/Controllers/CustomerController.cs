@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Vjezba.Model.Data;
+using Vjezba.Model.Models.ViewModels;
 
 namespace Vjezba.Model.Controllers;
 
@@ -30,12 +31,17 @@ public class CustomerController : Controller
             return NotFound();
         }
 
-        customer.Tickets = _ticketRepository
-            .GetAll()
+        var tickets = _ticketRepository.GetAll()
             .Where(t => t.Customer?.Id == customer.Id)
             .OrderByDescending(t => t.PurchasedAt)
             .ToList();
 
-        return View(customer);
+        var viewModel = new CustomerDetailsViewModel
+        {
+            Customer = customer,
+            Tickets = tickets
+        };
+
+        return View(viewModel);
     }
 }

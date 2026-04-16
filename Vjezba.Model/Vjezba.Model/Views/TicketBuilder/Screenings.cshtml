@@ -1,20 +1,21 @@
 @model Vjezba.Model.Models.ViewModels.TicketBuilderScreeningListViewModel
 @{
-    ViewData["Title"] = "Ticket Builder - Projekcije";
+    ViewData["Title"] = "Brza kupnja - Projekcije";
 }
 
-<div class="tb-page">
+<div class="tb-cinema tb-page">
     <div class="tb-header">
         <h1>@Model.MovieTitle</h1>
         <p>Korak 3/4: odaberi projekciju</p>
     </div>
 
-    <div class="tb-step-line">
-        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
-        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2
+    <div class="tb-step-line" aria-label="Koraci brze kupnje">
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies"
+               asp-route-cinemaId="@Model.CinemaId">2
             Film</a>
-            <span class="tb-step active">3 Projekcija</span>
-            <span class="tb-step">4 Sjedalo</span>
+            <span class="tb-step active" aria-current="step">3 Projekcija</span>
+            <span class="tb-step is-disabled" aria-disabled="true">4 Sjedalo</span>
         </div>
 
         @if (!Model.Screenings.Any())
@@ -26,12 +27,19 @@
             <div class="tb-list">
                 @foreach (var screening in Model.Screenings)
                 {
-                    <a class="tb-list-item" asp-controller="TicketBuilder" asp-action="Seats" asp-route-cinemaId="@Model.CinemaId"
-                           asp-route-movieId="@Model.MovieId" asp-route-screeningId="@screening.Id">
-                        <strong>@screening.StartTime.ToString("dd.MM.yyyy HH:mm") - @screening.EndTime.ToString("HH:mm")</strong>
-                        <small>@screening.HallName @(screening.Is3D ? "| 3D" : "")</small>
-                    </a>
-                }
-            </div>
-        }
-    </div>
+                    <a class="tb-list-item tb-compact-list-item" asp-controller="TicketBuilder" asp-action="Seats"
+                           asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId"
+                           asp-route-screeningId="@screening.Id">
+                        <div class="tb-screening-info">
+                            <div class="tb-screening-datetime">
+                                <span class="tb-date">@screening.StartTime.ToString("dd.MM.yyyy")</span>
+                                <strong class="tb-time">@screening.StartTime.ToString("HH:mm") -
+                                    @screening.EndTime.ToString("HH:mm")</strong>
+                                </div>
+                                <small class="tb-screening-hall">@screening.HallName @(screening.Is3D ? "| 3D" : "")</small>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>

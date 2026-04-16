@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Vjezba.Model.Data;
+using Vjezba.Model.Models.ViewModels;
 
 namespace Vjezba.Model.Controllers;
 
@@ -35,17 +36,24 @@ public class HallController : Controller
             return NotFound();
         }
 
-        hall.Seats = _seatRepository
-            .GetAll()
+        var seats = _seatRepository.GetAll()
             .Where(s => s.Hall?.Id == hall.Id)
+            .OrderBy(s => s.RowLabel)
+            .ThenBy(s => s.SeatNumber)
             .ToList();
 
-        hall.Screenings = _screeningRepository
-            .GetAll()
+        var screenings = _screeningRepository.GetAll()
             .Where(s => s.Hall?.Id == hall.Id)
             .OrderBy(s => s.StartTime)
             .ToList();
 
-        return View(hall);
+        var viewModel = new HallDetailsViewModel
+        {
+            Hall = hall,
+            Seats = seats,
+            Screenings = screenings
+        };
+
+        return View(viewModel);
     }
 }

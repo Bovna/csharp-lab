@@ -6,12 +6,10 @@ namespace Vjezba.Model.Controllers;
 public class MovieController : Controller
 {
     private readonly MovieMockRepository _movieRepository;
-    private readonly ScreeningMockRepository _screeningRepository;
 
-    public MovieController(MovieMockRepository movieRepository, ScreeningMockRepository screeningRepository)
+    public MovieController(MovieMockRepository movieRepository)
     {
         _movieRepository = movieRepository;
-        _screeningRepository = screeningRepository;
     }
 
     public IActionResult Index()
@@ -29,12 +27,6 @@ public class MovieController : Controller
         {
             return NotFound();
         }
-
-        movie.Screenings = _screeningRepository
-            .GetAll()
-            .Where(s => s.Movie?.Id == movie.Id)
-            .OrderBy(s => s.StartTime)
-            .ToList();
 
         return View(movie);
     }

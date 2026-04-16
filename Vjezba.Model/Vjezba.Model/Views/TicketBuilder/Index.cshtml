@@ -1,19 +1,19 @@
 @model Vjezba.Model.Models.ViewModels.TicketBuilderCinemaListViewModel
 @{
-    ViewData["Title"] = "Ticket Builder - Kina";
+    ViewData["Title"] = "Brza kupnja - Kina";
 }
 
-<div class="tb-page">
+<div class="tb-cinema tb-page">
     <div class="tb-header">
-        <h1>Ticket Builder</h1>
+        <h1>Brza kupnja ulaznica</h1>
         <p>Korak 1/4: odaberi kino</p>
     </div>
 
-    <div class="tb-step-line">
-        <span class="tb-step active">1 Kino</span>
-        <span class="tb-step">2 Film</span>
-        <span class="tb-step">3 Projekcija</span>
-        <span class="tb-step">4 Sjedalo</span>
+    <div class="tb-step-line" aria-label="Koraci brze kupnje">
+        <span class="tb-step active" aria-current="step">1 Kino</span>
+        <span class="tb-step is-disabled" aria-disabled="true">2 Film</span>
+        <span class="tb-step is-disabled" aria-disabled="true">3 Projekcija</span>
+        <span class="tb-step is-disabled" aria-disabled="true">4 Sjedalo</span>
     </div>
 
     <div class="tb-grid-cards">
