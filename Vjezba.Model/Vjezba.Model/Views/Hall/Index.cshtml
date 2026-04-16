@@ -4,41 +4,51 @@
     ViewData["Title"] = "Dvorane";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Popis dvorana</h1>
-        <span class="badge bg-primary">Ukupno: @Model.Count</span>
-    </div>
+<div class="container py-4 animate-fade-in-up">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis
+            dvorana</h1>
+            <span class="cinema-badge">Ukupno: @Model.Count</span>
+        </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-striped table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Naziv</th>
-                        <th>Kino</th>
-                        <th>Kapacitet</th>
-                        <th>3D podrska</th>
-                        <th class="text-end">Akcije</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var hall in Model)
-                    {
+        <div class="cinema-card">
+            <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
+                <table class="table entity-index-table">
+                    <thead>
                         <tr>
-                            <td>@hall.Id</td>
-                            <td>@hall.Name</td>
-                            <td>@(hall.Cinema?.Name ?? "-")</td>
-                            <td>@hall.Capacity</td>
-                            <td>@(hall.Supports3D ? "Da" : "Ne")</td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@hall.Id" class="btn btn-sm btn-outline-primary">Detalji</a>
-                            </td>
+                            <th>ID</th>
+                            <th>Naziv</th>
+                            <th>Kino</th>
+                            <th>Kapacitet</th>
+                            <th>3D podrška</th>
+                            <th>Dodatno</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var hall in Model)
+                        {
+                            <tr>
+                                <td class="text-muted">@hall.Id</td>
+                                <td>@hall.Name</td>
+                                <td>@(hall.Cinema?.Name ?? "-")</td>
+                                <td>@hall.Capacity</td>
+                                <td>
+                                    @if (hall.Supports3D)
+                                    {
+                                        <span class="cinema-status-yes">Da</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="cinema-status-no">Ne</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@hall.Id" class="cinema-btn-outline">Detalji</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>

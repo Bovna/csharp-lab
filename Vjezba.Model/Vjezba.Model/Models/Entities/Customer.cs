@@ -14,4 +14,5 @@ public class Customer
     public DateTime RegisteredAt { get; set; }
     public bool IsLoyaltyMember { get; set; }
     public int LoyaltyPoints { get; set; }
+    public List<Ticket> Tickets { get; set; } = new List<Ticket>();
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Vjezba.Model.Data;
+using Vjezba.Model.Models.ViewModels;
 
 namespace Vjezba.Model.Controllers;
 
@@ -30,12 +31,17 @@ public class ScreeningController : Controller
             return NotFound();
         }
 
-        screening.Tickets = _ticketRepository
-            .GetAll()
+        var tickets = _ticketRepository.GetAll()
             .Where(t => t.Screening?.Id == screening.Id)
             .OrderByDescending(t => t.PurchasedAt)
             .ToList();
 
-        return View(screening);
+        var viewModel = new ScreeningDetailsViewModel
+        {
+            Screening = screening,
+            Tickets = tickets
+        };
+
+        return View(viewModel);
     }
 }

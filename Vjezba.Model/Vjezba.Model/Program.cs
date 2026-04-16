@@ -33,6 +33,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-//Vjezba.Model.Main.initialOutput();
+//Vjezba.Model.Main.main();
 
-app.Run()
+app.Run();

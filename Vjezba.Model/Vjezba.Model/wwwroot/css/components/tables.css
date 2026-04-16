@@ -1,0 +1,104 @@
+/* Tables Core Layout for Entity listings */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--spacing-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-surface);
+}
+
+.card-body.p-0 {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0;
+  table-layout: auto;
+}
+
+.table th,
+.table td {
+  padding: var(--spacing-3) var(--spacing-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.card-body.p-0 .table {
+  min-width: max-content;
+}
+
+.table th:first-child,
+.table td:first-child {
+  width: 1%;
+}
+
+.table th:last-child,
+.table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Allow description fields to wrap if needed */
+.table td.text-wrap {
+  white-space: normal;
+  max-width: 250px;
+}
+
+.table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--color-bg-surface-hover);
+  border-bottom: 2px solid var(--color-border);
+}
+
+/* Hover effects */
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+.table tbody tr:hover {
+  background-color: rgba(0, 230, 118, 0.05);
+}
+
+/* Striped variant override */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Text alignment utilities */
+.table td.text-center,
+.table th.text-center {
+  text-align: center;
+}
+
+.table td.text-end,
+.table th.text-end {
+  text-align: right;
+}
+
+/* Button group within table cells */
+.table td .btn-group {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: flex-end;
+}
+
+.table td.text-end {
+  white-space: nowrap;
+}
+
+/* Table Card Layout integration */
+.card-body.p-0 .table-responsive {
+  border: none;
+  border-radius: 0;
+  margin-bottom: 0;
+}

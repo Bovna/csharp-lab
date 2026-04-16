@@ -8,4 +8,5 @@ public class Screening
     public bool Is3D { get; set; }
     public Movie? Movie { get; set; }
     public Hall? Hall { get; set; }
+    public List<Ticket> Tickets { get; set; } = new List<Ticket>();
 }

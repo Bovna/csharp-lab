@@ -4,81 +4,45 @@
     ViewData["Title"] = "Detalji filma";
 }
 
-<div class="container py-4">
+<div class="container py-4 animate-fade-in-up">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="h3 mb-0">@Model.Title</h1>
-                <a asp-action="Index" class="btn btn-outline-secondary">Natrag na popis</a>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">@Model.Id</dd>
-
-                        <dt class="col-sm-4">Naslov</dt>
-                        <dd class="col-sm-8">@Model.Title</dd>
-
-                        <dt class="col-sm-4">Opis</dt>
-                        <dd class="col-sm-8">@Model.Description</dd>
-
-                        <dt class="col-sm-4">Zanr</dt>
-                        <dd class="col-sm-8">@Model.Genre</dd>
-
-                        <dt class="col-sm-4">Trajanje</dt>
-                        <dd class="col-sm-8">@Model.DurationMinutes min</dd>
-
-                        <dt class="col-sm-4">Jezik</dt>
-                        <dd class="col-sm-8">@Model.Language</dd>
-
-                        <dt class="col-sm-4">Dobna oznaka</dt>
-                        <dd class="col-sm-8">@Model.AgeRating</dd>
-
-                        <dt class="col-sm-4">Datum izlaska</dt>
-                        <dd class="col-sm-8">@Model.ReleaseDate.ToString("dd.MM.yyyy")</dd>
-                    </dl>
+        <div class="col-12 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+                    @Model.Title</h1>
+                    <a asp-action="Index" class="cinema-btn-secondary">Natrag na popis</a>
                 </div>
-            </div>
 
-            <div class="card shadow-sm mt-3">
-                <div class="card-header">Projekcije filma</div>
-                <div class="card-body p-0">
-                    @if (Model.Screenings.Count == 0)
-                    {
-                        <div class="p-3 text-muted">Film trenutno nema projekcija.</div>
-                    }
-                    else
-                    {
-                        <table class="table table-striped mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Kino</th>
-                                    <th>Dvorana</th>
-                                    <th>Pocetak</th>
-                                    <th>Zavrsetak</th>
-                                    <th>3D</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var screening in Model.Screenings)
-                                {
-                                    <tr>
-                                        <td>@screening.Id</td>
-                                        <td>@(screening.Hall?.Cinema?.Name ?? "-")</td>
-                                        <td>@(screening.Hall?.Name ?? "-")</td>
-                                        <td>@screening.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
-                                        <td>@screening.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
-                                        <td>@(screening.Is3D ? "Da" : "Ne")</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
+                <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="cinema-card-header">Detalji filma</div>
+                    <div class="cinema-card-body">
+                        <dl class="cinema-details-list">
+                            <dt>ID</dt>
+                            <dd>@Model.Id</dd>
+
+                            <dt>Naslov</dt>
+                            <dd>@Model.Title</dd>
+
+                            <dt>Opis</dt>
+                            <dd>@Model.Description</dd>
+
+                            <dt>Žanr</dt>
+                            <dd>@Model.Genre</dd>
+
+                            <dt>Trajanje</dt>
+                            <dd>@Model.DurationMinutes min</dd>
+
+                            <dt>Jezik</dt>
+                            <dd>@Model.Language</dd>
+
+                            <dt>Dobna oznaka</dt>
+                            <dd>@Model.AgeRating</dd>
+
+                            <dt>Datum izlaska</dt>
+                            <dd>@Model.ReleaseDate.ToString("dd.MM.yyyy")</dd>
+                        </dl>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>

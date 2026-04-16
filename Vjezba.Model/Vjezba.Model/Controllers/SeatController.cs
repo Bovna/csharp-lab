@@ -6,12 +6,10 @@ namespace Vjezba.Model.Controllers;
 public class SeatController : Controller
 {
     private readonly SeatMockRepository _seatRepository;
-    private readonly TicketMockRepository _ticketRepository;
 
-    public SeatController(SeatMockRepository seatRepository, TicketMockRepository ticketRepository)
+    public SeatController(SeatMockRepository seatRepository)
     {
         _seatRepository = seatRepository;
-        _ticketRepository = ticketRepository;
     }
 
     public IActionResult Index()
@@ -29,12 +27,6 @@ public class SeatController : Controller
         {
             return NotFound();
         }
-
-        seat.Tickets = _ticketRepository
-            .GetAll()
-            .Where(t => t.Seat?.Id == seat.Id)
-            .OrderByDescending(t => t.PurchasedAt)
-            .ToList();
 
         return View(seat);
     }

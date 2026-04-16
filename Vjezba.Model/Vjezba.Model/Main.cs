@@ -483,7 +483,7 @@ public static class Main
         }
     ];
 
-    public static void initialOutput()
+    public static void main()
     {
         Console.WriteLine("=== Detaljni ispis kina, dvorana i projekcija ===");
         foreach (var cinema in Cinemas)

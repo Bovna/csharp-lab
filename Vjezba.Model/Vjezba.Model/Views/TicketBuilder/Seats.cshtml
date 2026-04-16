@@ -1,26 +1,26 @@
 @model Vjezba.Model.Models.ViewModels.TicketBuilderSeatPageViewModel
 @{
-    ViewData["Title"] = "Ticket Builder - Sjedala";
+    ViewData["Title"] = "Brza kupnja - Sjedala";
     var groupedSeats = Model.Seats
         .GroupBy(s => s.RowLabel)
         .OrderBy(g => g.Key)
         .ToList();
 }
 
-<div class="tb-page">
+<div class="tb-cinema tb-page tb-page-seats">
     <div class="tb-header">
         <h1>@Model.MovieTitle</h1>
         <p>Korak 4/4: klikni sjedalo za prikaz cijene ulaznice</p>
         <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
     </div>
 
-    <div class="tb-step-line">
-        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
-        <a class="tb-step" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2
+    <div class="tb-step-line" aria-label="Koraci brze kupnje">
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2
             Film</a>
-            <a class="tb-step" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
+            <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
                asp-route-movieId="@Model.MovieId">3 Projekcija</a>
-            <span class="tb-step active">4 Sjedalo</span>
+            <span class="tb-step active" aria-current="step">4 Sjedalo</span>
         </div>
 
         <div class="tb-seat-layout">
@@ -104,8 +104,13 @@
                             return;
                         }
 
+                        // Remove selected class from all other seats
+                        seats.forEach(s => s.classList.remove("selected"));
+                        // Add selected class to the clicked seat
+                        seat.classList.add("selected");
+
                         const price = calculatePrice(seatType, is3D).toFixed(2);
-                        panel.textContent = `${seatLabel} | Tip: ${seatType} | Cijena: ${price} EUR`;
+                        panel.innerHTML = `<strong>Sjedalo:</strong> ${seatLabel} | <strong>Tip:</strong> ${seatType} | <strong>Cijena:</strong> <span style="color:var(--color-accent)">${price} EUR</span>`;
                     });
                 });
             })();
