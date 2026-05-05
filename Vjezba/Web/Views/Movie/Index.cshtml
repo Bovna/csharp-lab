@@ -1,0 +1,51 @@
+@model List<Vjezba.Model.Entities.Movie>
+
+@{
+    ViewData["Title"] = "Filmovi";
+}
+
+<div class="container py-4 animate-fade-in-up">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis
+            filmova</h1>
+            <span class="cinema-badge">Ukupno: @Model.Count</span>
+        </div>
+
+        <div class="cinema-card">
+            <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
+                <table class="table entity-index-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Naslov</th>
+                            <th>Opis</th>
+                            <th>Žanr</th>
+                            <th>Trajanje (min)</th>
+                            <th>Jezik</th>
+                            <th>Dobna oznaka</th>
+                            <th>Datum izlaska</th>
+                            <th>Dodatno</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var movie in Model)
+                        {
+                            <tr>
+                                <td class="text-muted">@movie.Id</td>
+                                <td>@movie.Title</td>
+                                <td>@movie.Description</td>
+                                <td>@movie.Genre</td>
+                                <td>@movie.DurationMinutes</td>
+                                <td>@movie.Language</td>
+                                <td>@movie.AgeRating</td>
+                                <td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@movie.Id" class="cinema-btn-outline">Detalji</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
