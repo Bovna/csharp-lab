@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.Web.Repositories;
+using Vjezba.DAL.Repositories;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
 public class HallController : Controller
 {
-    private readonly HallMockRepository _hallRepository;
-    private readonly SeatMockRepository _seatRepository;
-    private readonly ScreeningMockRepository _screeningRepository;
+    private readonly HallRepository _hallRepository;
+    private readonly SeatRepository _seatRepository;
+    private readonly ScreeningRepository _screeningRepository;
 
     public HallController(
-        HallMockRepository hallRepository,
-        SeatMockRepository seatRepository,
-        ScreeningMockRepository screeningRepository)
+        HallRepository hallRepository,
+        SeatRepository seatRepository,
+        ScreeningRepository screeningRepository)
     {
         _hallRepository = hallRepository;
         _seatRepository = seatRepository;

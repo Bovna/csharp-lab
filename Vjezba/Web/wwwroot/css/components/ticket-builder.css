@@ -317,7 +317,7 @@ a.tb-step.is-link:hover {
 }
 .seat-couple {
   border-radius: 18px;
-  width: 72px;
+  width: 48px;
   border-color: #ff4081;
   color: #ff4081;
 }
@@ -403,6 +403,6 @@ a.tb-step.is-link:hover {
   }
 
   .seat-couple {
-    width: 64px;
+    width: 44px;
   }
 }

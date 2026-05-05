@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.Web.Repositories;
+using Vjezba.DAL.Repositories;
 using Vjezba.Model.Entities;
 using Vjezba.Web.ViewModels;
 
@@ -7,18 +7,18 @@ namespace Vjezba.Web.Controllers;
 
 public class TicketBuilderController : Controller
 {
-    private readonly CinemaMockRepository _cinemaRepository;
-    private readonly MovieMockRepository _movieRepository;
-    private readonly ScreeningMockRepository _screeningRepository;
-    private readonly SeatMockRepository _seatRepository;
-    private readonly TicketMockRepository _ticketRepository;
+    private readonly CinemaRepository _cinemaRepository;
+    private readonly MovieRepository _movieRepository;
+    private readonly ScreeningRepository _screeningRepository;
+    private readonly SeatRepository _seatRepository;
+    private readonly TicketRepository _ticketRepository;
 
     public TicketBuilderController(
-        CinemaMockRepository cinemaRepository,
-        MovieMockRepository movieRepository,
-        ScreeningMockRepository screeningRepository,
-        SeatMockRepository seatRepository,
-        TicketMockRepository ticketRepository)
+        CinemaRepository cinemaRepository,
+        MovieRepository movieRepository,
+        ScreeningRepository screeningRepository,
+        SeatRepository seatRepository,
+        TicketRepository ticketRepository)
     {
         _cinemaRepository = cinemaRepository;
         _movieRepository = movieRepository;

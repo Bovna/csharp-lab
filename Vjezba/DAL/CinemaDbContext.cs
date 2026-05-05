@@ -101,32 +101,32 @@ public class CinemaDbContext : DbContext
             });
 
         modelBuilder.Entity<Hall>().HasData(
-            new Hall { Id = 101, Name = "Dvorana A", Capacity = 150, Supports3D = true, CinemaId = 1 },
-            new Hall { Id = 102, Name = "Dvorana B", Capacity = 112, Supports3D = false, CinemaId = 1 },
-            new Hall { Id = 103, Name = "Dvorana C", Capacity = 96, Supports3D = false, CinemaId = 1 },
+            new Hall { Id = 101, Name = "Dvorana A", Capacity = 66, Supports3D = true, CinemaId = 1 },
+            new Hall { Id = 102, Name = "Dvorana B", Capacity = 54, Supports3D = false, CinemaId = 1 },
+            new Hall { Id = 103, Name = "Dvorana C", Capacity = 63, Supports3D = false, CinemaId = 1 },
 
-            new Hall { Id = 201, Name = "Dvorana A", Capacity = 150, Supports3D = true, CinemaId = 2 },
-            new Hall { Id = 202, Name = "Dvorana B", Capacity = 112, Supports3D = false, CinemaId = 2 },
-            new Hall { Id = 203, Name = "Dvorana C", Capacity = 90, Supports3D = false, CinemaId = 2 },
+            new Hall { Id = 201, Name = "Dvorana A", Capacity = 66, Supports3D = true, CinemaId = 2 },
+            new Hall { Id = 202, Name = "Dvorana B", Capacity = 54, Supports3D = false, CinemaId = 2 },
+            new Hall { Id = 203, Name = "Dvorana C", Capacity = 63, Supports3D = false, CinemaId = 2 },
             new Hall { Id = 204, Name = "Dvorana D", Capacity = 77, Supports3D = true, CinemaId = 2 },
-            new Hall { Id = 205, Name = "Dvorana E", Capacity = 60, Supports3D = false, CinemaId = 2 },
+            new Hall { Id = 205, Name = "Dvorana E", Capacity = 54, Supports3D = false, CinemaId = 2 },
 
-            new Hall { Id = 301, Name = "Dvorana A", Capacity = 150, Supports3D = true, CinemaId = 3 },
-            new Hall { Id = 302, Name = "Dvorana B", Capacity = 112, Supports3D = false, CinemaId = 3 },
-            new Hall { Id = 303, Name = "Dvorana C", Capacity = 96, Supports3D = false, CinemaId = 3 },
-            new Hall { Id = 304, Name = "Dvorana D", Capacity = 90, Supports3D = true, CinemaId = 3 },
-            new Hall { Id = 305, Name = "Dvorana E", Capacity = 72, Supports3D = false, CinemaId = 3 },
-            new Hall { Id = 306, Name = "Dvorana F", Capacity = 70, Supports3D = true, CinemaId = 3 },
+            new Hall { Id = 301, Name = "Dvorana A", Capacity = 66, Supports3D = true, CinemaId = 3 },
+            new Hall { Id = 302, Name = "Dvorana B", Capacity = 66, Supports3D = false, CinemaId = 3 },
+            new Hall { Id = 303, Name = "Dvorana C", Capacity = 63, Supports3D = false, CinemaId = 3 },
+            new Hall { Id = 304, Name = "Dvorana D", Capacity = 77, Supports3D = true, CinemaId = 3 },
+            new Hall { Id = 305, Name = "Dvorana E", Capacity = 54, Supports3D = false, CinemaId = 3 },
+            new Hall { Id = 306, Name = "Dvorana F", Capacity = 88, Supports3D = true, CinemaId = 3 },
 
-            new Hall { Id = 401, Name = "Dvorana A", Capacity = 150, Supports3D = true, CinemaId = 4 },
-            new Hall { Id = 402, Name = "Dvorana B", Capacity = 150, Supports3D = false, CinemaId = 4 },
-            new Hall { Id = 403, Name = "Dvorana C", Capacity = 96, Supports3D = false, CinemaId = 4 },
+            new Hall { Id = 401, Name = "Dvorana A", Capacity = 66, Supports3D = true, CinemaId = 4 },
+            new Hall { Id = 402, Name = "Dvorana B", Capacity = 88, Supports3D = false, CinemaId = 4 },
+            new Hall { Id = 403, Name = "Dvorana C", Capacity = 63, Supports3D = false, CinemaId = 4 },
 
-            new Hall { Id = 501, Name = "Dvorana A", Capacity = 150, Supports3D = true, CinemaId = 5 },
-            new Hall { Id = 502, Name = "Dvorana B", Capacity = 112, Supports3D = false, CinemaId = 5 },
-            new Hall { Id = 503, Name = "Dvorana C", Capacity = 72, Supports3D = false, CinemaId = 5 },
-            new Hall { Id = 504, Name = "Dvorana D", Capacity = 90, Supports3D = true, CinemaId = 5 },
-            new Hall { Id = 505, Name = "Dvorana E", Capacity = 90, Supports3D = false, CinemaId = 5 });
+            new Hall { Id = 501, Name = "Dvorana A", Capacity = 66, Supports3D = true, CinemaId = 5 },
+            new Hall { Id = 502, Name = "Dvorana B", Capacity = 54, Supports3D = false, CinemaId = 5 },
+            new Hall { Id = 503, Name = "Dvorana C", Capacity = 63, Supports3D = false, CinemaId = 5 },
+            new Hall { Id = 504, Name = "Dvorana D", Capacity = 77, Supports3D = true, CinemaId = 5 },
+            new Hall { Id = 505, Name = "Dvorana E", Capacity = 77, Supports3D = false, CinemaId = 5 });
 
         modelBuilder.Entity<Movie>().HasData(
             new Movie { Id = 1, Title = "Galactic Run", Description = "Sci-fi akcija o bijegu kroz galaksiju.", DurationMinutes = 155, ReleaseDate = new DateTime(2025, 12, 12), Genre = MovieGenre.SciFi, Language = "EN", AgeRating = "12+" },
@@ -187,26 +187,28 @@ public class CinemaDbContext : DbContext
             new Customer { Id = 7, FirstName = "Mia", LastName = "Novak", City = "Zagreb", Street = "Selska", HouseNumber = "101", PostalCode = "10000", Email = "mia.novak@email.hr", Phone = "+385 99 111 111", RegisteredAt = new DateTime(2026, 2, 14), IsLoyaltyMember = false, LoyaltyPoints = 0 },
             new Customer { Id = 8, FirstName = "Dario", LastName = "Sokic", City = "Zagreb", Street = "Trg bana Jelacica", HouseNumber = "1", PostalCode = "10000", Email = "dario.sokic@email.hr", Phone = "+385 95 333 222", RegisteredAt = new DateTime(2025, 12, 1), IsLoyaltyMember = true, LoyaltyPoints = 260 });
 
-        static IEnumerable<Seat> BuildSeatsForHall(int hallId, char maxRowLabel, int maxSeatNumber)
+        static IEnumerable<Seat> BuildSeatsForHall(
+            int hallId,
+            char lastRowLabel,
+            int seatCount)
         {
-            for (var rowLabel = 'A'; rowLabel <= maxRowLabel; rowLabel++)
+            var vipSeatStart = Math.Max(3, (seatCount + 1) / 2 - 1);
+            var vipSeatEnd = Math.Min(seatCount - 2, vipSeatStart + 2);
+
+            for (var rowLabel = 'A'; rowLabel <= lastRowLabel; rowLabel++)
             {
                 var rowIndex = rowLabel - 'A' + 1;
-                var middleSeat = (maxSeatNumber + 1) / 2;
 
-                for (var seatNumber = 1; seatNumber <= maxSeatNumber; seatNumber++)
+                for (var seatNumber = 1; seatNumber <= seatCount; seatNumber++)
                 {
-                    var isVipSeat = maxSeatNumber % 2 == 0
-                        ? seatNumber == maxSeatNumber / 2 || seatNumber == maxSeatNumber / 2 + 1
-                        : seatNumber >= middleSeat - 1 && seatNumber <= middleSeat + 1;
+                    var isCoupleSeat = rowLabel == lastRowLabel;
+                    var isVipSeat = seatNumber >= vipSeatStart && seatNumber <= vipSeatEnd;
 
-                    var seatType = seatNumber <= 2
-                        ? SeatType.Standard
-                        : seatNumber >= maxSeatNumber - 1
-                            ? SeatType.Couple
-                            : isVipSeat
-                                ? SeatType.Vip
-                                : SeatType.Standard;
+                    var seatType = isCoupleSeat
+                        ? SeatType.Couple
+                        : isVipSeat
+                            ? SeatType.Vip
+                            : SeatType.Standard;
 
                     yield return new Seat
                     {
@@ -221,10 +223,35 @@ public class CinemaDbContext : DbContext
         }
 
         var seats = new List<Seat>();
-        var hallIds = new[] { 101, 102, 103, 201, 202, 203, 204, 205, 301, 302, 303, 304, 305, 306, 401, 402, 403, 501, 502, 503, 504, 505 };
-        foreach (var hallId in hallIds)
+        var hallLayouts = new (int HallId, char LastRowLabel, int SeatCount)[]
         {
-            seats.AddRange(BuildSeatsForHall(hallId, 'D', 8));
+            (101, 'F', 11),
+            (102, 'F', 9),
+            (103, 'G', 9),
+            (201, 'F', 11),
+            (202, 'F', 9),
+            (203, 'G', 9),
+            (204, 'G', 11),
+            (205, 'F', 9),
+            (301, 'F', 11),
+            (302, 'F', 11),
+            (303, 'G', 9),
+            (304, 'G', 11),
+            (305, 'F', 9),
+            (306, 'H', 11),
+            (401, 'F', 11),
+            (402, 'H', 11),
+            (403, 'G', 9),
+            (501, 'F', 11),
+            (502, 'F', 9),
+            (503, 'G', 9),
+            (504, 'G', 11),
+            (505, 'G', 11)
+        };
+
+        foreach (var (hallId, lastRowLabel, seatCount) in hallLayouts)
+        {
+            seats.AddRange(BuildSeatsForHall(hallId, lastRowLabel, seatCount));
         }
 
         modelBuilder.Entity<Seat>().HasData(seats);
@@ -242,7 +269,14 @@ public class CinemaDbContext : DbContext
             new Ticket { Id = 10, TicketNumber = "ZD-2026-0502", PurchasedAt = new DateTime(2026, 4, 16, 11, 20, 0), Price = 12.50m, Status = TicketStatus.Active, ScreeningId = 5002, SeatId = 502101, CustomerId = 6 },
             new Ticket { Id = 11, TicketNumber = "ZD-2026-0503", PurchasedAt = new DateTime(2026, 4, 16, 12, 10, 0), Price = 7.20m, Status = TicketStatus.Active, ScreeningId = 5003, SeatId = 503403, CustomerId = 4 },
             new Ticket { Id = 12, TicketNumber = "ZD-2026-0504", PurchasedAt = new DateTime(2026, 4, 16, 18, 25, 0), Price = 8.90m, Status = TicketStatus.Active, ScreeningId = 5004, SeatId = 504108, CustomerId = 7 },
-            new Ticket { Id = 13, TicketNumber = "ZD-2026-0505", PurchasedAt = new DateTime(2026, 4, 16, 19, 40, 0), Price = 10.20m, Status = TicketStatus.Used, ScreeningId = 5001, SeatId = 501302, CustomerId = 8 });
+            new Ticket { Id = 13, TicketNumber = "ZD-2026-0505", PurchasedAt = new DateTime(2026, 4, 16, 19, 40, 0), Price = 10.20m, Status = TicketStatus.Used, ScreeningId = 5001, SeatId = 501302, CustomerId = 8 },
+            new Ticket { Id = 14, TicketNumber = "ZG-2026-0003", PurchasedAt = new DateTime(2026, 4, 16, 20, 5, 0), Price = 7.50m, Status = TicketStatus.Active, ScreeningId = 1001, SeatId = 101305, CustomerId = 5 },
+            new Ticket { Id = 15, TicketNumber = "ZG-2026-0004", PurchasedAt = new DateTime(2026, 4, 16, 20, 20, 0), Price = 7.50m, Status = TicketStatus.Active, ScreeningId = 1004, SeatId = 101405, CustomerId = 7 },
+            new Ticket { Id = 16, TicketNumber = "RI-2026-0103", PurchasedAt = new DateTime(2026, 4, 16, 20, 35, 0), Price = 6.50m, Status = TicketStatus.Active, ScreeningId = 2002, SeatId = 202404, CustomerId = 4 },
+            new Ticket { Id = 17, TicketNumber = "OS-2026-0203", PurchasedAt = new DateTime(2026, 4, 16, 20, 45, 0), Price = 7.00m, Status = TicketStatus.Active, ScreeningId = 3002, SeatId = 302205, CustomerId = 1 },
+            new Ticket { Id = 18, TicketNumber = "ST-2026-0303", PurchasedAt = new DateTime(2026, 4, 16, 21, 0, 0), Price = 8.50m, Status = TicketStatus.Active, ScreeningId = 4001, SeatId = 401207, CustomerId = 2 },
+            new Ticket { Id = 19, TicketNumber = "ZD-2026-0506", PurchasedAt = new DateTime(2026, 4, 16, 21, 15, 0), Price = 9.50m, Status = TicketStatus.Active, ScreeningId = 5001, SeatId = 501505, CustomerId = 3 },
+            new Ticket { Id = 20, TicketNumber = "ZD-2026-0507", PurchasedAt = new DateTime(2026, 4, 16, 21, 25, 0), Price = 9.50m, Status = TicketStatus.Active, ScreeningId = 5004, SeatId = 504307, CustomerId = 6 });
     }
 
 

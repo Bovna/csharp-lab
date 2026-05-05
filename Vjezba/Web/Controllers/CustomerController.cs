@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.Web.Repositories;
+using Vjezba.DAL.Repositories;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
 public class CustomerController : Controller
 {
-    private readonly CustomerMockRepository _customerRepository;
-    private readonly TicketMockRepository _ticketRepository;
+    private readonly CustomerRepository _customerRepository;
+    private readonly TicketRepository _ticketRepository;
 
-    public CustomerController(CustomerMockRepository customerRepository, TicketMockRepository ticketRepository)
+    public CustomerController(CustomerRepository customerRepository, TicketRepository ticketRepository)
     {
         _customerRepository = customerRepository;
         _ticketRepository = ticketRepository;

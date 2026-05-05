@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.Web.Repositories;
+using Vjezba.DAL.Repositories;
 
 namespace Vjezba.Web.Controllers;
 
 public class CinemaController : Controller
 {
-    private readonly CinemaMockRepository _cinemaRepository;
+    private readonly CinemaRepository _cinemaRepository;
 
-    public CinemaController(CinemaMockRepository cinemaRepository)
+    public CinemaController(CinemaRepository cinemaRepository)
     {
         _cinemaRepository = cinemaRepository;
     }

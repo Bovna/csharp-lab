@@ -222,7 +222,7 @@ a.tb-step:hover {
 }
 .seat-couple {
   background: var(--tb-color-seat-couple);
-  width: 68px;
+  width: 48px;
 }
 .seat-taken {
   background: var(--tb-color-seat-taken);
@@ -253,7 +253,7 @@ a.tb-step:hover {
   pointer-events: none;
 }
 .tb-legend i.seat-couple {
-  width: 32px;
+  width: 24px;
 } /* Override for legend sizing */
 
 /* Price Panel */

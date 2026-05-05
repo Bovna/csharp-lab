@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
 using Vjezba.DAL.Repositories;
-using Vjezba.Web.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,13 +12,12 @@ builder.Services.AddDbContext<CinemaDbContext>(options =>
         builder.Configuration.GetConnectionString("CinemaDbContext"),
         sql => sql.MigrationsAssembly("Vjezba.DAL")));
 
-builder.Services.AddSingleton<CinemaMockRepository>();
-builder.Services.AddSingleton<CustomerMockRepository>();
-builder.Services.AddSingleton<HallMockRepository>();
-builder.Services.AddSingleton<ScreeningMockRepository>();
-builder.Services.AddSingleton<SeatMockRepository>();
-builder.Services.AddSingleton<TicketMockRepository>();
-
+builder.Services.AddScoped<CinemaRepository>();
+builder.Services.AddScoped<CustomerRepository>();
+builder.Services.AddScoped<HallRepository>();
+builder.Services.AddScoped<ScreeningRepository>();
+builder.Services.AddScoped<SeatRepository>();
+builder.Services.AddScoped<TicketRepository>();
 builder.Services.AddScoped<MovieRepository>();
 
 var app = builder.Build();

@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.Web.Repositories;
+using Vjezba.DAL.Repositories;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
 public class ScreeningController : Controller
 {
-    private readonly ScreeningMockRepository _screeningRepository;
-    private readonly TicketMockRepository _ticketRepository;
+    private readonly ScreeningRepository _screeningRepository;
+    private readonly TicketRepository _ticketRepository;
 
-    public ScreeningController(ScreeningMockRepository screeningRepository, TicketMockRepository ticketRepository)
+    public ScreeningController(ScreeningRepository screeningRepository, TicketRepository ticketRepository)
     {
         _screeningRepository = screeningRepository;
         _ticketRepository = ticketRepository;

@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.Web.Repositories;
+using Vjezba.DAL.Repositories;
 
 namespace Vjezba.Web.Controllers;
 
 public class SeatController : Controller
 {
-    private readonly SeatMockRepository _seatRepository;
+    private readonly SeatRepository _seatRepository;
 
-    public SeatController(SeatMockRepository seatRepository)
+    public SeatController(SeatRepository seatRepository)
     {
         _seatRepository = seatRepository;
     }
