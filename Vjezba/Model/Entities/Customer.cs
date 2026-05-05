@@ -1,7 +1,10 @@
 namespace Vjezba.Model.Entities;
 
+using System.ComponentModel.DataAnnotations;
+
 public class Customer
 {
+    [Key]
     public int Id { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
@@ -14,5 +17,5 @@ public class Customer
     public DateTime RegisteredAt { get; set; }
     public bool IsLoyaltyMember { get; set; }
     public int LoyaltyPoints { get; set; }
-    public List<Ticket> Tickets { get; set; } = new List<Ticket>();
+    public virtual ICollection<Ticket> Tickets { get; set; } = new HashSet<Ticket>();
 }
