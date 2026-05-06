@@ -12747,7 +12747,7 @@ namespace Vjezba.DAL.Migrations
                     b.Property<int>("ScreeningId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SeatId")
+                    b.Property<int?>("SeatId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -13047,9 +13047,7 @@ namespace Vjezba.DAL.Migrations
 
                     b.HasOne("Vjezba.Model.Entities.Seat", "Seat")
                         .WithMany()
-                        .HasForeignKey("SeatId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("SeatId");
 
                     b.Navigation("Customer");
 

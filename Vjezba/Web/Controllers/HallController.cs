@@ -1,49 +1,48 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.DAL.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Vjezba.DAL;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
 public class HallController : Controller
 {
-    private readonly HallRepository _hallRepository;
-    private readonly SeatRepository _seatRepository;
-    private readonly ScreeningRepository _screeningRepository;
+    private readonly CinemaDbContext _dbContext;
 
-    public HallController(
-        HallRepository hallRepository,
-        SeatRepository seatRepository,
-        ScreeningRepository screeningRepository)
+    public HallController(CinemaDbContext dbContext)
     {
-        _hallRepository = hallRepository;
-        _seatRepository = seatRepository;
-        _screeningRepository = screeningRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var halls = _hallRepository.GetAll();
+        var halls = _dbContext.Halls
+            .Include(h => h.Cinema)
+            .ToList();
 
         return View(halls);
     }
 
     public IActionResult Details(int id)
     {
-        var hall = _hallRepository.GetById(id);
+        var hall = _dbContext.Halls
+            .Include(h => h.Cinema)
+            .FirstOrDefault(h => h.Id == id);
 
         if (hall is null)
         {
             return NotFound();
         }
 
-        var seats = _seatRepository.GetAll()
-            .Where(s => s.Hall?.Id == hall.Id)
+        var seats = _dbContext.Seats
+            .Where(s => s.HallId == hall.Id)
             .OrderBy(s => s.RowLabel)
             .ThenBy(s => s.SeatNumber)
             .ToList();
 
-        var screenings = _screeningRepository.GetAll()
-            .Where(s => s.Hall?.Id == hall.Id)
+        var screenings = _dbContext.Screenings
+            .Where(s => s.HallId == hall.Id)
+            .Include(s => s.Movie)
             .OrderBy(s => s.StartTime)
             .ToList();
 

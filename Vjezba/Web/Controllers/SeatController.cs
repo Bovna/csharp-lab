@@ -1,27 +1,34 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.DAL.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Vjezba.DAL;
 
 namespace Vjezba.Web.Controllers;
 
 public class SeatController : Controller
 {
-    private readonly SeatRepository _seatRepository;
+    private readonly CinemaDbContext _dbContext;
 
-    public SeatController(SeatRepository seatRepository)
+    public SeatController(CinemaDbContext dbContext)
     {
-        _seatRepository = seatRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var seats = _seatRepository.GetAll();
+        var seats = _dbContext.Seats
+            .Include(s => s.Hall)
+                .ThenInclude(h => h.Cinema)
+            .ToList();
 
         return View(seats);
     }
 
     public IActionResult Details(int id)
     {
-        var seat = _seatRepository.GetById(id);
+        var seat = _dbContext.Seats
+            .Include(s => s.Hall)
+                .ThenInclude(h => h.Cinema)
+            .FirstOrDefault(s => s.Id == id);
 
         if (seat is null)
         {

@@ -1,38 +1,42 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.DAL.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Vjezba.DAL;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
 public class CustomerController : Controller
 {
-    private readonly CustomerRepository _customerRepository;
-    private readonly TicketRepository _ticketRepository;
+    private readonly CinemaDbContext _dbContext;
 
-    public CustomerController(CustomerRepository customerRepository, TicketRepository ticketRepository)
+    public CustomerController(CinemaDbContext dbContext)
     {
-        _customerRepository = customerRepository;
-        _ticketRepository = ticketRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var customers = _customerRepository.GetAll();
+        var customers = _dbContext.Customers.ToList();
 
         return View(customers);
     }
 
     public IActionResult Details(int id)
     {
-        var customer = _customerRepository.GetById(id);
+        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id);
 
         if (customer is null)
         {
             return NotFound();
         }
 
-        var tickets = _ticketRepository.GetAll()
-            .Where(t => t.Customer?.Id == customer.Id)
+        var tickets = _dbContext.Tickets
+            .Where(t => t.CustomerId == customer.Id)
+            .Include(t => t.Screening)
+                .ThenInclude(s => s.Movie)
+            .Include(t => t.Screening)
+                .ThenInclude(s => s.Hall)
+                    .ThenInclude(h => h.Cinema)
             .OrderByDescending(t => t.PurchasedAt)
             .ToList();
 

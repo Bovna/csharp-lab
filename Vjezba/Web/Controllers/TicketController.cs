@@ -1,50 +1,49 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.DAL.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Vjezba.DAL;
 
 namespace Vjezba.Web.Controllers;
 
 public class TicketController : Controller
 {
-    private readonly TicketRepository _ticketRepository;
-    private readonly ScreeningRepository _screeningRepository;
+    private readonly CinemaDbContext _dbContext;
 
-    public TicketController(TicketRepository ticketRepository, ScreeningRepository screeningRepository)
+    public TicketController(CinemaDbContext dbContext)
     {
-        _ticketRepository = ticketRepository;
-        _screeningRepository = screeningRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var screeningsById = _screeningRepository.GetAll().ToDictionary(s => s.Id);
-        var tickets = _ticketRepository.GetAll();
-
-        foreach (var ticket in tickets)
-        {
-            if (ticket.Screening is not null && screeningsById.TryGetValue(ticket.Screening.Id, out var screening))
-            {
-                ticket.Screening = screening;
-            }
-        }
+        var tickets = _dbContext.Tickets
+            .Include(t => t.Customer)
+            .Include(t => t.Seat)
+            .Include(t => t.Screening)
+                .ThenInclude(s => s.Movie)
+            .Include(t => t.Screening)
+                .ThenInclude(s => s.Hall)
+                    .ThenInclude(h => h.Cinema)
+            .ToList();
 
         return View(tickets);
     }
 
     public IActionResult Details(int id)
     {
-        var ticket = _ticketRepository.GetById(id);
+        var ticket = _dbContext.Tickets
+            .Include(t => t.Customer)
+            .Include(t => t.Seat)
+            .Include(t => t.Screening)
+                .ThenInclude(s => s.Movie)
+            .Include(t => t.Screening)
+                .ThenInclude(s => s.Hall)
+                    .ThenInclude(h => h.Cinema)
+            .FirstOrDefault(t => t.Id == id);
 
         if (ticket is null)
         {
             return NotFound();
         }
-
-        var screening = _screeningRepository.GetById(ticket.Screening?.Id ?? 0);
-        if (screening is not null)
-        {
-            ticket.Screening = screening;
-        }
-
         return View(ticket);
     }
 }

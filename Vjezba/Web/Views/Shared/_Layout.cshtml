@@ -100,10 +100,17 @@
                                                             }
                                                             else
                                                             {
+                                                                var customActionLabel = currentAction switch
+                                                                {
+                                                                    "Create" => "Dodaj",
+                                                                    "Edit" => "Uredi",
+                                                                    _ => currentActionLabel
+                                                                };
+
                                                                 <li class="breadcrumb-item">
                                                                     <a asp-area="" asp-controller="@currentController" asp-action="Index">@currentControllerLabel</a>
                                                                 </li>
-                                                                <li class="breadcrumb-item active" aria-current="page">@currentActionLabel</li>
+                                                                <li class="breadcrumb-item active" aria-current="page">@customActionLabel</li>
                                                             }
                                                         }
                                                         else
@@ -126,6 +133,21 @@
                                         </footer>
                                         <script src="~/lib/jquery/dist/jquery.min.js"></script>
                                         <script src="~/js/site.js" asp-append-version="true"></script>
+                                        <script src="~/js/ui/uiHelper.js" asp-append-version="true"></script>
+
+                                        <!-- Shared Confirmation Modal -->
+                                        <div class="modal-confirm" id="modal-confirm" role="dialog" aria-modal="true" aria-hidden="true">
+                                            <div class="modal-confirm__backdrop"></div>
+                                            <div class="modal-confirm__panel">
+                                                <h2 class="modal-confirm__title">Potvrdite</h2>
+                                                <p class="modal-confirm__body">Jeste li sigurni?</p>
+                                                <div class="modal-confirm__actions">
+                                                    <button type="button" class="ui-btn ui-btn--secondary" data-action="cancel">Otkaži</button>
+                                                    <button type="button" class="ui-btn ui-btn--primary" data-action="confirm">Potvrdi</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         @await RenderSectionAsync("Scripts", required: false)
                                     </body>
 

@@ -17,9 +17,10 @@ public class Ticket
     public virtual Screening Screening { get; set; } = null!;
 
     [ForeignKey("Seat")]
-    public int SeatId { get; set; }
-    public virtual Seat Seat { get; set; } = null!;
+    public int? SeatId { get; set; }
+    public virtual Seat? Seat { get; set; }
 
+    [ForeignKey("Customer")]
     public int CustomerId { get; set; }
     public virtual Customer Customer { get; set; } = null!;
 }

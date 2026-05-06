@@ -1,38 +1,47 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.DAL.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Vjezba.DAL;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
 public class ScreeningController : Controller
 {
-    private readonly ScreeningRepository _screeningRepository;
-    private readonly TicketRepository _ticketRepository;
+    private readonly CinemaDbContext _dbContext;
 
-    public ScreeningController(ScreeningRepository screeningRepository, TicketRepository ticketRepository)
+    public ScreeningController(CinemaDbContext dbContext)
     {
-        _screeningRepository = screeningRepository;
-        _ticketRepository = ticketRepository;
+        _dbContext = dbContext;
     }
 
     public IActionResult Index()
     {
-        var screenings = _screeningRepository.GetAll();
+        var screenings = _dbContext.Screenings
+            .Include(s => s.Movie)
+            .Include(s => s.Hall)
+                .ThenInclude(h => h.Cinema)
+            .ToList();
 
         return View(screenings);
     }
 
     public IActionResult Details(int id)
     {
-        var screening = _screeningRepository.GetById(id);
+        var screening = _dbContext.Screenings
+            .Include(s => s.Movie)
+            .Include(s => s.Hall)
+                .ThenInclude(h => h.Cinema)
+            .FirstOrDefault(s => s.Id == id);
 
         if (screening is null)
         {
             return NotFound();
         }
 
-        var tickets = _ticketRepository.GetAll()
-            .Where(t => t.Screening?.Id == screening.Id)
+        var tickets = _dbContext.Tickets
+            .Where(t => t.ScreeningId == screening.Id)
+            .Include(t => t.Customer)
+            .Include(t => t.Seat)
             .OrderByDescending(t => t.PurchasedAt)
             .ToList();
 

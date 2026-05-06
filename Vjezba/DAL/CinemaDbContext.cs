@@ -25,24 +25,6 @@ public class CinemaDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Ticket>()
-            .HasOne(t => t.Seat)
-            .WithMany()
-            .HasForeignKey(t => t.SeatId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Ticket>()
-            .HasOne(t => t.Screening)
-            .WithMany(s => s.Tickets)
-            .HasForeignKey(t => t.ScreeningId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Ticket>()
-            .HasOne(t => t.Customer)
-            .WithMany(c => c.Tickets)
-            .HasForeignKey(t => t.CustomerId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<Cinema>().HasData(
             new Cinema
             {

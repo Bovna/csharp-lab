@@ -12,8 +12,8 @@ using Vjezba.DAL;
 namespace Vjezba.DAL.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    [Migration("20260505181114_Initial")]
-    partial class Initial
+    [Migration("20260506150854_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -12750,7 +12750,7 @@ namespace Vjezba.DAL.Migrations
                     b.Property<int>("ScreeningId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SeatId")
+                    b.Property<int?>("SeatId")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
@@ -13050,9 +13050,7 @@ namespace Vjezba.DAL.Migrations
 
                     b.HasOne("Vjezba.Model.Entities.Seat", "Seat")
                         .WithMany()
-                        .HasForeignKey("SeatId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("SeatId");
 
                     b.Navigation("Customer");
 

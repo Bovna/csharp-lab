@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Vjezba.DAL.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Vjezba.DAL;
 using Vjezba.Model.Entities;
 using Vjezba.Web.ViewModels;
 
@@ -7,24 +8,11 @@ namespace Vjezba.Web.Controllers;
 
 public class TicketBuilderController : Controller
 {
-    private readonly CinemaRepository _cinemaRepository;
-    private readonly MovieRepository _movieRepository;
-    private readonly ScreeningRepository _screeningRepository;
-    private readonly SeatRepository _seatRepository;
-    private readonly TicketRepository _ticketRepository;
+    private readonly CinemaDbContext _dbContext;
 
-    public TicketBuilderController(
-        CinemaRepository cinemaRepository,
-        MovieRepository movieRepository,
-        ScreeningRepository screeningRepository,
-        SeatRepository seatRepository,
-        TicketRepository ticketRepository)
+    public TicketBuilderController(CinemaDbContext dbContext)
     {
-        _cinemaRepository = cinemaRepository;
-        _movieRepository = movieRepository;
-        _screeningRepository = screeningRepository;
-        _seatRepository = seatRepository;
-        _ticketRepository = ticketRepository;
+        _dbContext = dbContext;
     }
 
     [HttpGet]
@@ -32,7 +20,7 @@ public class TicketBuilderController : Controller
     {
         var model = new TicketBuilderCinemaListViewModel
         {
-            Cinemas = _cinemaRepository.GetAll().OrderBy(c => c.Name).ToList()
+            Cinemas = _dbContext.Cinemas.OrderBy(c => c.Name).ToList()
         };
 
         return View(model);
@@ -41,23 +29,14 @@ public class TicketBuilderController : Controller
     [HttpGet]
     public IActionResult Movies(int cinemaId)
     {
-        var cinema = _cinemaRepository.GetById(cinemaId);
+        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
         if (cinema is null)
         {
             return RedirectToAction(nameof(Index));
         }
 
-        var screeningsInCinema = _screeningRepository.GetAll()
-            .Where(s => s.Hall?.Cinema?.Id == cinemaId && s.Movie is not null)
-            .ToList();
-
-        var movieIds = screeningsInCinema
-            .Select(s => s.Movie!.Id)
-            .Distinct()
-            .ToHashSet();
-
-        var movies = _movieRepository.GetAll()
-            .Where(m => movieIds.Contains(m.Id))
+        var movies = _dbContext.Movies
+            .Where(m => m.Screenings.Any(s => s.Hall.CinemaId == cinemaId))
             .OrderBy(m => m.Title)
             .Select(m => new TicketBuilderMovieCardViewModel
             {
@@ -83,21 +62,22 @@ public class TicketBuilderController : Controller
     [HttpGet]
     public IActionResult Screenings(int cinemaId, int movieId)
     {
-        var cinema = _cinemaRepository.GetById(cinemaId);
-        var movie = _movieRepository.GetById(movieId);
+        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
+        var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId);
         if (cinema is null || movie is null)
         {
             return RedirectToAction(nameof(Index));
         }
 
-        var screenings = _screeningRepository.GetAll()
-            .Where(s => s.Hall?.Cinema?.Id == cinemaId && s.Movie?.Id == movieId)
+        var screenings = _dbContext.Screenings
+            .Where(s => s.Hall.CinemaId == cinemaId && s.MovieId == movieId)
+            .Include(s => s.Hall)
             .OrderBy(s => s.StartTime)
             .Select(s => new TicketBuilderScreeningCardViewModel
             {
                 Id = s.Id,
-                HallId = s.Hall?.Id ?? 0,
-                HallName = s.Hall?.Name ?? "Nepoznata dvorana",
+                HallId = s.HallId,
+                HallName = s.Hall.Name,
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
                 Is3D = s.Is3D
@@ -119,23 +99,19 @@ public class TicketBuilderController : Controller
     [HttpGet]
     public IActionResult Seats(int cinemaId, int movieId, int screeningId)
     {
-        var cinema = _cinemaRepository.GetById(cinemaId);
-        var movie = _movieRepository.GetById(movieId);
-        var screening = _screeningRepository.GetById(screeningId);
+        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
+        var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId);
+        var screening = _dbContext.Screenings
+            .Include(s => s.Hall)
+            .FirstOrDefault(s => s.Id == screeningId);
 
         if (cinema is null || movie is null || screening is null)
         {
             return RedirectToAction(nameof(Index));
         }
 
-        var hallId = screening.Hall?.Id;
-        if (!hallId.HasValue)
-        {
-            return RedirectToAction(nameof(Screenings), new { cinemaId, movieId });
-        }
-
-        var seats = _seatRepository.GetAll()
-            .Where(s => s.Hall?.Id == hallId.Value)
+        var seats = _dbContext.Seats
+            .Where(s => s.HallId == screening.HallId)
             .OrderBy(s => s.RowLabel)
             .ThenBy(s => s.SeatNumber)
             .Select(s => new TicketBuilderSeatViewModel
@@ -147,11 +123,11 @@ public class TicketBuilderController : Controller
             })
             .ToList();
 
-        var takenSeatIds = _ticketRepository.GetAll()
-            .Where(t => t.Screening?.Id == screeningId
-                && t.Seat is not null
+        var takenSeatIds = _dbContext.Tickets
+            .Where(t => t.ScreeningId == screeningId
+                && t.SeatId.HasValue
                 && (t.Status == TicketStatus.Active || t.Status == TicketStatus.Used))
-            .Select(t => t.Seat!.Id)
+            .Select(t => t.SeatId!.Value)
             .Distinct()
             .ToHashSet();
 
@@ -166,7 +142,7 @@ public class TicketBuilderController : Controller
             MovieId = movie.Id,
             MovieTitle = movie.Title,
             ScreeningId = screening.Id,
-            HallName = screening.Hall?.Name ?? "Nepoznata dvorana",
+            HallName = screening.Hall.Name,
             StartTime = screening.StartTime,
             EndTime = screening.EndTime,
             Is3D = screening.Is3D,

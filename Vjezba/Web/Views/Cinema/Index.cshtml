@@ -7,45 +7,67 @@
 <div class="container py-4 animate-fade-in-up">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
-                    Popis kina</h1>
-                    <span class="cinema-badge">Ukupno: @Model.Count</span>
+            <div class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="h3 mb-0"
+                        style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+                        Popis kina</h1>
+                        <span class="cinema-badge">Ukupno: @Model.Count</span>
+                    </div>
+
+                    <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+                        <div class="cinema-card-header">Filtriraj po gradu</div>
+                        <div class="cinema-card-body">
+                            <div class="ui-field" style="max-width: 430px;">
+                                <label for="city" class="ui-field__label">Odaberite grad</label>
+                                <select id="city" class="ui-field__input" onchange="navigateCinemasByCity(this.value)"
+                                        aria-label="Filtriraj kina po gradu">
+                                    <option value="">Svi gradovi</option>
+                                    @if (ViewBag.Cities != null)
+                                    {
+                                        foreach (var city in ViewBag.Cities as List<string> ?? new List<string>())
+                                        {
+                                            if ((string)ViewBag.SelectedCity == city)
+                                            {
+                                                <option value="@city" selected>@city</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@city">@city</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="cinema-card">
+                <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
                     <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                        <table class="table entity-index-table">
+                        <table class="ui-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Naziv</th>
                                     <th>Grad</th>
                                     <th>Adresa</th>
-                                    <th>Poštanski broj</th>
-                                    <th>Država</th>
-                                    <th>Broj dvorana</th>
                                     <th>E-pošta</th>
                                     <th>Telefon</th>
-                                    <th>Dodatno</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var cinema in Model)
                                 {
                                     <tr>
-                                        <td class="text-muted" title="@cinema.Id">@cinema.Id</td>
-                                        <td style="font-weight: 500; color: #fff;" title="@cinema.Name">@cinema.Name</td>
-                                        <td title="@cinema.City">@cinema.City</td>
-                                        <td title="@cinema.Street @cinema.HouseNumber">@cinema.Street @cinema.HouseNumber
-                                        </td>
-                                        <td title="@cinema.PostalCode">@cinema.PostalCode</td>
-                                        <td>Hrvatska</td>
-                                        <td title="@cinema.Halls.Count">@cinema.Halls.Count</td>
-                                        <td title="@cinema.Email">@cinema.Email</td>
-                                        <td title="@cinema.Phone">@cinema.Phone</td>
-                                        <td>
-                                            <a asp-action="Details" asp-route-id="@cinema.Id" class="cinema-btn-outline">
+                                        <td style="font-weight: 500; color: #fff;">@cinema.Name</td>
+                                        <td>@cinema.City</td>
+                                        <td>@cinema.Street @cinema.HouseNumber</td>
+                                        <td>@cinema.Email</td>
+                                        <td>@cinema.Phone</td>
+                                        <td class="ui-table__actions">
+                                            <a asp-action="Details" asp-route-id="@cinema.Id" class="ui-btn ui-btn--primary"
+                                                   style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
                                                 Detalji
                                             </a>
                                         </td>
@@ -56,5 +78,22 @@
                     </div>
                 </div>
             </div>
+
+            <div class="mt-5 pt-3" style="text-align: right;">
+                <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novo kino</a>
+            </div>
         </div>
     </div>
+</div>
+
+<script>
+    function navigateCinemasByCity(city) {
+        if (!city) {
+            window.location.href = '@Url.Content("~/kina")';
+            return;
+        }
+
+        window.location.href = '@Url.Content("~/kina/grad=")' + encodeURIComponent(city);
+    }
+</script>
+

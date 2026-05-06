@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Vjezba.DAL.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -158,7 +158,7 @@ namespace Vjezba.DAL.Migrations
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     ScreeningId = table.Column<int>(type: "int", nullable: false),
-                    SeatId = table.Column<int>(type: "int", nullable: false),
+                    SeatId = table.Column<int>(type: "int", nullable: true),
                     CustomerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -180,8 +180,7 @@ namespace Vjezba.DAL.Migrations
                         name: "FK_Tickets_Seats_SeatId",
                         column: x => x.SeatId,
                         principalTable: "Seats",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
