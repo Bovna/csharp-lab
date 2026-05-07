@@ -2,156 +2,191 @@
 
 @{
     ViewData["Title"] = "Detalji dvorane";
+    var vipSeats = Model.Seats.Count(s => s.SeatType == Vjezba.Model.Entities.SeatType.Vip);
+    var coupleSeats = Model.Seats.Count(s => s.SeatType == Vjezba.Model.Entities.SeatType.Couple);
 }
 
-<div class="container py-4 animate-fade-in-up">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
-                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
-                    @Model.Hall.Name</h1>
-                    <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
-                </div>
+<div class="container py-4 animate-fade-in-up entity-details-page">
+    <section class="entity-hero entity-hero--hall">
+        <div class="entity-hero__content">
+            <p class="entity-hero__eyebrow">Dvorana</p>
+            <h1 class="entity-hero__title">@Model.Hall.Name</h1>
+            <p class="entity-hero__subtitle">Kino: @(Model.Hall.Cinema?.Name ?? "-")</p>
+            <p class="hall-subline">Raspored sjedala i projekcija za operativni pregled dvorane.</p>
+        </div>
+        <div class="ui-actions ui-actions--stack-mobile">
+            <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
+        </div>
+    </section>
 
-                <div class="cinema-card mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
-                    <div class="cinema-card-header">Detalji dvorane</div>
-                    <div class="cinema-card-body">
-                        <dl class="cinema-details-list">
-                            <dt>ID</dt>
-                            <dd>@Model.Hall.Id</dd>
+    <section class="entity-kpi-grid">
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Kapacitet</p>
+            <p class="entity-kpi__value entity-kpi__value--accent">@Model.Hall.Capacity</p>
+        </article>
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Broj VIP sjedala</p>
+            <p class="entity-kpi__value">@vipSeats</p>
+        </article>
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Broj couple sjedala</p>
+            <p class="entity-kpi__value">@coupleSeats</p>
+        </article>
+    </section>
 
-                            <dt>Naziv dvorane</dt>
-                            <dd>@Model.Hall.Name</dd>
+    <div class="entity-details-grid">
+        <article class="cinema-card entity-details-panel">
+            <div class="cinema-card-header">Detalji dvorane</div>
+            <div class="cinema-card-body">
+                <dl class="cinema-details-list">
+                    <dt>ID</dt>
+                    <dd>@Model.Hall.Id</dd>
 
-                            <dt>Kino</dt>
-                            <dd>@(Model.Hall.Cinema?.Name ?? "-")</dd>
+                    <dt>Naziv</dt>
+                    <dd>@Model.Hall.Name</dd>
 
-                            <dt>Kapacitet</dt>
-                            <dd>@Model.Hall.Capacity</dd>
+                    <dt>Kino</dt>
+                    <dd>@(Model.Hall.Cinema?.Name ?? "-")</dd>
 
-                            <dt>3D podrška</dt>
-                            <dd>
-                                @if (Model.Hall.Supports3D)
-                                {
-                                    <span class="cinema-status-yes">Da</span>
-                                }
-                                else
-                                {
-                                    <span style="color: var(--color-text-muted);">Ne</span>
-                                }
-                            </dd>
-                        </dl>
+                    <dt>Kapacitet</dt>
+                    <dd>@Model.Hall.Capacity mjesta</dd>
 
-                        <div class="ui-actions ui-actions--center ui-actions--stack-mobile"
-                             style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
-                            <a asp-action="Edit" asp-route-id="@Model.Hall.Id" class="ui-btn ui-btn--primary"
-                               style="width: 120px; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box;">Uredi</a>
-
-                            <form asp-action="Delete" asp-route-id="@Model.Hall.Id" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="ui-btn ui-btn--danger"
-                                        style="width: 120px; padding: 0.72rem 1.2rem; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box; line-height: 1.2;"
-                                        onclick="return handleDeleteClick(event, 'Jeste li sigurni da želite obrisati ovu dvoranu?');">Obriši</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.2s;">
-                    <div class="cinema-card-header">Projekcije</div>
-                    <div class="cinema-table-wrapper">
-                        @if (Model.Screenings.Any())
+                    <dt>3D podrška</dt>
+                    <dd>
+                        @if (Model.Hall.Supports3D)
                         {
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Film</th>
-                                        <th>Početak</th>
-                                        <th>Završetak</th>
-                                        <th>3D</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var screening in Model.Screenings)
-                                    {
-                                        <tr>
-                                            <td>@screening.Id</td>
-                                            <td>@(screening.Movie?.Title ?? "-")</td>
-                                            <td>@screening.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
-                                            <td>@screening.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
-                                            <td>
-                                                @if (screening.Is3D)
-                                                {
-                                                    <span class="cinema-status-yes">Da</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="cinema-status-no">Ne</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                            <span class="entity-pill entity-pill--success">Da</span>
                         }
                         else
                         {
-                            <div class="cinema-card-body">
-                                <p class="text-muted mb-0">Dvorana trenutno nema projekcija.</p>
-                            </div>
+                            <span class="entity-pill entity-pill--muted">Ne</span>
                         }
-                    </div>
-                </div>
+                    </dd>
+                </dl>
 
-                <div class="cinema-card mt-2 animate-fade-in-up" style="animation-delay: 0.3s;">
-                    <div class="cinema-card-header">Sjedala</div>
-                    <div class="cinema-table-wrapper">
-                        @if (Model.Seats.Any())
-                        {
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Red</th>
-                                        <th>Broj</th>
-                                        <th>Oznaka</th>
-                                        <th>Tip</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var seat in Model.Seats)
-                                    {
-                                        <tr>
-                                            <td>@seat.Id</td>
-                                            <td>@seat.RowLabel</td>
-                                            <td>@seat.SeatNumber</td>
-                                            <td>@seat.RowLabel@seat.SeatNumber</td>
-                                            <td>@seat.SeatType</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        }
-                        else
-                        {
-                            <div class="cinema-card-body">
-                                <p class="text-muted mb-0">Dvorana trenutno nema definirana sjedala.</p>
-                            </div>
-                        }
-                    </div>
+                <div class="ui-actions ui-actions--center ui-actions--stack-mobile entity-actions">
+                    <a asp-action="Edit" asp-route-id="@Model.Hall.Id" class="ui-btn ui-btn--primary">Uredi</a>
+                    <form asp-action="Delete" asp-route-id="@Model.Hall.Id" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="ui-btn ui-btn--danger"
+                                onclick="return handleDeleteHall(event);">Obriši</button>
+                    </form>
                 </div>
             </div>
+        </article>
+
+        <article class="cinema-card entity-details-panel">
+            <div class="cinema-card-header">Brze poveznice</div>
+            <div class="cinema-card-body">
+                <div class="entity-meta">
+                    <span class="entity-pill">@Model.Seats.Count sjedala</span>
+                    <span class="entity-pill @(Model.Hall.Supports3D ? "entity-pill--success" : "entity-pill--muted")">
+                        @(Model.Hall.Supports3D ? "Podržava 3D" : "Bez 3D podrške")
+                    </span>
+                </div>
+                <ul class="entity-link-list">
+                    <li><a asp-controller="Cinema" asp-action="Details" asp-route-id="@Model.Hall.CinemaId">Otvori
+                        detalje kina</a></li>
+                        <li><a asp-controller="Screening" asp-action="Create">Dodajte novu projekciju</a></li>
+                        <li><a asp-controller="Seat" asp-action="Create">Dodajte novo sjedalo</a></li>
+                    </ul>
+                </div>
+            </article>
         </div>
 
-        <script>
-                function handleDeleteClick(event, message) {
-                    event.preventDefault();
-                    CinemaUI.showConfirm({
-                        title: 'Potvrda brisanja',
-                        body: message,
-                        onConfirm: () => event.target.form.submit()
-                    });
+        <article class="cinema-card animate-fade-in-up">
+            <div class="cinema-card-header">Projekcije u dvorani</div>
+            <div class="cinema-table-wrapper">
+                @if (Model.Screenings.Any())
+                {
+                    <table class="ui-table entity-related-table">
+                        <thead>
+                            <tr>
+                                <th>Film</th>
+                                <th>Početak</th>
+                                <th>Završetak</th>
+                                <th>3D</th>
+                                <th>Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var screening in Model.Screenings)
+                            {
+                                <tr>
+                                    <td>@(screening.Movie?.Title ?? "-")</td>
+                                    <td>@screening.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>@screening.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        @if (screening.Is3D)
+                                        {
+                                            <span class="entity-pill entity-pill--success">Da</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="entity-pill entity-pill--muted">Ne</span>
+                                        }
+                                    </td>
+                                    <td><a asp-controller="Screening" asp-action="Details" asp-route-id="@screening.Id">Otvori</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 }
-        </script>
+                else
+                {
+                    <div class="cinema-card-body">
+                        <p class="text-muted mb-0">Dvorana trenutno nema projekcija.</p>
+                    </div>
+                }
+            </div>
+        </article>
+
+        <article class="cinema-card animate-fade-in-up">
+            <div class="cinema-card-header">Sjedala u dvorani</div>
+            <div class="cinema-table-wrapper">
+                @if (Model.Seats.Any())
+                {
+                    <table class="ui-table entity-related-table">
+                        <thead>
+                            <tr>
+                                <th>Oznaka</th>
+                                <th>Tip</th>
+                                <th>Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var seat in Model.Seats)
+                            {
+                                <tr>
+                                    <td>@seat.RowLabel@seat.SeatNumber</td>
+                                    <td>@seat.SeatType</td>
+                                    <td><a asp-controller="Seat" asp-action="Details" asp-route-id="@seat.Id">Otvori</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="cinema-card-body">
+                        <p class="text-muted mb-0">Dvorana trenutno nema definirana sjedala.</p>
+                    </div>
+                }
+            </div>
+        </article>
     </div>
+
+    @section Scripts {
+        <script>
+            function handleDeleteHall(event) {
+                event.preventDefault();
+                CinemaUI.showConfirm({
+                    title: 'Potvrdite brisanje',
+                    body: 'Jeste li sigurni da želite trajno obrisati ovu dvoranu?',
+                    onConfirm: () => event.currentTarget.form.submit()
+                });
+                return false;
+            }
+        </script>
+    }

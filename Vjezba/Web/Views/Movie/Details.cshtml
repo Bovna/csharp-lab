@@ -4,71 +4,116 @@
     ViewData["Title"] = "Detalji filma";
 }
 
-<div class="container py-4 animate-fade-in-up">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
-                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
-                    @Model.Title
-                </h1>
-
-                <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
+<div class="container py-4 animate-fade-in-up entity-details-page">
+    <section class="entity-hero entity-hero--poster">
+        <article class="movie-poster">
+            <p class="movie-poster__eyebrow">Sada u fokusu</p>
+            <h2 class="movie-poster__title">@Model.Title</h2>
+            <p class="movie-poster__meta">@Model.Genre • @Model.DurationMinutes min • @Model.Language</p>
+            <div class="movie-poster__rating">@Model.AgeRating</div>
+            <p class="movie-poster__date">Premijera: @Model.ReleaseDate.ToString("dd.MM.yyyy")</p>
+        </article>
+        <div class="entity-hero__content">
+            <p class="entity-hero__eyebrow">Film</p>
+            <h1 class="entity-hero__title">@Model.Title</h1>
+            <p class="entity-hero__subtitle">Poster-first prikaz s ključnim informacijama i brzim radnjama.</p>
+            <div class="entity-meta">
+                <span class="entity-pill">@Model.Genre</span>
+                <span class="entity-pill">@Model.DurationMinutes min</span>
+                <span class="entity-pill entity-pill--success">@Model.Language</span>
             </div>
-
-            <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
-                <div class="cinema-card-header">Detalji filma</div>
-                <div class="cinema-card-body">
-                    <dl class="cinema-details-list">
-                        <dt>ID</dt>
-                        <dd>@Model.Id</dd>
-
-                        <dt>Naslov</dt>
-                        <dd>@Model.Title</dd>
-
-                        <dt>Opis</dt>
-                        <dd>@Model.Description</dd>
-
-                        <dt>Žanr</dt>
-                        <dd>@Model.Genre</dd>
-
-                        <dt>Trajanje</dt>
-                        <dd>@Model.DurationMinutes min</dd>
-
-                        <dt>Jezik</dt>
-                        <dd>@Model.Language</dd>
-
-                        <dt>Dobna oznaka</dt>
-                        <dd>@Model.AgeRating</dd>
-
-                        <dt>Datum izlaska</dt>
-                        <dd>@Model.ReleaseDate.ToString("dd.MM.yyyy")</dd>
-                    </dl>
-
-                    <div class="ui-actions ui-actions--center"
-                         style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary"
-                           style="width: 120px; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box;">Uredi</a>
-
-                        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="ui-btn ui-btn--danger"
-                                    style="width: 120px; padding: 0.72rem 1.2rem; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box; line-height: 1.2;"
-                                    onclick="return handleDeleteClick(event, 'Jeste li sigurni da želite obrisati ovaj film?');">Obriši</button>
-                        </form>
-                    </div>
-                </div>
+            <div class="ui-actions ui-actions--stack-mobile">
+                <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
+                <a asp-controller="Screening" asp-action="Create" class="ui-btn ui-btn--primary">Dodajte projekciju</a>
             </div>
         </div>
+    </section>
+
+    <section class="entity-kpi-grid">
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Žanr</p>
+            <p class="entity-kpi__value entity-kpi__value--accent">@Model.Genre</p>
+        </article>
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Trajanje</p>
+            <p class="entity-kpi__value">@Model.DurationMinutes min</p>
+        </article>
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Dobna oznaka</p>
+            <p class="entity-kpi__value">@Model.AgeRating</p>
+        </article>
+        <article class="entity-kpi">
+            <p class="entity-kpi__label">Datum izlaska</p>
+            <p class="entity-kpi__value">@Model.ReleaseDate.ToString("dd.MM.yyyy")</p>
+        </article>
+    </section>
+
+    <div class="entity-details-grid">
+        <article class="cinema-card entity-details-panel">
+            <div class="cinema-card-header">Profil filma</div>
+            <div class="cinema-card-body">
+                <dl class="cinema-details-list">
+                    <dt>ID</dt>
+                    <dd>@Model.Id</dd>
+
+                    <dt>Naslov</dt>
+                    <dd>@Model.Title</dd>
+
+                    <dt>Žanr</dt>
+                    <dd>@Model.Genre</dd>
+
+                    <dt>Trajanje</dt>
+                    <dd>@Model.DurationMinutes min</dd>
+
+                    <dt>Jezik</dt>
+                    <dd>@Model.Language</dd>
+
+                    <dt>Dobna oznaka</dt>
+                    <dd>@Model.AgeRating</dd>
+
+                    <dt>Datum izlaska</dt>
+                    <dd>@Model.ReleaseDate.ToString("dd.MM.yyyy")</dd>
+                </dl>
+
+                <div class="ui-actions ui-actions--center ui-actions--stack-mobile entity-actions">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary">Uredi</a>
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="ui-btn ui-btn--danger"
+                                onclick="return handleDeleteMovie(event);">Obriši</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+
+        <article class="cinema-card entity-details-panel">
+            <div class="cinema-card-header">Sinopsis i raspored</div>
+            <div class="cinema-card-body">
+                <p class="entity-details-description">@Model.Description</p>
+                <div class="entity-meta">
+                    <span class="entity-pill">Jezik: @Model.Language</span>
+                    <span class="entity-pill">Dobna oznaka: @Model.AgeRating</span>
+                </div>
+                <ul class="entity-link-list">
+                    <li><a asp-controller="Screening" asp-action="Index">Provjerite raspored projekcija</a></li>
+                    <li><a asp-controller="Screening" asp-action="Create">Dodajte novu projekciju filma</a></li>
+                    <li><a asp-controller="TicketBuilder" asp-action="Index">Pokrenite brzu kupnju</a></li>
+                </ul>
+            </div>
+        </article>
     </div>
 </div>
 
-<script>
-    function handleDeleteClick(event, message) {
-        event.preventDefault();
-        CinemaUI.showConfirm({
-            title: 'Potvrda brisanja',
-            body: message,
-            onConfirm: () => event.target.form.submit()
-        });
-    }
-</script>
+@section Scripts {
+    <script>
+        function handleDeleteMovie(event) {
+            event.preventDefault();
+            CinemaUI.showConfirm({
+                title: 'Potvrdite brisanje',
+                body: 'Jeste li sigurni da želite trajno obrisati ovaj film?',
+                onConfirm: () => event.currentTarget.form.submit()
+            });
+            return false;
+        }
+    </script>
+}
