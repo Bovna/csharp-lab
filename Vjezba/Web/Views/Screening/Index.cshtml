@@ -2,18 +2,53 @@
 
 @{
     ViewData["Title"] = "Projekcije";
+    var selectedDayOfWeek = ViewBag.SelectedDayOfWeek?.ToString();
+    var dayOptions = new[]
+    {
+        (Value: "1", Label: "Ponedjeljak"),
+        (Value: "2", Label: "Utorak"),
+        (Value: "3", Label: "Srijeda"),
+        (Value: "4", Label: "Četvrtak"),
+        (Value: "5", Label: "Petak"),
+        (Value: "6", Label: "Subota"),
+        (Value: "7", Label: "Nedjelja")
+    };
 }
 
 <div class="container py-4 animate-fade-in-up">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis
             projekcija</h1>
             <span class="cinema-badge">Ukupno: @Model.Count</span>
         </div>
 
+        <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+            <div class="cinema-card-header">Filtriranje po danu u tjednu</div>
+            <div class="cinema-card-body">
+                <div class="ui-field" style="max-width: 430px;">
+                    <label for="dayOfWeek" class="ui-field__label">Odaberite dan</label>
+                    <select id="dayOfWeek" class="ui-field__input" onchange="navigateScreeningsByDay(this.value)"
+                            aria-label="Filtriraj projekcije po danu u tjednu">
+                        <option value="">Svi dani</option>
+                        @foreach (var dayOption in dayOptions)
+                        {
+                            if (selectedDayOfWeek == dayOption.Value)
+                            {
+                                <option value="@dayOption.Value" selected="selected">@dayOption.Label</option>
+                            }
+                            else
+                            {
+                                <option value="@dayOption.Value">@dayOption.Label</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="cinema-card">
             <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                <table class="table entity-index-table">
+                <table class="ui-table entity-index-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -23,7 +58,7 @@
                             <th>Početak</th>
                             <th>Završetak</th>
                             <th>3D projekcija</th>
-                            <th>Dodatno</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,8 +81,9 @@
                                         <span class="cinema-status-no">Ne</span>
                                     }
                                 </td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@screening.Id" class="cinema-btn-outline">Detalji</a>
+                                <td class="ui-table__actions">
+                                    <a asp-action="Details" asp-route-id="@screening.Id" class="ui-btn ui-btn--primary"
+                                       style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
                                 </td>
                             </tr>
                         }
@@ -55,4 +91,19 @@
                 </table>
             </div>
         </div>
+
+        <div class="mt-5 pt-3 text-end">
+            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu projekciju</a>
+        </div>
     </div>
+
+    <script>
+        function navigateScreeningsByDay(dayOfWeek) {
+            if (!dayOfWeek) {
+                window.location.href = '@Url.Content("~/projekcije")';
+                return;
+            }
+
+            window.location.href = '@Url.Content("~/projekcije")' + '?dayOfWeek=' + encodeURIComponent(dayOfWeek);
+        }
+    </script>

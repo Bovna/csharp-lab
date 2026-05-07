@@ -5,22 +5,32 @@
         .GroupBy(s => s.RowLabel)
         .OrderBy(g => g.Key)
         .ToList();
+    var checkoutUrl = Url.Action("Checkout", "TicketBuilder") ?? "/TicketBuilder/Checkout";
 }
 
 <div class="tb-cinema tb-page tb-page-seats">
     <div class="tb-header">
         <h1>@Model.MovieTitle</h1>
-        <p>Korak 4/4: klikni sjedalo za prikaz cijene ulaznice</p>
+        <p>Korak 4/5: odaberi sjedalo i nastavi na placanje</p>
         <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
     </div>
 
+    @if (TempData["PurchaseError"] is string purchaseError)
+    {
+        <div class="tb-price-panel mb-4" style="border-color:#ef4444; background:rgba(239,68,68,0.08);">
+            @purchaseError
+        </div>
+    }
+
     <div class="tb-step-line" aria-label="Koraci brze kupnje">
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
-        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies"
+               asp-route-cinemaId="@Model.CinemaId">2
             Film</a>
-            <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
-               asp-route-movieId="@Model.MovieId">3 Projekcija</a>
+            <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings"
+               asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">3 Projekcija</a>
             <span class="tb-step active" aria-current="step">4 Sjedalo</span>
+            <span class="tb-step is-disabled" aria-disabled="true">5 Placanje</span>
         </div>
 
         <div class="tb-seat-layout">
@@ -74,6 +84,10 @@
             (() => {
                 const panel = document.getElementById("tb-price-panel");
                 const seats = document.querySelectorAll(".tb-seat[data-seat-id]");
+                const checkoutBaseUrl = "@checkoutUrl";
+                const cinemaId = @Model.CinemaId;
+                const movieId = @Model.MovieId;
+                const screeningId = @Model.ScreeningId;
 
                 function calculatePrice(type, is3D) {
                     const normalized = (type || "standard").toLowerCase();
@@ -98,6 +112,7 @@
                         const seatType = seat.dataset.seatType || "Standard";
                         const seatStatus = seat.dataset.seatStatus || "available";
                         const is3D = seat.dataset.is3d === "1";
+                        const seatId = seat.dataset.seatId;
 
                         if (seatStatus === "taken") {
                             panel.textContent = `${seatLabel} je zauzeto. Odaberi drugo sjedalo.`;
@@ -110,7 +125,15 @@
                         seat.classList.add("selected");
 
                         const price = calculatePrice(seatType, is3D).toFixed(2);
-                        panel.innerHTML = `<strong>Sjedalo:</strong> ${seatLabel} | <strong>Tip:</strong> ${seatType} | <strong>Cijena:</strong> <span style="color:var(--color-accent)">${price} EUR</span>`;
+                        const checkoutParams = new URLSearchParams({
+                            cinemaId: cinemaId.toString(),
+                            movieId: movieId.toString(),
+                            screeningId: screeningId.toString(),
+                            seatId: seatId
+                        });
+                        const checkoutLink = `${checkoutBaseUrl}?${checkoutParams.toString()}`;
+
+                        panel.innerHTML = `<strong>Sjedalo:</strong> ${seatLabel} | <strong>Tip:</strong> ${seatType} | <strong>Cijena:</strong> <span style="color:var(--color-accent)">${price} EUR</span><div style="margin-top:16px"><a class="cinema-btn" href="${checkoutLink}">Nastavi na placanje</a></div>`;
                     });
                 });
             })();

@@ -1,0 +1,90 @@
+@model Vjezba.Model.Entities.Ticket
+
+@{
+    ViewData["Title"] = "Dodaj ulaznicu";
+    var customers = ViewBag.Customers as List<Vjezba.Model.Entities.Customer> ?? new List<Vjezba.Model.Entities.Customer>();
+    var screenings = ViewBag.Screenings as List<Vjezba.Model.Entities.Screening> ?? new
+List<Vjezba.Model.Entities.Screening>();
+    var seats = ViewBag.Seats as List<Vjezba.Model.Entities.Seat> ?? new List<Vjezba.Model.Entities.Seat>();
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 entity-form">
+            <div class="cinema-card animate-fade-in-up">
+                <div class="cinema-card-header">Dodaj novu ulaznicu</div>
+                <div class="cinema-card-body">
+                    <form asp-action="Create" method="post" class="ui-form"
+                          onsubmit="return CinemaUI.validateForm(this);">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3"
+                             style="background-color: rgba(255,0,0,0.1); border-radius: 4px;"></div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="ui-field"><label asp-for="TicketNumber" class="ui-field__label">Broj
+                                    ulaznice <span style="color: #ef4444;">*</span></label><input
+                                    asp-for="TicketNumber" class="ui-field__input" required /><span
+                                    class="ui-field__validation"></span></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="ui-field"><label asp-for="PurchasedAt" class="ui-field__label">Vrijeme
+                                        kupnje <span style="color: #ef4444;">*</span></label><input
+                                        asp-for="PurchasedAt" class="ui-field__input" type="datetime-local"
+                                        required /><span class="ui-field__validation"></span></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="ui-field"><label asp-for="Price" class="ui-field__label">Cijena <span
+                                            style="color: #ef4444;">*</span></label><input asp-for="Price"
+                                                                                           class="ui-field__input" type="number" step="0.01" min="0" required /><span
+                                            class="ui-field__validation"></span></div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="ui-field"><label asp-for="Status" class="ui-field__label">Status <span
+                                                style="color: #ef4444;">*</span></label><select asp-for="Status"
+                                                                                                class="ui-field__input"
+                                                                                                asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.TicketStatus>()"
+                                                                                                required></select><span class="ui-field__validation"></span></div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="ui-field"><label asp-for="SeatId"
+                                                                                 class="ui-field__label">Sjedalo</label><select asp-for="SeatId"
+                                                                                               class="ui-field__input">
+                                                    <option value="">Bez odabira</option>@foreach (var seat in seats) {
+                                                    <option
+                                                        value="@seat.Id">@seat.Hall.Cinema.Name - @seat.Hall.Name -
+                                                        @seat.RowLabel@seat.SeatNumber</option>
+                                                    }
+                                                </select></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="ui-field"><label asp-for="CustomerId" class="ui-field__label">Kupac <span
+                                                    style="color: #ef4444;">*</span></label><select asp-for="CustomerId"
+                                                                                                class="ui-field__input" required>
+                                                    <option value="">Odaberite kupca</option>@foreach (var customer in customers) {
+                                                    <option value="@customer.Id">@customer.FirstName @customer.LastName</option>
+                                                }
+                                            </select><span class="ui-field__validation"></span></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="ui-field"><label asp-for="ScreeningId" class="ui-field__label">Projekcija
+                                                <span style="color: #ef4444;">*</span></label><select asp-for="ScreeningId"
+                                                                                                  class="ui-field__input" required>
+                                                <option value="">Odaberite projekciju</option>@foreach (var screening in
+                                                screenings) {
+                                                    <option value="@screening.Id">@screening.Movie.Title -
+                                                        @screening.Hall.Cinema.Name / @screening.Hall.Name -
+                                                        @screening.StartTime.ToString("dd.MM.yyyy HH:mm")</option>
+                                                    }
+                                                </select><span class="ui-field__validation"></span></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="ui-actions mt-4 pt-3 border-top ui-actions--stack-mobile">
+                                            <button type="submit" class="ui-btn ui-btn--primary">Spremi ulaznicu</button>
+                                            <a asp-action="Index" class="ui-btn ui-btn--secondary">Odustani</a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

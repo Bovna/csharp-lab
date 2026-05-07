@@ -5,15 +5,59 @@
 }
 
 <div class="container py-4 animate-fade-in-up">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis
             dvorana</h1>
             <span class="cinema-badge">Ukupno: @Model.Count</span>
         </div>
 
+        <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+            <div class="cinema-card-header">Filtriranje 3D podrške</div>
+            <div class="cinema-card-body">
+                <form method="get" asp-action="Index" class="ui-form">
+                    <div class="ui-choice-group">
+                        <label class="ui-choice-group__item">
+                            @if (string.IsNullOrWhiteSpace((string?)ViewBag.Supports3D))
+                            {
+                                <input type="radio" name="supports3D" value="" checked onchange="this.form.submit()" />
+                            }
+                            else
+                            {
+                                <input type="radio" name="supports3D" value="" onchange="this.form.submit()" />
+                            }
+                            <span>Sve dvorane</span>
+                        </label>
+                        <label class="ui-choice-group__item">
+                            @if (string.Equals((string?)ViewBag.Supports3D, "true", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <input type="radio" name="supports3D" value="true" checked onchange="this.form.submit()" />
+                            }
+                            else
+                            {
+                                <input type="radio" name="supports3D" value="true" onchange="this.form.submit()" />
+                            }
+                            <span>Podržava 3D</span>
+                        </label>
+                        <label class="ui-choice-group__item">
+                            @if (string.Equals((string?)ViewBag.Supports3D, "false", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <input type="radio" name="supports3D" value="false" checked onchange="this.form.submit()" />
+                            }
+                            else
+                            {
+                                <input type="radio" name="supports3D" value="false" onchange="this.form.submit()" />
+                            }
+                            <span>Ne podržava 3D</span>
+                        </label>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
         <div class="cinema-card">
             <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                <table class="table entity-index-table">
+                <table class="ui-table entity-index-table">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -42,8 +86,9 @@
                                         <span class="cinema-status-no">Ne</span>
                                     }
                                 </td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@hall.Id" class="cinema-btn-outline">Detalji</a>
+                                <td class="ui-table__actions">
+                                    <a asp-action="Details" asp-route-id="@hall.Id" class="ui-btn ui-btn--primary"
+                                       style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
                                 </td>
                             </tr>
                         }
@@ -51,4 +96,19 @@
                 </table>
             </div>
         </div>
+
+        <div class="mt-5 pt-3 text-end">
+            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu dvoranu</a>
+        </div>
     </div>
+
+    <script>
+        function handleDeleteClick(event, message) {
+            event.preventDefault();
+            CinemaUI.showConfirm({
+                title: 'Potvrda brisanja',
+                body: message,
+                onConfirm: () => event.target.form.submit()
+            });
+        }
+    </script>

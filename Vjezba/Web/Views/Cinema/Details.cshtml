@@ -7,100 +7,99 @@
 <div class="container py-4 animate-fade-in-up">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
                 <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
-                    @Model.Name</h1>
-                </div>
+                    @Model.Name
+                </h1>
 
-                <div class="mb-4 text-end">
-                    <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
-                </div>
+                <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
+            </div>
 
-                <div class="cinema-card mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
-                    <div class="cinema-card-header">Detalji kina</div>
-                    <div class="cinema-card-body">
-                        <dl class="cinema-details-list">
-                            <dt>ID</dt>
-                            <dd>@Model.Id</dd>
+            <div class="cinema-card mb-4 animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="cinema-card-header">Detalji kina</div>
+                <div class="cinema-card-body">
+                    <dl class="cinema-details-list">
+                        <dt>ID</dt>
+                        <dd>@Model.Id</dd>
 
-                            <dt>Naziv</dt>
-                            <dd>@Model.Name</dd>
+                        <dt>Naziv</dt>
+                        <dd>@Model.Name</dd>
 
-                            <dt>Grad</dt>
-                            <dd>@Model.City</dd>
+                        <dt>Grad</dt>
+                        <dd>@Model.City</dd>
 
-                            <dt>Adresa</dt>
-                            <dd>@Model.Street @Model.HouseNumber</dd>
+                        <dt>Adresa</dt>
+                        <dd>@Model.Street @Model.HouseNumber</dd>
 
-                            <dt>Poštanski broj</dt>
-                            <dd>@Model.PostalCode</dd>
+                        <dt>Poštanski broj</dt>
+                        <dd>@Model.PostalCode</dd>
 
-                            <dt>Država</dt>
-                            <dd>Hrvatska</dd>
+                        <dt>Država</dt>
+                        <dd>Hrvatska</dd>
 
-                            <dt>E-pošta</dt>
-                            <dd>@Model.Email</dd>
+                        <dt>E-pošta</dt>
+                        <dd>@Model.Email</dd>
 
-                            <dt>Telefon</dt>
-                            <dd>@Model.Phone</dd>
+                        <dt>Telefon</dt>
+                        <dd>@Model.Phone</dd>
 
-                            <dt>Broj dvorana</dt>
-                            <dd>@Model.Halls.Count</dd>
-                        </dl>
+                        <dt>Broj dvorana</dt>
+                        <dd>@Model.Halls.Count</dd>
+                    </dl>
 
-                        <div class="ui-actions ui-actions--center"
-                             style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
-                            <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary"
-                               style="min-width: 120px; text-align: center;">Uredi</a>
+                    <div class="ui-actions ui-actions--center"
+                         style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary"
+                           style="width: 120px; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box;">Uredi</a>
 
-                            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="ui-btn ui-btn--danger"
-                                        style="min-width: 120px; text-align: center;"
-                                        onclick="return handleDeleteClick(event, 'Jeste li sigurni da želite obrisati ovo kino?');">Obriši</button>
-                            </form>
-                        </div>
+                        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="ui-btn ui-btn--danger"
+                                    style="width: 120px; padding: 0.72rem 1.2rem; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box; line-height: 1.2;"
+                                    onclick="return handleDeleteClick(event, 'Jeste li sigurni da želite obrisati ovo kino?');">Obriši</button>
+                        </form>
                     </div>
                 </div>
+            </div>
 
-                <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.2s;">
-                    <div class="cinema-card-header">Dvorane</div>
-                    <div class="cinema-table-wrapper">
-                        <table class="ui-table">
-                            <thead>
+            <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.2s;">
+                <div class="cinema-card-header">Dvorane</div>
+                <div class="cinema-table-wrapper">
+                    <table class="ui-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Naziv</th>
+                                <th>Kapacitet</th>
+                                <th>3D Podrška</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var hall in Model.Halls)
+                            {
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Naziv</th>
-                                    <th>Kapacitet</th>
-                                    <th>3D Podrška</th>
+                                    <td class="text-muted">@hall.Id</td>
+                                    <td style="font-weight: 500; color: #fff;">@hall.Name</td>
+                                    <td>@hall.Capacity mjesta</td>
+                                    <td>
+                                        @if (hall.Supports3D)
+                                        {
+                                            <span class="cinema-status-yes">Da</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color: var(--color-text-muted);">Ne</span>
+                                        }
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var hall in Model.Halls)
-                                {
-                                    <tr>
-                                        <td class="text-muted">@hall.Id</td>
-                                        <td style="font-weight: 500; color: #fff;">@hall.Name</td>
-                                        <td>@hall.Capacity mjesta</td>
-                                        <td>
-                                            @if (hall.Supports3D)
-                                            {
-                                                <span class="cinema-status-yes">Da</span>
-                                            }
-                                            else
-                                            {
-                                                <span style="color: var(--color-text-muted);">Ne</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script>

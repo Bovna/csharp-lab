@@ -12,7 +12,7 @@ using Vjezba.DAL;
 namespace Vjezba.DAL.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    [Migration("20260506150854_InitialCreate")]
+    [Migration("20260507095923_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -296,6 +296,79 @@ namespace Vjezba.DAL.Migrations
                             PostalCode = "10000",
                             RegisteredAt = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Street = "Trg bana Jelacica"
+                        });
+                });
+
+            modelBuilder.Entity("Vjezba.Model.Entities.CustomerFavoriteMovie", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("MovieId");
+
+                    b.ToTable("CustomerFavoriteMovies");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CustomerId = 1,
+                            MovieId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CustomerId = 1,
+                            MovieId = 5
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CustomerId = 1,
+                            MovieId = 8
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CustomerId = 2,
+                            MovieId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CustomerId = 3,
+                            MovieId = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CustomerId = 3,
+                            MovieId = 10
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CustomerId = 4,
+                            MovieId = 6
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CustomerId = 6,
+                            MovieId = 1
                         });
                 });
 
@@ -12993,6 +13066,25 @@ namespace Vjezba.DAL.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Vjezba.Model.Entities.CustomerFavoriteMovie", b =>
+                {
+                    b.HasOne("Vjezba.Model.Entities.Customer", "Customer")
+                        .WithMany("FavoriteMovies")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vjezba.Model.Entities.Movie", "Movie")
+                        .WithMany("FavoritedBy")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Movie");
+                });
+
             modelBuilder.Entity("Vjezba.Model.Entities.Hall", b =>
                 {
                     b.HasOne("Vjezba.Model.Entities.Cinema", "Cinema")
@@ -13066,6 +13158,8 @@ namespace Vjezba.DAL.Migrations
 
             modelBuilder.Entity("Vjezba.Model.Entities.Customer", b =>
                 {
+                    b.Navigation("FavoriteMovies");
+
                     b.Navigation("Tickets");
                 });
 
@@ -13078,6 +13172,8 @@ namespace Vjezba.DAL.Migrations
 
             modelBuilder.Entity("Vjezba.Model.Entities.Movie", b =>
                 {
+                    b.Navigation("FavoritedBy");
+
                     b.Navigation("Screenings");
                 });
 

@@ -18,4 +18,6 @@ public class Customer
     public bool IsLoyaltyMember { get; set; }
     public int LoyaltyPoints { get; set; }
     public virtual ICollection<Ticket> Tickets { get; set; } = new HashSet<Ticket>();
+
+    public virtual ICollection<CustomerFavoriteMovie> FavoriteMovies { get; set; } = new HashSet<CustomerFavoriteMovie>();
 }

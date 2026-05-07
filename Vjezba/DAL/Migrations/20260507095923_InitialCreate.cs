@@ -97,6 +97,32 @@ namespace Vjezba.DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CustomerFavoriteMovies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    MovieId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerFavoriteMovies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerFavoriteMovies_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CustomerFavoriteMovies_Movies_MovieId",
+                        column: x => x.MovieId,
+                        principalTable: "Movies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Screenings",
                 columns: table => new
                 {
@@ -231,6 +257,21 @@ namespace Vjezba.DAL.Migrations
                     { 14, "12+", "Napeta sci-fi misterija o nestalom signalu.", 108, 9, "EN", new DateTime(2026, 4, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Signal 404" },
                     { 15, "U", "Dokumentarni film o arktickim ekspedicijama.", 96, 11, "HR", new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified), "Dnevnik Sjevera" },
                     { 16, "12+", "Drama o povratku kuci nakon dugog putovanja.", 114, 5, "HR", new DateTime(2026, 3, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), "Juzni Vjetar" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "CustomerFavoriteMovies",
+                columns: new[] { "Id", "CustomerId", "MovieId" },
+                values: new object[,]
+                {
+                    { 1, 1, 1 },
+                    { 2, 1, 5 },
+                    { 3, 1, 8 },
+                    { 4, 2, 2 },
+                    { 5, 3, 4 },
+                    { 6, 3, 10 },
+                    { 7, 4, 6 },
+                    { 8, 6, 1 }
                 });
 
             migrationBuilder.InsertData(
@@ -1794,6 +1835,16 @@ namespace Vjezba.DAL.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_CustomerFavoriteMovies_CustomerId",
+                table: "CustomerFavoriteMovies",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerFavoriteMovies_MovieId",
+                table: "CustomerFavoriteMovies",
+                column: "MovieId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Halls_CinemaId",
                 table: "Halls",
                 column: "CinemaId");
@@ -1832,6 +1883,9 @@ namespace Vjezba.DAL.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CustomerFavoriteMovies");
+
             migrationBuilder.DropTable(
                 name: "Tickets");
 

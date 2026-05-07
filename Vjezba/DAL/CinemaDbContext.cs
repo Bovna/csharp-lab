@@ -21,6 +21,8 @@ public class CinemaDbContext : DbContext
     public DbSet<Seat> Seats { get; set; } = null!;
     public DbSet<Ticket> Tickets { get; set; } = null!;
 
+    public DbSet<CustomerFavoriteMovie> CustomerFavoriteMovies { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -239,6 +241,9 @@ public class CinemaDbContext : DbContext
         modelBuilder.Entity<Seat>().HasData(seats);
 
         modelBuilder.Entity<Ticket>().HasData(
+
+
+
             new Ticket { Id = 1, TicketNumber = "ZG-2026-0001", PurchasedAt = new DateTime(2026, 4, 14, 10, 25, 0), Price = 7.50m, Status = TicketStatus.Active, ScreeningId = 1001, SeatId = 101101, CustomerId = 1 },
             new Ticket { Id = 2, TicketNumber = "ZG-2026-0002", PurchasedAt = new DateTime(2026, 4, 14, 11, 40, 0), Price = 9.00m, Status = TicketStatus.Used, ScreeningId = 1002, SeatId = 102202, CustomerId = 2 },
             new Ticket { Id = 3, TicketNumber = "RI-2026-0101", PurchasedAt = new DateTime(2026, 4, 14, 12, 5, 0), Price = 6.50m, Status = TicketStatus.Active, ScreeningId = 2002, SeatId = 202305, CustomerId = 3 },
@@ -259,7 +264,16 @@ public class CinemaDbContext : DbContext
             new Ticket { Id = 18, TicketNumber = "ST-2026-0303", PurchasedAt = new DateTime(2026, 4, 16, 21, 0, 0), Price = 8.50m, Status = TicketStatus.Active, ScreeningId = 4001, SeatId = 401207, CustomerId = 2 },
             new Ticket { Id = 19, TicketNumber = "ZD-2026-0506", PurchasedAt = new DateTime(2026, 4, 16, 21, 15, 0), Price = 9.50m, Status = TicketStatus.Active, ScreeningId = 5001, SeatId = 501505, CustomerId = 3 },
             new Ticket { Id = 20, TicketNumber = "ZD-2026-0507", PurchasedAt = new DateTime(2026, 4, 16, 21, 25, 0), Price = 9.50m, Status = TicketStatus.Active, ScreeningId = 5004, SeatId = 504307, CustomerId = 6 });
-    }
 
+        modelBuilder.Entity<CustomerFavoriteMovie>().HasData(
+new CustomerFavoriteMovie { Id = 1, CustomerId = 1, MovieId = 1 },
+new CustomerFavoriteMovie { Id = 2, CustomerId = 1, MovieId = 5 },
+new CustomerFavoriteMovie { Id = 3, CustomerId = 1, MovieId = 8 },
+new CustomerFavoriteMovie { Id = 4, CustomerId = 2, MovieId = 2 },
+new CustomerFavoriteMovie { Id = 5, CustomerId = 3, MovieId = 4 },
+new CustomerFavoriteMovie { Id = 6, CustomerId = 3, MovieId = 10 },
+new CustomerFavoriteMovie { Id = 7, CustomerId = 4, MovieId = 6 },
+new CustomerFavoriteMovie { Id = 8, CustomerId = 6, MovieId = 1 });
+    }
 
 }

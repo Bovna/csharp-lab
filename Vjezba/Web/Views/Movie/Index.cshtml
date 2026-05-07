@@ -42,9 +42,10 @@
 
         <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
             <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                <table class="ui-table">
+                <table class="ui-table entity-index-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Naslov</th>
                             <th>Žanr</th>
                             <th>Trajanje</th>
@@ -57,6 +58,7 @@
                         @foreach (var movie in Model)
                         {
                             <tr>
+                                <td class="text-muted">@movie.Id</td>
                                 <td style="font-weight: 500; color: #fff;">@movie.Title</td>
                                 <td>@movie.Genre</td>
                                 <td>@movie.DurationMinutes min</td>

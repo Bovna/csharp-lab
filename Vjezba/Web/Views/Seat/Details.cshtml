@@ -7,10 +7,10 @@
 <div class="container py-4 animate-fade-in-up">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
                 <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
                     Sjedalo @Model.RowLabel@Model.SeatNumber</h1>
-                    <a asp-action="Index" class="cinema-btn-secondary">Natrag na popis</a>
+                    <a asp-action="Index" class="ui-btn ui-btn--secondary">Natrag na popis</a>
                 </div>
 
                 <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
@@ -35,8 +35,32 @@
                             <dt>Tip sjedala</dt>
                             <dd>@Model.SeatType</dd>
                         </dl>
+
+                        <div class="ui-actions ui-actions--center ui-actions--stack-mobile"
+                             style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary"
+                               style="width: 120px; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box;">Uredi</a>
+
+                            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="ui-btn ui-btn--danger"
+                                        style="width: 120px; padding: 0.72rem 1.2rem; display: inline-flex; justify-content: center; align-items: center; box-sizing: border-box; line-height: 1.2;"
+                                        onclick="return handleDeleteClick(event, 'Jeste li sigurni da želite obrisati ovo sjedalo?');">Obriši</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        function handleDeleteClick(event, message) {
+            event.preventDefault();
+            CinemaUI.showConfirm({
+                title: 'Potvrda brisanja',
+                body: message,
+                onConfirm: () => event.target.form.submit()
+            });
+        }
+    </script>

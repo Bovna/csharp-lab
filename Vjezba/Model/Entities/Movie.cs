@@ -14,4 +14,6 @@ public class Movie
     public string Language { get; set; } = string.Empty;
     public string AgeRating { get; set; } = string.Empty;
     public virtual ICollection<Screening> Screenings { get; set; } = new HashSet<Screening>();
+
+    public virtual ICollection<CustomerFavoriteMovie> FavoritedBy { get; set; } = new HashSet<CustomerFavoriteMovie>();
 }

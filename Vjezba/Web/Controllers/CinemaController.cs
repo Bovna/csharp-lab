@@ -57,13 +57,13 @@ public class CinemaController : Controller
         return View(cinema);
     }
 
-    [HttpGet("create")]
+    [HttpGet("dodaj")]
     public IActionResult Create()
     {
         return View();
     }
 
-    [HttpPost("create")]
+    [HttpPost("dodaj")]
     [ValidateAntiForgeryToken]
     public IActionResult Create(Cinema cinema)
     {
@@ -78,7 +78,7 @@ public class CinemaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet("edit/{id}")]
+    [HttpGet("uredi/{id}")]
     public IActionResult Edit(int id)
     {
         var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == id);
@@ -91,7 +91,7 @@ public class CinemaController : Controller
         return View(cinema);
     }
 
-    [HttpPost("edit/{id}")]
+    [HttpPost("uredi/{id}")]
     [ValidateAntiForgeryToken]
     public IActionResult Edit(int id, Cinema cinema)
     {
@@ -111,7 +111,7 @@ public class CinemaController : Controller
         return RedirectToAction(nameof(Details), new { id = cinema.Id });
     }
 
-    [HttpPost("delete/{id}")]
+    [HttpPost("izbrisi/{id}")]
     [ValidateAntiForgeryToken]
     public IActionResult Delete(int id)
     {

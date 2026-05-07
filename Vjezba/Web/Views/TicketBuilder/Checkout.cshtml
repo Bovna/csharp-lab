@@ -1,0 +1,68 @@
+@model Vjezba.Web.ViewModels.TicketBuilderCheckoutViewModel
+@{
+    ViewData["Title"] = "Brza kupnja - Placanje";
+}
+
+<div class="tb-cinema tb-page">
+    <div class="tb-header">
+        <h1>@Model.MovieTitle</h1>
+        <p>Korak 5/5: potvrdi kupnju i spremi kartu</p>
+        <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
+    </div>
+
+    <div class="tb-step-line" aria-label="Koraci brze kupnje">
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2 Film</a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">3 Projekcija</a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Seats" asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId" asp-route-screeningId="@Model.ScreeningId">4 Sjedalo</a>
+        <span class="tb-step active" aria-current="step">5 Placanje</span>
+    </div>
+
+    <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="cinema-card-header">Potvrda kupnje</div>
+        <div class="cinema-card-body">
+            <dl class="cinema-details-list mb-4">
+                <dt>Kino</dt>
+                <dd>@Model.CinemaName</dd>
+
+                <dt>Film</dt>
+                <dd>@Model.MovieTitle</dd>
+
+                <dt>Vrijeme</dt>
+                <dd>@Model.StartTime.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                <dt>Sjedalo</dt>
+                <dd>@Model.SeatLabel (@Model.SeatType)</dd>
+
+                <dt>Cijena</dt>
+                <dd><strong>@Model.Price.ToString("0.00") EUR</strong></dd>
+            </dl>
+
+            <form asp-controller="TicketBuilder" asp-action="Purchase" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="CinemaId" value="@Model.CinemaId" />
+                <input type="hidden" name="MovieId" value="@Model.MovieId" />
+                <input type="hidden" name="ScreeningId" value="@Model.ScreeningId" />
+                <input type="hidden" name="SeatId" value="@Model.SeatId" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-4">
+                    <label for="CustomerId" class="form-label">Kupac</label>
+                    <select id="CustomerId" name="CustomerId" class="form-select" required>
+                        <option value="">Odaberite kupca</option>
+                        @foreach (var customer in Model.Customers)
+                        {
+                            <option value="@customer.Id">@customer.FullName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="cinema-btn">Potvrdi i kupi</button>
+                    <a class="cinema-btn-outline" asp-controller="TicketBuilder" asp-action="Seats" asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId" asp-route-screeningId="@Model.ScreeningId">Natrag</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

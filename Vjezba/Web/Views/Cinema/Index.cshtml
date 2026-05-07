@@ -45,9 +45,10 @@
 
                 <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
                     <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                        <table class="ui-table">
+                        <table class="ui-table entity-index-table">
                             <thead>
                                 <tr>
+                                    <th>ID</th>
                                     <th>Naziv</th>
                                     <th>Grad</th>
                                     <th>Adresa</th>
@@ -60,6 +61,7 @@
                                 @foreach (var cinema in Model)
                                 {
                                     <tr>
+                                        <td class="text-muted">@cinema.Id</td>
                                         <td style="font-weight: 500; color: #fff;">@cinema.Name</td>
                                         <td>@cinema.City</td>
                                         <td>@cinema.Street @cinema.HouseNumber</td>
@@ -79,8 +81,10 @@
                 </div>
             </div>
 
-            <div class="mt-5 pt-3" style="text-align: right;">
-                <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novo kino</a>
+            <div class="mt-5 pt-3 w-100">
+                <div class="d-flex justify-content-end w-100">
+                    <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novo kino</a>
+                </div>
             </div>
         </div>
     </div>

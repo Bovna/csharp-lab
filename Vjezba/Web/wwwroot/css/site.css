@@ -365,15 +365,16 @@ a:hover {
 
 .entity-index-table {
   table-layout: fixed;
+  width: 100%;
 }
 
 .entity-index-table th,
 .entity-index-table td {
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   line-height: 1.2;
   vertical-align: middle;
 }
@@ -400,32 +401,12 @@ a:hover {
 
 .entity-index-table th:first-child,
 .entity-index-table td:first-child {
-  width: 25%;
-}
-
-.entity-index-table th:nth-child(2),
-.entity-index-table td:nth-child(2) {
-  width: 15%;
-}
-
-.entity-index-table th:nth-child(3),
-.entity-index-table td:nth-child(3) {
-  width: 15%;
-}
-
-.entity-index-table th:nth-child(4),
-.entity-index-table td:nth-child(4) {
-  width: 15%;
-}
-
-.entity-index-table th:nth-child(5),
-.entity-index-table td:nth-child(5) {
-  width: 15%;
+  width: 5.5rem;
 }
 
 .entity-index-table th:last-child,
 .entity-index-table td:last-child {
-  width: 15%;
+  width: 9rem;
   white-space: nowrap;
   padding-right: 0.95rem;
 }
@@ -605,8 +586,9 @@ a:hover {
 
 .cinema-btn:hover {
   background-color: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3);
+  color: var(--color-bg-base);
+  box-shadow: 0 6px 18px rgba(0, 230, 118, 0.25);
+  transform: translateY(-1px);
 }
 
 /* Delete/Danger Button */
@@ -783,8 +765,11 @@ a:hover {
 
 /* Shared Button Component */
 .ui-btn {
-  display: inline-block;
-  padding: 0.5rem 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.55rem 1.2rem;
   background-color: var(--color-bg-surface-hover);
   color: var(--color-text-main);
   border: 1px solid var(--color-border);
@@ -796,6 +781,7 @@ a:hover {
   transition: all 0.2s ease;
   white-space: nowrap;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .ui-btn:hover {
@@ -899,7 +885,8 @@ a:hover {
 .ui-field textarea {
   display: block;
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
   background-color: var(--color-bg-surface);
   color: var(--color-text-main);
   border: 1px solid var(--color-border);
@@ -907,6 +894,7 @@ a:hover {
   font-size: 0.95rem;
   font-family: inherit;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .ui-field__input:hover,
@@ -921,6 +909,79 @@ a:hover {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1);
+}
+
+.ui-field textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.entity-form .cinema-card-body {
+  padding: 2rem;
+}
+
+.entity-form .ui-actions {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+}
+
+.entity-form .ui-actions .ui-btn {
+  min-width: 120px;
+}
+
+.ui-choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ui-choice-group__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 42px;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ui-choice-group__item:hover {
+  border-color: var(--color-accent);
+  background-color: var(--color-bg-surface-hover);
+}
+
+.ui-choice-group__item input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  border: 2px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-bg-base);
+  box-shadow: inset 0 0 0 0.2rem var(--color-bg-base);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ui-choice-group__item input[type="radio"]:checked {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  box-shadow: inset 0 0 0 0.24rem var(--color-bg-base);
+}
+
+.ui-choice-group__item input[type="radio"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.18);
+}
+
+.ui-choice-group__item span {
+  line-height: 1.2;
 }
 
 .ui-field__validation {
@@ -1396,6 +1457,59 @@ dd.col-sm-10 {
 .btn-sm {
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+input[type="checkbox"]:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.15);
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+input[type="checkbox"]:checked::before {
+  content: "✓";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: var(--color-bg-base);
+  font-size: 0.9rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.25);
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-outline-primary {
