@@ -10,6 +10,7 @@ public class Screening
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public bool Is3D { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     [ForeignKey("Movie")]
     public int MovieId { get; set; }

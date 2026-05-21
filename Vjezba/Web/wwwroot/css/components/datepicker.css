@@ -1,0 +1,221 @@
+.cinema-datepicker {
+  position: relative;
+}
+
+.cinema-datepicker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cinema-datepicker__display {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-main);
+}
+
+.cinema-datepicker__icon {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.cinema-datepicker__popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 1000;
+  width: min(21rem, 100%);
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.cinema-datepicker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--color-text-main);
+  font-weight: 600;
+}
+
+.cinema-datepicker__title {
+  text-transform: capitalize;
+}
+
+.cinema-datepicker__nav {
+  position: relative;
+  overflow: hidden;
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-main);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.55rem;
+  line-height: 1;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.cinema-datepicker__nav::before,
+.cinema-datepicker__day::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  transition: transform 360ms ease;
+  pointer-events: none;
+}
+
+.cinema-datepicker__nav:hover,
+.cinema-datepicker__nav:focus-visible {
+  border-color: var(--color-border);
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.cinema-datepicker__nav:hover::before,
+.cinema-datepicker__nav:focus-visible::before,
+.cinema-datepicker__day:hover::before,
+.cinema-datepicker__day:focus-visible::before {
+  transform: translateX(120%);
+}
+
+.cinema-datepicker__days-header,
+.cinema-datepicker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.cinema-datepicker__days-header {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.cinema-datepicker__day {
+  position: relative;
+  overflow: hidden;
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-main);
+  min-height: 1.5rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.cinema-datepicker__day:hover:not(.cinema-datepicker__day--empty),
+.cinema-datepicker__day:focus-visible:not(.cinema-datepicker__day--empty) {
+  border-color: var(--color-accent);
+  background: rgba(0, 230, 118, 0.1);
+  outline: none;
+}
+
+.cinema-datepicker__day--selected {
+  background: var(--color-accent) !important;
+  color: #05120a;
+  font-weight: 700;
+}
+
+.cinema-datepicker__day--empty {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.cinema-datepicker__time {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cinema-datepicker__time .ui-field__label {
+  margin-bottom: var(--space-3);
+}
+
+.cinema-datepicker__time-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) auto minmax(0, 1.1fr);
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.cinema-datepicker__time-input {
+  display: block;
+  width: 100%;
+  min-height: 38px;
+  padding: 0.25rem 0.8rem;
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.cinema-datepicker__time-minute,
+.cinema-datepicker__time-hour {
+  padding-right: 1.6rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%),
+    linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) calc(50% - 2px),
+    calc(100% - 0.75rem) calc(50% - 2px);
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+}
+
+.cinema-datepicker__time-separator {
+  color: var(--color-text-muted);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+.cinema-datepicker__time-input:hover,
+.cinema-datepicker__time-input:focus-visible {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1);
+}

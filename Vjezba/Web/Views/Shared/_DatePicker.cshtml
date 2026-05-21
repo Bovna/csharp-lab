@@ -1,0 +1,65 @@
+@using System.Globalization
+
+@{
+    var inputName = ViewData["Name"]?.ToString() ?? string.Empty;
+    var inputValue = ViewData["Value"]?.ToString() ?? string.Empty;
+    var inputType = ViewData["Type"]?.ToString() ?? "datetime-local";
+    var inputLocale = ViewData["Locale"]?.ToString() ?? CultureInfo.CurrentCulture.Name;
+    var initialDateTime = DateTime.TryParse(inputValue, out var parsedValue) ? parsedValue : DateTime.Now;
+    var pickerValue = inputType == "datetime-local" && !string.IsNullOrWhiteSpace(inputValue) && !inputValue.Contains("T")
+        ? $"{inputValue}T00:00"
+        : inputValue;
+    var displayText = "Odaberite datum i vrijeme";
+}
+
+<div class="cinema-datepicker" data-type="@inputType" data-locale="@inputLocale">
+    <input type="hidden" name="@inputName" id="@inputName" value="@pickerValue" class="cinema-datepicker__hidden" />
+    <button type="button" class="cinema-datepicker__trigger ui-field__input" aria-expanded="false">
+        <span class="cinema-datepicker__display">@displayText</span>
+        <svg class="cinema-datepicker__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+             fill="currentColor" viewBox="0 0 16 16">
+            <path
+            d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+        </svg>
+    </button>
+    <div class="cinema-datepicker__popover" hidden>
+        <div class="cinema-datepicker__header">
+            <button type="button" class="cinema-datepicker__nav cinema-datepicker__prev">&laquo;</button>
+            <div class="cinema-datepicker__title"></div>
+            <button type="button" class="cinema-datepicker__nav cinema-datepicker__next">&raquo;</button>
+        </div>
+        <div class="cinema-datepicker__days-header">
+            <span data-day="0"></span><span data-day="1"></span><span data-day="2"></span><span
+            data-day="3"></span><span data-day="4"></span><span data-day="5"></span><span data-day="6"></span>
+        </div>
+        <div class="cinema-datepicker__grid"></div>
+
+        @if (inputType == "datetime-local")
+        {
+            <div class="cinema-datepicker__time">
+                <label class="ui-field__label" for="@inputName-time">Vrijeme</label>
+                <div class="cinema-datepicker__time-picker">
+                    <select id="@inputName-hour" class="cinema-datepicker__time-input cinema-datepicker__time-hour"
+                            aria-label="Sat">
+                        @for (var hour = 0; hour < 24; hour++)
+                        {
+                            var hourValue = hour.ToString("D2");
+                            <option value="@hourValue" selected="@(initialDateTime.Hour == hour ? "selected" : null)">@hourValue
+                            </option>
+                        }
+                    </select>
+                    <span class="cinema-datepicker__time-separator" aria-hidden="true">:</span>
+                    <select id="@inputName-minute" class="cinema-datepicker__time-input cinema-datepicker__time-minute"
+                            aria-label="Minute">
+                        @for (var minute = 0; minute < 60; minute++)
+                        {
+                            var minuteValue = minute.ToString("D2");
+                            <option value="@minuteValue" selected="@(initialDateTime.Minute == minute ? "selected" : null)">
+                                @minuteValue</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>

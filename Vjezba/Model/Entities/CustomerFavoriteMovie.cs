@@ -15,4 +15,6 @@ public class CustomerFavoriteMovie
     [ForeignKey("Movie")]
     public int MovieId { get; set; }
     public virtual Movie Movie { get; set; } = null!;
+
+    public DateTime? DeletedAt { get; set; }
 }

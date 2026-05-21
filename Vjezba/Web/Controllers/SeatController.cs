@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
 using Vjezba.Model.Entities;
+using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
@@ -15,10 +17,14 @@ public class SeatController : Controller
         _dbContext = dbContext;
     }
 
-    [HttpGet("")]
-    public IActionResult Index(SeatType? seatType)
+    [Route("")]
+    public IActionResult Index(SeatType? seatType, string? search, bool partial = false)
     {
+        var normalizedSearch = (search ?? string.Empty).Trim();
         var query = _dbContext.Seats
+            .Where(seat => seat.DeletedAt == null
+                && seat.Hall.DeletedAt == null
+                && seat.Hall.Cinema.DeletedAt == null)
             .Include(s => s.Hall)
                 .ThenInclude(h => h.Cinema)
             .AsQueryable();
@@ -28,22 +34,46 @@ public class SeatController : Controller
             query = query.Where(seat => seat.SeatType == seatType.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            if (int.TryParse(normalizedSearch, out var seatNumber))
+            {
+                query = query.Where(seat => seat.SeatNumber == seatNumber);
+            }
+            else
+            {
+                query = query.Where(seat =>
+                    EF.Functions.Like(seat.RowLabel, $"%{normalizedSearch}%")
+                    || EF.Functions.Like(seat.Hall.Name, $"%{normalizedSearch}%")
+                    || EF.Functions.Like(seat.Hall.Cinema.Name, $"%{normalizedSearch}%"));
+            }
+        }
+
         var seats = query
             .OrderBy(seat => seat.Id)
             .ToList();
 
         ViewBag.SelectedSeatType = seatType?.ToString();
+        ViewBag.Search = search;
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", seats);
+        }
 
         return View(seats);
     }
 
-    [HttpGet("detalji/{id}")]
+    [Route("detalji/{id}")]
     public IActionResult Details(int id)
     {
         var seat = _dbContext.Seats
             .Include(s => s.Hall)
                 .ThenInclude(h => h.Cinema)
-            .FirstOrDefault(s => s.Id == id);
+            .FirstOrDefault(s => s.Id == id
+                && s.DeletedAt == null
+                && s.Hall.DeletedAt == null
+                && s.Hall.Cinema.DeletedAt == null);
 
         if (seat is null)
         {
@@ -53,87 +83,175 @@ public class SeatController : Controller
         return View(seat);
     }
 
-    [HttpGet("dodaj")]
+    [Route("dodaj")]
     public IActionResult Create()
     {
-        LoadSeatFormData();
-        return View(new Seat());
+        var model = new SeatFormViewModel();
+        PrepareSeatForm(model, isCreate: true);
+        return View(model);
     }
 
     [HttpPost("dodaj")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Create(Seat seat)
+    public IActionResult Create(SeatFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            LoadSeatFormData();
-            return View(seat);
+            PrepareSeatForm(model, isCreate: true);
+            return View(model);
         }
+
+        var seat = new Seat
+        {
+            RowLabel = model.RowLabel,
+            SeatNumber = model.SeatNumber,
+            SeatType = model.SeatType,
+            HallId = model.HallId!.Value
+        };
 
         _dbContext.Seats.Add(seat);
-        _dbContext.SaveChanges();
-
-        return RedirectToAction(nameof(Details), new { id = seat.Id });
-    }
-
-    [HttpGet("uredi/{id}")]
-    public IActionResult Edit(int id)
-    {
-        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id);
-
-        if (seat is null)
-        {
-            return NotFound();
-        }
-
-        LoadSeatFormData();
-        return View(seat);
-    }
-
-    [HttpPost("uredi/{id}")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Seat seat)
-    {
-        if (id != seat.Id)
-        {
-            return BadRequest();
-        }
-
-        if (!ModelState.IsValid)
-        {
-            LoadSeatFormData();
-            return View(seat);
-        }
-
-        _dbContext.Seats.Update(seat);
-        _dbContext.SaveChanges();
-
-        return RedirectToAction(nameof(Details), new { id = seat.Id });
-    }
-
-    [HttpPost("obrisi/{id}")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Delete(int id)
-    {
-        var seat = _dbContext.Seats.Find(id);
-
-        if (seat is null)
-        {
-            return NotFound();
-        }
-
-        _dbContext.Seats.Remove(seat);
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
     }
 
-    private void LoadSeatFormData()
+    [Route("uredi/{id}")]
+    [ActionName("Edit")]
+    public IActionResult EditGet(int id)
     {
-        ViewBag.Halls = _dbContext.Halls
-            .Include(hall => hall.Cinema)
-            .OrderBy(hall => hall.Cinema.Name)
-            .ThenBy(hall => hall.Name)
+        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+
+        if (seat is null)
+        {
+            return NotFound();
+        }
+
+        var model = new SeatFormViewModel
+        {
+            Id = seat.Id,
+            RowLabel = seat.RowLabel,
+            SeatNumber = seat.SeatNumber,
+            SeatType = seat.SeatType,
+            HallId = seat.HallId
+        };
+
+        PrepareSeatForm(model, isCreate: false);
+        return View(model);
+    }
+
+    [HttpPost("uredi/{id}")]
+    [ActionName("Edit")]
+    public async Task<IActionResult> EditPost(int id)
+    {
+        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+
+        if (seat is null)
+        {
+            return NotFound();
+        }
+
+        var model = new SeatFormViewModel
+        {
+            Id = seat.Id,
+            RowLabel = seat.RowLabel,
+            SeatNumber = seat.SeatNumber,
+            SeatType = seat.SeatType,
+            HallId = seat.HallId
+        };
+
+        var ok = await TryUpdateModelAsync(model, string.Empty,
+            m => m.RowLabel,
+            m => m.SeatNumber,
+            m => m.SeatType,
+            m => m.HallId);
+
+        if (ok && ModelState.IsValid)
+        {
+            seat.RowLabel = model.RowLabel;
+            seat.SeatNumber = model.SeatNumber;
+            seat.SeatType = model.SeatType;
+            seat.HallId = model.HallId!.Value;
+
+            _dbContext.SaveChanges();
+            return RedirectToAction(nameof(Index));
+        }
+
+        PrepareSeatForm(model, isCreate: false);
+        return View(model);
+    }
+
+    [HttpPost("obrisi/{id}")]
+    public IActionResult Delete(int id)
+    {
+        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+
+        if (seat is null)
+        {
+            return NotFound();
+        }
+
+        SoftDeleteSeat(seat);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private void PrepareSeatForm(SeatFormViewModel model, bool isCreate = false)
+    {
+        model.HallSelector = new AutocompleteViewModel
+        {
+            InputName = nameof(model.HallId),
+            Label = "Dvorana",
+            Endpoint = Url.Action(nameof(ScreeningController.Search), "Screening") ?? "/projekcije/search",
+            SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
+            RequiredMessage = "Dvorana je obavezna.",
+            Items = BuildSelectItems(
+                _dbContext.Halls
+                    .Include(hall => hall.Cinema)
+                    .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
+                    .OrderBy(hall => hall.Cinema.Name)
+                    .ThenBy(hall => hall.Name)
+                    .Select(hall => new SelectListItem
+                    {
+                        Value = hall.Id.ToString(),
+                        Text = hall.Cinema.Name + " - " + hall.Name,
+                        Selected = model.HallId.HasValue && hall.Id == model.HallId.Value
+                    })
+                    .ToList(),
+                model.HallId,
+                isCreate)
+        };
+    }
+
+    private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)
+    {
+        var selectItems = new List<SelectListItem>();
+
+        if (!isCreate)
+        {
+            selectItems.Add(new SelectListItem
+            {
+                Text = "- odaberite -",
+                Value = string.Empty,
+                Selected = !selectedValue.HasValue
+            });
+        }
+
+        selectItems.AddRange(items);
+        return selectItems;
+    }
+
+    private void SoftDeleteSeat(Seat seat)
+    {
+        var deletedAt = DateTime.UtcNow;
+        seat.DeletedAt = deletedAt;
+
+        var tickets = _dbContext.Tickets
+            .Where(ticket => ticket.SeatId == seat.Id && ticket.DeletedAt == null)
             .ToList();
+
+        foreach (var ticket in tickets)
+        {
+            ticket.DeletedAt = deletedAt;
+        }
     }
 }

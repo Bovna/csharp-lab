@@ -16,10 +16,12 @@ public class CustomerController : Controller
         _dbContext = dbContext;
     }
 
-    [HttpGet("")]
-    public IActionResult Index(string? firstName, string? lastName)
+    [Route("")]
+    public IActionResult Index(string? firstName, string? lastName, bool partial = false)
     {
-        var query = _dbContext.Customers.AsQueryable();
+        var query = _dbContext.Customers
+            .Where(customer => customer.DeletedAt == null)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(firstName))
         {
@@ -32,19 +34,25 @@ public class CustomerController : Controller
         }
 
         var customers = query
-            .OrderBy(customer => customer.Id)
+            .OrderBy(customer => customer.LastName)
+            .ThenBy(customer => customer.FirstName)
             .ToList();
 
         ViewBag.FirstName = firstName;
         ViewBag.LastName = lastName;
 
+        if (partial)
+        {
+            return PartialView("_IndexResults", customers);
+        }
+
         return View(customers);
     }
 
-    [HttpGet("detalji/{id}")]
+    [Route("detalji/{id}")]
     public IActionResult Details(int id)
     {
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id);
+        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
 
         if (customer is null)
         {
@@ -52,7 +60,11 @@ public class CustomerController : Controller
         }
 
         var tickets = _dbContext.Tickets
-            .Where(t => t.CustomerId == customer.Id)
+            .Where(t => t.CustomerId == customer.Id
+                && t.DeletedAt == null
+                && t.Screening.DeletedAt == null
+                && t.Screening.Hall.DeletedAt == null
+                && t.Screening.Hall.Cinema.DeletedAt == null)
             .Include(t => t.Screening)
                 .ThenInclude(s => s.Movie)
             .Include(t => t.Screening)
@@ -70,82 +82,177 @@ public class CustomerController : Controller
         return View(viewModel);
     }
 
-    [HttpGet("dodaj")]
+    [Route("dodaj")]
     public IActionResult Create()
     {
-        return View(new Customer
+        return View(new CustomerFormViewModel
         {
             RegisteredAt = DateTime.Now
         });
     }
 
     [HttpPost("dodaj")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Create(Customer customer)
+    public IActionResult Create(CustomerFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            return View(customer);
+            return View(model);
         }
 
-        if (customer.RegisteredAt == default)
+        if (model.RegisteredAt == default)
         {
-            customer.RegisteredAt = DateTime.Now;
+            model.RegisteredAt = DateTime.Now;
         }
+
+        var customer = new Customer
+        {
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            City = model.City,
+            Street = model.Street,
+            HouseNumber = model.HouseNumber,
+            PostalCode = model.PostalCode,
+            Email = model.Email,
+            Phone = model.Phone,
+            RegisteredAt = model.RegisteredAt,
+            IsLoyaltyMember = model.IsLoyaltyMember,
+            LoyaltyPoints = model.LoyaltyPoints
+        };
 
         _dbContext.Customers.Add(customer);
         _dbContext.SaveChanges();
 
-        return RedirectToAction(nameof(Details), new { id = customer.Id });
+        return RedirectToAction(nameof(Index));
     }
 
-    [HttpGet("uredi/{id}")]
-    public IActionResult Edit(int id)
+    [Route("uredi/{id}")]
+    [ActionName("Edit")]
+    public IActionResult EditGet(int id)
     {
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id);
+        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
 
         if (customer is null)
         {
             return NotFound();
         }
 
-        return View(customer);
+        var model = new CustomerFormViewModel
+        {
+            Id = customer.Id,
+            FirstName = customer.FirstName,
+            LastName = customer.LastName,
+            City = customer.City,
+            Street = customer.Street,
+            HouseNumber = customer.HouseNumber,
+            PostalCode = customer.PostalCode,
+            Email = customer.Email,
+            Phone = customer.Phone,
+            RegisteredAt = customer.RegisteredAt,
+            IsLoyaltyMember = customer.IsLoyaltyMember,
+            LoyaltyPoints = customer.LoyaltyPoints
+        };
+
+        return View(model);
     }
 
     [HttpPost("uredi/{id}")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Customer customer)
+    [ActionName("Edit")]
+    public async Task<IActionResult> EditPost(int id)
     {
-        if (id != customer.Id)
-        {
-            return BadRequest();
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return View(customer);
-        }
-
-        _dbContext.Customers.Update(customer);
-        _dbContext.SaveChanges();
-
-        return RedirectToAction(nameof(Details), new { id = customer.Id });
-    }
-
-    [HttpPost("obrisi/{id}")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Delete(int id)
-    {
-        var customer = _dbContext.Customers.Find(id);
+        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
 
         if (customer is null)
         {
             return NotFound();
         }
 
-        _dbContext.Customers.Remove(customer);
+        var model = new CustomerFormViewModel
+        {
+            Id = customer.Id,
+            FirstName = customer.FirstName,
+            LastName = customer.LastName,
+            City = customer.City,
+            Street = customer.Street,
+            HouseNumber = customer.HouseNumber,
+            PostalCode = customer.PostalCode,
+            Email = customer.Email,
+            Phone = customer.Phone,
+            RegisteredAt = customer.RegisteredAt,
+            IsLoyaltyMember = customer.IsLoyaltyMember,
+            LoyaltyPoints = customer.LoyaltyPoints
+        };
+
+        var ok = await TryUpdateModelAsync(model, string.Empty,
+            m => m.FirstName,
+            m => m.LastName,
+            m => m.City,
+            m => m.Street,
+            m => m.HouseNumber,
+            m => m.PostalCode,
+            m => m.Email,
+            m => m.Phone,
+            m => m.RegisteredAt,
+            m => m.IsLoyaltyMember,
+            m => m.LoyaltyPoints);
+
+        if (ok && ModelState.IsValid)
+        {
+            customer.FirstName = model.FirstName;
+            customer.LastName = model.LastName;
+            customer.City = model.City;
+            customer.Street = model.Street;
+            customer.HouseNumber = model.HouseNumber;
+            customer.PostalCode = model.PostalCode;
+            customer.Email = model.Email;
+            customer.Phone = model.Phone;
+            customer.RegisteredAt = model.RegisteredAt;
+            customer.IsLoyaltyMember = model.IsLoyaltyMember;
+            customer.LoyaltyPoints = model.LoyaltyPoints;
+
+            _dbContext.SaveChanges();
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(model);
+    }
+
+    [HttpPost("obrisi/{id}")]
+    public IActionResult Delete(int id)
+    {
+        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+
+        if (customer is null)
+        {
+            return NotFound();
+        }
+
+        SoftDeleteCustomer(customer);
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private void SoftDeleteCustomer(Customer customer)
+    {
+        var deletedAt = DateTime.UtcNow;
+        customer.DeletedAt = deletedAt;
+
+        var tickets = _dbContext.Tickets
+            .Where(ticket => ticket.CustomerId == customer.Id && ticket.DeletedAt == null)
+            .ToList();
+
+        foreach (var ticket in tickets)
+        {
+            ticket.DeletedAt = deletedAt;
+        }
+
+        var favorites = _dbContext.CustomerFavoriteMovies
+            .Where(favorite => favorite.CustomerId == customer.Id && favorite.DeletedAt == null)
+            .ToList();
+
+        foreach (var favorite in favorites)
+        {
+            favorite.DeletedAt = deletedAt;
+        }
     }
 }

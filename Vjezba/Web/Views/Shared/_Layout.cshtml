@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Kino Sustav</title>
     <!-- Removed Bootstrap for custom Cinematic UI/UX -->
+    <link rel="stylesheet" href="~/css/components/datepicker.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Vjezba.Web.styles.css" asp-append-version="true" />
 </head>
@@ -132,9 +133,6 @@
                                                 &copy; 2026 - Sustav za prodaju kino ulaznica
                                             </div>
                                         </footer>
-                                        <script src="~/lib/jquery/dist/jquery.min.js"></script>
-                                        <script src="~/js/site.js" asp-append-version="true"></script>
-                                        <script src="~/js/ui/uiHelper.js" asp-append-version="true"></script>
 
                                         <!-- Shared Confirmation Modal -->
                                         <div class="modal-confirm" id="modal-confirm" role="dialog" aria-modal="true" aria-hidden="true">
@@ -142,12 +140,20 @@
                                             <div class="modal-confirm__panel">
                                                 <h2 class="modal-confirm__title">Potvrdite</h2>
                                                 <p class="modal-confirm__body">Jeste li sigurni?</p>
-                                                <div class="modal-confirm__actions">
-                                                    <button type="button" class="ui-btn ui-btn--secondary" data-action="cancel">Otkaži</button>
+                                                <div class="modal-confirm__actions ui-actions ui-actions--end">
+                                                    <button type="button" class="ui-btn ui-btn--secondary" data-action="cancel">Odustani</button>
                                                     <button type="button" class="ui-btn ui-btn--primary" data-action="confirm">Potvrdi</button>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+                                        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+                                        <partial name="_ValidationScriptsPartial" />
+                                        <script src="~/js/ui/autocomplete.js" asp-append-version="true"></script>
+                                        <script src="~/js/ui/ajaxSearch.js" asp-append-version="true"></script>
+                                        <script src="~/js/ui/datepicker.js" asp-append-version="true"></script>
+                                        <script src="~/js/site.js" asp-append-version="true"></script>
 
                                         @await RenderSectionAsync("Scripts", required: false)
                                     </body>

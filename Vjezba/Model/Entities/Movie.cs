@@ -16,4 +16,6 @@ public class Movie
     public virtual ICollection<Screening> Screenings { get; set; } = new HashSet<Screening>();
 
     public virtual ICollection<CustomerFavoriteMovie> FavoritedBy { get; set; } = new HashSet<CustomerFavoriteMovie>();
+
+    public DateTime? DeletedAt { get; set; }
 }

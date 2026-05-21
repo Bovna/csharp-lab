@@ -106,6 +106,42 @@
       }
     });
 
+    // Validate autocomplete fields as well
+    const acValid = window.CinemaUI.validateAutocompleteFields(form);
+
+    return isValid && acValid;
+  };
+
+  /**
+   * Validate autocomplete fields (custom component)
+   * - Looks for `.autocomplete-field` elements and checks their hidden value input
+   * - If the label contains an asterisk (*) we treat the field as required
+   */
+  window.CinemaUI.validateAutocompleteFields = function (form) {
+    let isValid = true;
+    const acFields = form.querySelectorAll('.autocomplete-field');
+
+    acFields.forEach((ac) => {
+      const hidden = ac.querySelector('[data-autocomplete-value]');
+      if (!hidden) return;
+
+      const label = ac.querySelector('.ui-field__label');
+      const isMarkedRequired = label && label.textContent && label.textContent.indexOf('*') !== -1;
+      if (!isMarkedRequired) return; // not required
+
+      const fieldContainer = ac.closest('.ui-field');
+      const validationEl = fieldContainer ? fieldContainer.querySelector('.ui-field__validation') : null;
+
+      if (!hidden.value || hidden.value.trim() === '') {
+        if (fieldContainer) fieldContainer.classList.add('is-invalid');
+        if (validationEl) validationEl.textContent = 'Ovo polje je obavezno.';
+        isValid = false;
+      } else {
+        if (fieldContainer) fieldContainer.classList.remove('is-invalid');
+        if (validationEl) validationEl.textContent = '';
+      }
+    });
+
     return isValid;
   };
 
@@ -141,6 +177,38 @@
       },
       true,
     );
+
+    // Autocomplete inputs: validate on blur/input
+    document.addEventListener('input', (e) => {
+      const target = e.target;
+      if (!target.matches('.autocomplete-field__input')) return;
+
+      const ac = target.closest('.autocomplete-field');
+      if (!ac) return;
+
+      const hidden = ac.querySelector('[data-autocomplete-value]');
+      const fieldContainer = ac.closest('.ui-field');
+      const validationEl = fieldContainer ? fieldContainer.querySelector('.ui-field__validation') : null;
+
+      const label = ac.querySelector('.ui-field__label');
+      const isMarkedRequired = label && label.textContent && label.textContent.indexOf('*') !== -1;
+
+      if (!isMarkedRequired) {
+        if (fieldContainer && validationEl) {
+          fieldContainer.classList.remove('is-invalid');
+          validationEl.textContent = '';
+        }
+        return;
+      }
+
+      if (!hidden || !hidden.value || hidden.value.trim() === '') {
+        if (fieldContainer) fieldContainer.classList.add('is-invalid');
+        if (validationEl) validationEl.textContent = 'Ovo polje je obavezno.';
+      } else {
+        if (fieldContainer) fieldContainer.classList.remove('is-invalid');
+        if (validationEl) validationEl.textContent = '';
+      }
+    }, true);
   };
 
   // Auto-init on DOMContentLoaded

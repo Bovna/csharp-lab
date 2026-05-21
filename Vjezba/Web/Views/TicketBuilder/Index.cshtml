@@ -3,7 +3,7 @@
     ViewData["Title"] = "Brza kupnja - Kina";
 }
 
-<div class="tb-cinema tb-page">
+<div class="tb-cinema tb-page animate-fade-in-up">
     <div class="tb-header">
         <h1>Brza kupnja ulaznica</h1>
         <p>Korak 1/4: odaberi kino</p>
@@ -17,13 +17,18 @@
     </div>
 
     <div class="tb-grid-cards">
+        @{
+            int delayMs = 100;
+        }
         @foreach (var cinema in Model.Cinemas)
         {
-            <a class="tb-card-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@cinema.Id">
+            <a class="tb-card-link animate-fade-in-up" style="animation-delay: @(delayMs)ms;" asp-controller="TicketBuilder"
+               asp-action="Movies" asp-route-cinemaId="@cinema.Id">
                 <strong>@cinema.Name</strong>
                 <span>@cinema.City</span>
                 <small>@cinema.Street @cinema.HouseNumber</small>
             </a>
+            delayMs += 50;
         }
     </div>
 </div>

@@ -1,0 +1,24 @@
+@model Vjezba.Web.ViewModels.AutocompleteViewModel
+
+@{
+    var controlId = $"{Model.InputName}_combobox";
+    var inputId = $"{Model.InputName}_input";
+    var listId = $"{Model.InputName}_list";
+    var selectedItem = Model.Items.FirstOrDefault(item => item.Selected);
+}
+
+<div class="ui-field autocomplete-field" data-autocomplete-field
+     data-items='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Items.Select(item => new { value = item.Value, text = item.Text })))'>
+    <label class="ui-field__label" for="@inputId">@Model.Label <span style="color: #ef4444;">*</span></label>
+    <div id="@controlId" class="autocomplete-field__combobox" role="combobox" aria-expanded="false"
+         aria-haspopup="listbox" aria-owns="@listId">
+        <input id="@inputId" class="ui-field__input autocomplete-field__input" type="text" autocomplete="off"
+               placeholder="@Model.SearchPlaceholder" data-autocomplete-input
+               value="@(selectedItem?.Text ?? string.Empty)" />
+        <input type="hidden" name="@Model.InputName" value="@(selectedItem?.Value ?? string.Empty)"
+               data-autocomplete-value required data-val="true"
+               data-val-required="@(string.IsNullOrWhiteSpace(Model.RequiredMessage) ? $"{Model.Label} je obavezna." : Model.RequiredMessage)" />
+        <div id="@listId" class="autocomplete-field__list" role="listbox" data-autocomplete-list hidden></div>
+    </div>
+    <span class="ui-field__validation" data-valmsg-for="@Model.InputName" data-valmsg-replace="true"></span>
+</div>

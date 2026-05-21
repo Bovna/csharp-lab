@@ -20,4 +20,5 @@ public class Customer
     public virtual ICollection<Ticket> Tickets { get; set; } = new HashSet<Ticket>();
 
     public virtual ICollection<CustomerFavoriteMovie> FavoriteMovies { get; set; } = new HashSet<CustomerFavoriteMovie>();
+    public DateTime? DeletedAt { get; set; }
 }

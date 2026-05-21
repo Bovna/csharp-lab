@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Vjezba.DAL;
 using Vjezba.Model.Entities;
 using Vjezba.Web.ViewModels;
@@ -16,14 +17,24 @@ public class ScreeningController : Controller
         _dbContext = dbContext;
     }
 
-    [HttpGet("")]
-    public IActionResult Index(int? dayOfWeek)
+    [Route("pretraga")]
+    public IActionResult Index(int? dayOfWeek, string? search, bool partial = false)
     {
+        var normalizedSearch = (search ?? string.Empty).Trim();
         var query = _dbContext.Screenings
+            .Where(screening => screening.DeletedAt == null
+                && screening.Movie.DeletedAt == null
+                && screening.Hall.DeletedAt == null
+                && screening.Hall.Cinema.DeletedAt == null)
             .Include(s => s.Movie)
             .Include(s => s.Hall)
                 .ThenInclude(h => h.Cinema)
             .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            query = query.Where(screening => EF.Functions.Like(screening.Movie.Title, $"%{normalizedSearch}%"));
+        }
 
         var screenings = query
             .OrderBy(screening => screening.StartTime)
@@ -39,14 +50,47 @@ public class ScreeningController : Controller
         }
 
         ViewBag.SelectedDayOfWeek = dayOfWeek;
+        ViewBag.Search = search;
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", screenings);
+        }
 
         return View(screenings);
     }
 
-    [HttpGet("detalji/{id}")]
+    public IActionResult Search(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var halls = _dbContext.Halls
+            .Include(hall => hall.Cinema)
+            .Where(hall => string.IsNullOrEmpty(normalizedQuery)
+                || EF.Functions.Like(hall.Name, $"%{normalizedQuery}%")
+                || EF.Functions.Like(hall.Cinema.Name + " - " + hall.Name, $"%{normalizedQuery}%"))
+            .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
+            .OrderBy(hall => hall.Cinema.Name)
+            .ThenBy(hall => hall.Name)
+            .Take(12)
+            .Select(hall => new
+            {
+                value = hall.Id,
+                text = hall.Cinema.Name + " - " + hall.Name
+            })
+            .ToList();
+
+        return Json(halls);
+    }
+
+    [Route("detalji/{id}")]
     public IActionResult Details(int id)
     {
         var screening = _dbContext.Screenings
+            .Where(s => s.DeletedAt == null
+                && s.Movie.DeletedAt == null
+                && s.Hall.DeletedAt == null
+                && s.Hall.Cinema.DeletedAt == null)
             .Include(s => s.Movie)
             .Include(s => s.Hall)
                 .ThenInclude(h => h.Cinema)
@@ -58,7 +102,10 @@ public class ScreeningController : Controller
         }
 
         var tickets = _dbContext.Tickets
-            .Where(t => t.ScreeningId == screening.Id)
+            .Where(t => t.ScreeningId == screening.Id
+                && t.DeletedAt == null
+                && t.Customer.DeletedAt == null
+                && (t.Seat == null || t.Seat.DeletedAt == null))
             .Include(t => t.Customer)
             .Include(t => t.Seat)
             .OrderByDescending(t => t.PurchasedAt)
@@ -73,91 +120,203 @@ public class ScreeningController : Controller
         return View(viewModel);
     }
 
-    [HttpGet("dodaj")]
+    [Route("dodaj")]
     public IActionResult Create()
     {
-        LoadScreeningFormData();
-        return View(new Screening());
+        var model = new ScreeningFormViewModel
+        {
+            StartTime = DateTime.Now,
+            EndTime = DateTime.Now.AddHours(2)
+        };
+
+        PrepareScreeningForm(model, isCreate: true);
+        return View(model);
     }
 
     [HttpPost("dodaj")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Create(Screening screening)
+    public IActionResult Create(ScreeningFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            LoadScreeningFormData();
-            return View(screening);
+            PrepareScreeningForm(model, isCreate: true);
+            return View(model);
         }
+
+        var screening = new Screening
+        {
+            StartTime = model.StartTime,
+            EndTime = model.EndTime,
+            Is3D = model.Is3D,
+            MovieId = model.MovieId!.Value,
+            HallId = model.HallId!.Value
+        };
 
         _dbContext.Screenings.Add(screening);
-        _dbContext.SaveChanges();
-
-        return RedirectToAction(nameof(Details), new { id = screening.Id });
-    }
-
-    [HttpGet("uredi/{id}")]
-    public IActionResult Edit(int id)
-    {
-        var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id);
-
-        if (screening is null)
-        {
-            return NotFound();
-        }
-
-        LoadScreeningFormData();
-        return View(screening);
-    }
-
-    [HttpPost("uredi/{id}")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Screening screening)
-    {
-        if (id != screening.Id)
-        {
-            return BadRequest();
-        }
-
-        if (!ModelState.IsValid)
-        {
-            LoadScreeningFormData();
-            return View(screening);
-        }
-
-        _dbContext.Screenings.Update(screening);
-        _dbContext.SaveChanges();
-
-        return RedirectToAction(nameof(Details), new { id = screening.Id });
-    }
-
-    [HttpPost("obrisi/{id}")]
-    [ValidateAntiForgeryToken]
-    public IActionResult Delete(int id)
-    {
-        var screening = _dbContext.Screenings.Find(id);
-
-        if (screening is null)
-        {
-            return NotFound();
-        }
-
-        _dbContext.Screenings.Remove(screening);
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
     }
 
-    private void LoadScreeningFormData()
+    [Route("uredi/{id}")]
+    [ActionName("Edit")]
+    public IActionResult EditGet(int id)
     {
-        ViewBag.Movies = _dbContext.Movies
-            .OrderBy(movie => movie.Title)
+        var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+
+        if (screening is null)
+        {
+            return NotFound();
+        }
+
+        var model = new ScreeningFormViewModel
+        {
+            Id = screening.Id,
+            StartTime = screening.StartTime,
+            EndTime = screening.EndTime,
+            Is3D = screening.Is3D,
+            MovieId = screening.MovieId,
+            HallId = screening.HallId
+        };
+
+        PrepareScreeningForm(model, isCreate: false);
+        return View(model);
+    }
+
+    [HttpPost("uredi/{id}")]
+    [ActionName("Edit")]
+    public async Task<IActionResult> EditPost(int id)
+    {
+        var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+
+        if (screening is null)
+        {
+            return NotFound();
+        }
+
+        var ok = await TryUpdateModelAsync(screening, string.Empty,
+            s => s.StartTime,
+            s => s.EndTime,
+            s => s.Is3D,
+            s => s.MovieId,
+            s => s.HallId);
+
+        if (ok && ModelState.IsValid)
+        {
+            _dbContext.SaveChanges();
+            return RedirectToAction(nameof(Index));
+        }
+
+        var model = new ScreeningFormViewModel
+        {
+            Id = screening.Id,
+            StartTime = screening.StartTime,
+            EndTime = screening.EndTime,
+            Is3D = screening.Is3D,
+            MovieId = screening.MovieId,
+            HallId = screening.HallId
+        };
+
+        PrepareScreeningForm(model, isCreate: false);
+
+        return View(model);
+    }
+
+    [HttpPost("obrisi/{id}")]
+    public IActionResult Delete(int id)
+    {
+        var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+
+        if (screening is null)
+        {
+            return NotFound();
+        }
+
+        screening.DeletedAt = DateTime.UtcNow;
+        SoftDeleteScreening(screening);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private void SoftDeleteScreening(Screening screening)
+    {
+        var deletedAt = screening.DeletedAt ?? DateTime.UtcNow;
+        screening.DeletedAt = deletedAt;
+
+        var tickets = _dbContext.Tickets
+            .Where(ticket => ticket.ScreeningId == screening.Id && ticket.DeletedAt == null)
             .ToList();
 
-        ViewBag.Halls = _dbContext.Halls
-            .Include(hall => hall.Cinema)
-            .OrderBy(hall => hall.Cinema.Name)
-            .ThenBy(hall => hall.Name)
-            .ToList();
+        foreach (var ticket in tickets)
+        {
+            ticket.DeletedAt = deletedAt;
+        }
+    }
+
+    private void PrepareScreeningForm(ScreeningFormViewModel model, bool isCreate = false)
+    {
+        model.MovieSelector = new AutocompleteViewModel
+        {
+            InputName = nameof(model.MovieId),
+            Label = "Film",
+            Endpoint = Url.Action(nameof(MovieController.Search), "Movie") ?? "/filmovi/search",
+            SearchPlaceholder = "Pretražite film po naslovu",
+            RequiredMessage = "Film je obavezan.",
+            Items = BuildSelectItems(
+                _dbContext.Movies
+                    .Where(movie => movie.DeletedAt == null)
+                    .OrderBy(movie => movie.Title)
+                    .Select(movie => new SelectListItem
+                    {
+                        Value = movie.Id.ToString(),
+                        Text = movie.Title,
+                        Selected = model.MovieId.HasValue && movie.Id == model.MovieId.Value
+                    })
+                    .ToList(),
+                model.MovieId,
+                isCreate)
+        };
+
+        model.HallSelector = new AutocompleteViewModel
+        {
+            InputName = nameof(model.HallId),
+            Label = "Dvorana",
+            Endpoint = Url.Action(nameof(Search), "Screening") ?? "/projekcije/search",
+            SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
+            RequiredMessage = "Dvorana je obavezna.",
+            Items = BuildSelectItems(
+                _dbContext.Halls
+                    .Include(hall => hall.Cinema)
+                    .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
+                    .OrderBy(hall => hall.Cinema.Name)
+                    .ThenBy(hall => hall.Name)
+                    .Select(hall => new SelectListItem
+                    {
+                        Value = hall.Id.ToString(),
+                        Text = hall.Cinema.Name + " - " + hall.Name,
+                        Selected = model.HallId.HasValue && hall.Id == model.HallId.Value
+                    })
+                    .ToList(),
+                model.HallId,
+                isCreate)
+        };
+    }
+
+    private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)
+    {
+        var selectItems = new List<SelectListItem>();
+
+        if (!isCreate)
+        {
+            selectItems.Add(new SelectListItem
+            {
+                Text = "- odaberite -",
+                Value = string.Empty,
+                Selected = !selectedValue.HasValue
+            });
+        }
+
+        selectItems.AddRange(items);
+        return selectItems;
     }
 }

@@ -24,7 +24,10 @@ public class TicketBuilderController : Controller
     {
         var model = new TicketBuilderCinemaListViewModel
         {
-            Cinemas = _dbContext.Cinemas.OrderBy(c => c.Name).ToList()
+            Cinemas = _dbContext.Cinemas
+                .Where(c => c.DeletedAt == null)
+                .OrderBy(c => c.Name)
+                .ToList()
         };
 
         return View(model);
@@ -33,14 +36,18 @@ public class TicketBuilderController : Controller
     [HttpGet]
     public IActionResult Movies(int cinemaId)
     {
-        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
+        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
         if (cinema is null)
         {
             return RedirectToAction(nameof(Index));
         }
 
         var movies = _dbContext.Movies
-            .Where(m => m.Screenings.Any(s => s.Hall.CinemaId == cinemaId))
+            .Where(m => m.DeletedAt == null
+                && m.Screenings.Any(s => s.DeletedAt == null
+                    && s.Hall.CinemaId == cinemaId
+                    && s.Hall.DeletedAt == null
+                    && s.Hall.Cinema.DeletedAt == null))
             .OrderBy(m => m.Title)
             .Select(m => new TicketBuilderMovieCardViewModel
             {
@@ -66,15 +73,19 @@ public class TicketBuilderController : Controller
     [HttpGet]
     public IActionResult Screenings(int cinemaId, int movieId)
     {
-        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
-        var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId);
+        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
+        var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId && m.DeletedAt == null);
         if (cinema is null || movie is null)
         {
             return RedirectToAction(nameof(Index));
         }
 
         var screenings = _dbContext.Screenings
-            .Where(s => s.Hall.CinemaId == cinemaId && s.MovieId == movieId)
+            .Where(s => s.Hall.CinemaId == cinemaId
+                && s.MovieId == movieId
+                && s.DeletedAt == null
+                && s.Hall.DeletedAt == null
+                && s.Hall.Cinema.DeletedAt == null)
             .Include(s => s.Hall)
             .OrderBy(s => s.StartTime)
             .Select(s => new TicketBuilderScreeningCardViewModel
@@ -103,11 +114,14 @@ public class TicketBuilderController : Controller
     [HttpGet]
     public IActionResult Seats(int cinemaId, int movieId, int screeningId)
     {
-        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
-        var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId);
+        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
+        var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId && m.DeletedAt == null);
         var screening = _dbContext.Screenings
             .Include(s => s.Hall)
-            .FirstOrDefault(s => s.Id == screeningId);
+            .FirstOrDefault(s => s.Id == screeningId
+                && s.DeletedAt == null
+                && s.Hall.DeletedAt == null
+                && s.Hall.Cinema.DeletedAt == null);
 
         if (cinema is null || movie is null || screening is null)
         {
@@ -115,7 +129,7 @@ public class TicketBuilderController : Controller
         }
 
         var seats = _dbContext.Seats
-            .Where(s => s.HallId == screening.HallId)
+            .Where(s => s.HallId == screening.HallId && s.DeletedAt == null)
             .OrderBy(s => s.RowLabel)
             .ThenBy(s => s.SeatNumber)
             .Select(s => new TicketBuilderSeatViewModel
@@ -130,6 +144,7 @@ public class TicketBuilderController : Controller
         var takenSeatIds = _dbContext.Tickets
             .Where(t => t.ScreeningId == screeningId
                 && t.SeatId.HasValue
+                && t.DeletedAt == null
                 && (t.Status == TicketStatus.Active || t.Status == TicketStatus.Used))
             .Select(t => t.SeatId!.Value)
             .Distinct()
@@ -176,7 +191,6 @@ public class TicketBuilderController : Controller
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public IActionResult Purchase(TicketBuilderCheckoutInputModel input)
     {
         if (!TryGetPurchaseContext(input.CinemaId, input.MovieId, input.ScreeningId, input.SeatId, out var cinema, out var movie, out var screening, out var seat))
@@ -184,7 +198,7 @@ public class TicketBuilderController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == input.CustomerId);
+        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == input.CustomerId && c.DeletedAt == null);
         if (customer is null)
         {
             ModelState.AddModelError(nameof(TicketBuilderCheckoutInputModel.CustomerId), "Odaberite valjanog kupca.");
@@ -225,12 +239,18 @@ public class TicketBuilderController : Controller
         out Screening? screening,
         out Seat? seat)
     {
-        cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId);
-        movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId);
+        cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
+        movie = _dbContext.Movies.FirstOrDefault(m => m.Id == movieId && m.DeletedAt == null);
         screening = _dbContext.Screenings
             .Include(s => s.Hall)
-            .FirstOrDefault(s => s.Id == screeningId);
-        seat = _dbContext.Seats.FirstOrDefault(s => s.Id == seatId);
+            .FirstOrDefault(s => s.Id == screeningId
+                && s.DeletedAt == null
+                && s.Hall.DeletedAt == null
+                && s.Hall.Cinema.DeletedAt == null);
+        seat = _dbContext.Seats.FirstOrDefault(s => s.Id == seatId
+            && s.DeletedAt == null
+            && s.Hall.DeletedAt == null
+            && s.Hall.Cinema.DeletedAt == null);
 
         if (cinema is null || movie is null || screening is null || seat is null)
         {
@@ -248,6 +268,7 @@ public class TicketBuilderController : Controller
         return _dbContext.Tickets.Any(t =>
             t.ScreeningId == screeningId
             && t.SeatId == seatId
+            && t.DeletedAt == null
             && (t.Status == TicketStatus.Active || t.Status == TicketStatus.Used));
     }
 
@@ -272,6 +293,7 @@ public class TicketBuilderController : Controller
             SeatType = seat.SeatType.ToString(),
             Price = CalculateSeatPrice(seat.SeatType, screening.Is3D),
             Customers = _dbContext.Customers
+                .Where(c => c.DeletedAt == null)
                 .OrderBy(c => c.LastName)
                 .ThenBy(c => c.FirstName)
                 .Select(c => new TicketBuilderCheckoutCustomerViewModel

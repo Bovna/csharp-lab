@@ -16,4 +16,5 @@ public class Hall
     public virtual Cinema Cinema { get; set; } = null!;
     public virtual ICollection<Seat> Seats { get; set; } = new HashSet<Seat>();
     public virtual ICollection<Screening> Screenings { get; set; } = new HashSet<Screening>();
+    public DateTime? DeletedAt { get; set; }
 }

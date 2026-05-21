@@ -2,90 +2,61 @@
 
 @{
     ViewData["Title"] = "Filmovi";
+    var selectedLanguage = ViewBag.SelectedLanguage as string;
+    var search = ViewBag.Search as string;
 }
 
 <div class="container py-4 animate-fade-in-up">
-    <div class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+        <div>
+            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
                 Popis filmova</h1>
-                <span class="cinema-badge">Ukupno: @Model.Count</span>
             </div>
-
-            <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
-                <div class="cinema-card-header">Filtriraj po jeziku</div>
-                <div class="cinema-card-body">
-                    <div class="ui-field" style="max-width: 430px;">
-                        <label for="language" class="ui-field__label">Odaberite jezik</label>
-                        <select id="language" class="ui-field__input" onchange="navigateMoviesByLanguage(this.value)"
-                                aria-label="Filtriraj filmove po jeziku">
-                            <option value="">Svi jezici</option>
-                            @if (ViewBag.Languages != null)
-                            {
-                                foreach (var lang in ViewBag.Languages as List<string> ?? new List<string>())
-                                {
-                                    if ((string)ViewBag.SelectedLanguage == lang)
-                                    {
-                                        <option value="@lang" selected>@lang</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@lang">@lang</option>
-                                    }
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="cinema-card animate-fade-in-up" style="animation-delay: 0.1s;">
-            <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                <table class="ui-table entity-index-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Naslov</th>
-                            <th>Žanr</th>
-                            <th>Trajanje</th>
-                            <th>Jezik</th>
-                            <th>Izlazak</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var movie in Model)
-                        {
-                            <tr>
-                                <td class="text-muted">@movie.Id</td>
-                                <td style="font-weight: 500; color: #fff;">@movie.Title</td>
-                                <td>@movie.Genre</td>
-                                <td>@movie.DurationMinutes min</td>
-                                <td>@movie.Language</td>
-                                <td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td>
-                                <td class="ui-table__actions">
-                                    <a asp-action="Details" asp-route-id="@movie.Id" class="ui-btn ui-btn--primary"
-                                       style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="mt-5 pt-3 text-end">
             <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novi film</a>
         </div>
-    </div>
-    <script>
-        function navigateMoviesByLanguage(language) {
-            if (!language) {
-                window.location.href = '@Url.Content("~/filmovi")';
-                return;
-            }
 
-            window.location.href = '@Url.Content("~/filmovi/jezik=")' + encodeURIComponent(language);
-        }
-    </script>
+        <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+            <div class="cinema-card-header">Pretraživanje</div>
+            <div class="cinema-card-body">
+                <form asp-action="Index" asp-route-language="@selectedLanguage" method="get"
+                      class="ui-form entity-index-search" data-ajax-search-form
+                      data-ajax-results-target="#movie-index-results">
+                    <div class="row g-4 align-items-end">
+                        <div class="col-12 col-lg-7">
+                            <div class="ui-field mb-0">
+                                <label for="movieSearch" class="ui-field__label">Naziv filma</label>
+                                <input id="movieSearch" name="search" value="@search" class="ui-field__input" type="search"
+                                       placeholder="Pretražite po naslovu..." autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-5">
+                            <div class="ui-field mb-0">
+                                <label for="language" class="ui-field__label">Jezik</label>
+                                <select id="language" name="language" class="ui-field__input">
+                                    <option value="">Svi jezici</option>
+                                    @if (ViewBag.Languages != null)
+                                    {
+                                        foreach (var lang in ViewBag.Languages as List<string> ?? new List<string>())
+                                        {
+                                            if (string.Equals(selectedLanguage, lang, StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <option value="@lang" selected="selected">@lang</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@lang">@lang</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="movie-index-results" data-ajax-search-results-container>
+            @await Html.PartialAsync("_IndexResults", Model)
+        </div>
+    </div>

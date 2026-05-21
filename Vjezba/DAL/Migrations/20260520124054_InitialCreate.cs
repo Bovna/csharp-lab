@@ -67,7 +67,8 @@ namespace Vjezba.DAL.Migrations
                     ReleaseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Genre = table.Column<int>(type: "int", nullable: false),
                     Language = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AgeRating = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    AgeRating = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -238,25 +239,25 @@ namespace Vjezba.DAL.Migrations
 
             migrationBuilder.InsertData(
                 table: "Movies",
-                columns: new[] { "Id", "AgeRating", "Description", "DurationMinutes", "Genre", "Language", "ReleaseDate", "Title" },
+                columns: new[] { "Id", "AgeRating", "DeletedAt", "Description", "DurationMinutes", "Genre", "Language", "ReleaseDate", "Title" },
                 values: new object[,]
                 {
-                    { 1, "12+", "Sci-fi akcija o bijegu kroz galaksiju.", 155, 9, "EN", new DateTime(2025, 12, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), "Galactic Run" },
-                    { 2, "15+", "Kriminalisticka drama smjestena u Zagrebu.", 110, 4, "HR", new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Tiha Ulica" },
-                    { 3, "U", "Animirana avantura za cijelu obitelj.", 90, 2, "HR", new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), "Mali Izumitelj" },
-                    { 4, "16+", "Horror triler o ekspediciji koja krene po zlu.", 130, 7, "EN", new DateTime(2025, 9, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Planina Straha" },
-                    { 5, "12+", "Akcijski film o ilegalnim utrkama.", 125, 0, "EN", new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Brzina Noci" },
-                    { 6, "12+", "Romanticna drama snimljena na obali.", 100, 8, "HR", new DateTime(2025, 6, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), "Ljeto u Puli" },
-                    { 7, "15+", "Napeti triler o novinarskoj istrazi.", 105, 10, "EN", new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "Sjene Istine" },
-                    { 8, "10+", "Fantasy pustolovina kroz tri svijeta.", 125, 6, "EN", new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Unspecified), "Kraljevstvo Vjetra" },
-                    { 9, "U", "Komedija o tri prijatelja i jednoj svadbi.", 100, 3, "HR", new DateTime(2025, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Smijeh do Suza" },
-                    { 10, "U", "Dokumentarac o zivotu ispod antarktickog leda.", 90, 11, "EN", new DateTime(2024, 12, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "Ledena Dubina" },
-                    { 11, "12+", "Drama o glazbenici koja se vraca na pozornicu.", 112, 5, "HR", new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "Zvuk Tisine" },
-                    { 12, "10+", "Avanturisticki road trip kroz Europu.", 118, 1, "EN", new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), "Put Bez Mape" },
-                    { 13, "15+", "Krimi misterij u nocnom gradu.", 123, 4, "EN", new DateTime(2025, 12, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), "Nocturna" },
-                    { 14, "12+", "Napeta sci-fi misterija o nestalom signalu.", 108, 9, "EN", new DateTime(2026, 4, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Signal 404" },
-                    { 15, "U", "Dokumentarni film o arktickim ekspedicijama.", 96, 11, "HR", new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified), "Dnevnik Sjevera" },
-                    { 16, "12+", "Drama o povratku kuci nakon dugog putovanja.", 114, 5, "HR", new DateTime(2026, 3, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), "Juzni Vjetar" }
+                    { 1, "12+", null, "Sci-fi akcija o bijegu kroz galaksiju.", 155, 9, "EN", new DateTime(2025, 12, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), "Galactic Run" },
+                    { 2, "15+", null, "Kriminalisticka drama smjestena u Zagrebu.", 110, 4, "HR", new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Tiha Ulica" },
+                    { 3, "U", null, "Animirana avantura za cijelu obitelj.", 90, 2, "HR", new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), "Mali Izumitelj" },
+                    { 4, "16+", null, "Horror triler o ekspediciji koja krene po zlu.", 130, 7, "EN", new DateTime(2025, 9, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Planina Straha" },
+                    { 5, "12+", null, "Akcijski film o ilegalnim utrkama.", 125, 0, "EN", new DateTime(2026, 1, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Brzina Noci" },
+                    { 6, "12+", null, "Romanticna drama snimljena na obali.", 100, 8, "HR", new DateTime(2025, 6, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), "Ljeto u Puli" },
+                    { 7, "15+", null, "Napeti triler o novinarskoj istrazi.", 105, 10, "EN", new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "Sjene Istine" },
+                    { 8, "10+", null, "Fantasy pustolovina kroz tri svijeta.", 125, 6, "EN", new DateTime(2026, 3, 8, 0, 0, 0, 0, DateTimeKind.Unspecified), "Kraljevstvo Vjetra" },
+                    { 9, "U", null, "Komedija o tri prijatelja i jednoj svadbi.", 100, 3, "HR", new DateTime(2025, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "Smijeh do Suza" },
+                    { 10, "U", null, "Dokumentarac o zivotu ispod antarktickog leda.", 90, 11, "EN", new DateTime(2024, 12, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "Ledena Dubina" },
+                    { 11, "12+", null, "Drama o glazbenici koja se vraca na pozornicu.", 112, 5, "HR", new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), "Zvuk Tisine" },
+                    { 12, "10+", null, "Avanturisticki road trip kroz Europu.", 118, 1, "EN", new DateTime(2026, 2, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), "Put Bez Mape" },
+                    { 13, "15+", null, "Krimi misterij u nocnom gradu.", 123, 4, "EN", new DateTime(2025, 12, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), "Nocturna" },
+                    { 14, "12+", null, "Napeta sci-fi misterija o nestalom signalu.", 108, 9, "EN", new DateTime(2026, 4, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Signal 404" },
+                    { 15, "U", null, "Dokumentarni film o arktickim ekspedicijama.", 96, 11, "HR", new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Unspecified), "Dnevnik Sjevera" },
+                    { 16, "12+", null, "Drama o povratku kuci nakon dugog putovanja.", 114, 5, "HR", new DateTime(2026, 3, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), "Juzni Vjetar" }
                 });
 
             migrationBuilder.InsertData(

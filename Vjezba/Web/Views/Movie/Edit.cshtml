@@ -1,101 +1,18 @@
-@model Vjezba.Model.Entities.Movie
+@model Vjezba.Web.ViewModels.MovieFormViewModel
 
 @{
     ViewData["Title"] = "Uredi film";
+    ViewData["IsEdit"] = true;
 }
 
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
+        <div class="col-12 col-lg-8 entity-form">
             <div class="cinema-card animate-fade-in-up">
                 <div class="cinema-card-header">Uredi film</div>
                 <div class="cinema-card-body">
-                    <form asp-action="Edit" method="post" class="ui-form"
-                          onsubmit="return CinemaUI.validateForm(this);">
-                        <input type="hidden" asp-for="Id" />
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3"
-                             style="background-color: rgba(255,0,0,0.1); border-radius: 4px;"></div>
+                    <partial name="MovieForm" model="Model" view-data="ViewData" />
 
-                        <div class="mb-5">
-                            <h5 class="mb-3"
-                                style="color: var(--color-accent); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                Osnovne informacije</h5>
-                                <div class="ui-field">
-                                    <label asp-for="Title" class="ui-field__label">Naslov filma <span
-                                        style="color: #ef4444;">*</span></label>
-                                        <input asp-for="Title" class="ui-field__input" required />
-                                        <span class="ui-field__validation"></span>
-                                    </div>
-
-                                    <div class="ui-field">
-                                        <label asp-for="Description" class="ui-field__label" style="padding-top:20px;"">Opis <span
-                                            style=" color: #ef4444;">*</span></label>
-                                            <textarea asp-for="Description" class="ui-field__input" rows="3" required></textarea>
-                                            <span class="ui-field__validation"></span>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-5">
-                                        <h5 class="mb-3"
-                                            style="color: var(--color-accent); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                            Tehnički detalji</h5>
-                                            <div class="row g-4" style="gap:16px;">
-                                                <div class="col-md-6">
-                                                    <div class="ui-field">
-                                                        <label asp-for="Genre" class="ui-field__label">Žanr <span
-                                                            style="color: #ef4444;">*</span></label>
-                                                            <select asp-for="Genre" class="ui-field__input"
-                                                                    asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.MovieGenre>()"
-                                                                    aria-label="Odaberite žanr filma" required></select>
-                                                            <span class="ui-field__validation"></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-md-6">
-                                                        <div class="ui-field">
-                                                            <label asp-for="DurationMinutes" class="ui-field__label">Trajanje (min) <span
-                                                                style="color: #ef4444;">*</span></label>
-                                                                <input asp-for="DurationMinutes" class="ui-field__input" type="number"
-                                                                       required />
-                                                                <span class="ui-field__validation"></span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <div class="ui-field">
-                                                                <label asp-for="ReleaseDate" class="ui-field__label">Datum izlaska <span
-                                                                    style="color: #ef4444;">*</span></label>
-                                                                    <input asp-for="ReleaseDate" class="ui-field__input" type="date" required />
-                                                                    <span class="ui-field__validation"></span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-6">
-                                                                <div class="ui-field">
-                                                                    <label asp-for="Language" class="ui-field__label">Jezik <span
-                                                                        style="color: #ef4444;">*</span></label>
-                                                                        <input asp-for="Language" class="ui-field__input" required />
-                                                                        <span class="ui-field__validation"></span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="col-md-6">
-                                                                    <div class="ui-field">
-                                                                        <label asp-for="AgeRating" class="ui-field__label">Dobna oznaka <span
-                                                                            style="color: #ef4444;">*</span></label>
-                                                                            <input asp-for="AgeRating" class="ui-field__input" required />
-                                                                            <span class="ui-field__validation"></span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="ui-actions mt-4 pt-3 border-top">
-                                                                <button type="submit" class="ui-btn ui-btn--primary">Spremi promjene</button>
-                                                                <a asp-action="Details" asp-route-id="@Model.Id" class="ui-btn ui-btn--secondary"
-                                                                   style="width: 120px; padding: 0.36rem;">Odustani</a>
-                                                            </div>
-                                                        </form>
                                                     </div>
                                                 </div>
                                             </div>

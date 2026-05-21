@@ -49,7 +49,7 @@
             <article class="entity-kpi">
                 <p class="entity-kpi__label">Trajanje</p>
                 <p class="entity-kpi__value">@((Model.Screening.EndTime -
-                                                        Model.Screening.StartTime).TotalMinutes.ToString("0")) min</p>
+                                                                            Model.Screening.StartTime).TotalMinutes.ToString("0")) min</p>
                 </article>
                 <article class="entity-kpi">
                     <p class="entity-kpi__label">Format</p>
@@ -183,10 +183,16 @@
                     <script>
                         function handleDeleteScreening(event) {
                             event.preventDefault();
+                            const form = event.currentTarget.form;
+
+                            if (!form) {
+                                return false;
+                            }
+
                             CinemaUI.showConfirm({
                                 title: 'Potvrdite brisanje',
                                 body: 'Jeste li sigurni da želite trajno obrisati ovu projekciju?',
-                                onConfirm: () => event.currentTarget.form.submit()
+                                onConfirm: () => form.submit()
                             });
                             return false;
                         }

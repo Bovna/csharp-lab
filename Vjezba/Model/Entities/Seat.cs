@@ -14,4 +14,5 @@ public class Seat
     [ForeignKey("Hall")]
     public int HallId { get; set; }
     public virtual Hall Hall { get; set; } = null!;
+    public DateTime? DeletedAt { get; set; }
 }

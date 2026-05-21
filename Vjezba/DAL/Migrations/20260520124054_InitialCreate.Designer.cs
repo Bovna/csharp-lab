@@ -12,7 +12,7 @@ using Vjezba.DAL;
 namespace Vjezba.DAL.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    [Migration("20260507095923_InitialCreate")]
+    [Migration("20260520124054_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -589,6 +589,9 @@ namespace Vjezba.DAL.Migrations
                     b.Property<string>("AgeRating")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()

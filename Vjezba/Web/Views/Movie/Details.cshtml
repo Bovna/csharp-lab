@@ -108,10 +108,11 @@
     <script>
         function handleDeleteMovie(event) {
             event.preventDefault();
+            const form = event.currentTarget.form;
             CinemaUI.showConfirm({
                 title: 'Potvrdite brisanje',
                 body: 'Jeste li sigurni da želite trajno obrisati ovaj film?',
-                onConfirm: () => event.currentTarget.form.submit()
+                onConfirm: () => form.submit()
             });
             return false;
         }

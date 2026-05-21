@@ -23,4 +23,6 @@ public class Ticket
     [ForeignKey("Customer")]
     public int CustomerId { get; set; }
     public virtual Customer Customer { get; set; } = null!;
+
+    public DateTime? DeletedAt { get; set; }
 }

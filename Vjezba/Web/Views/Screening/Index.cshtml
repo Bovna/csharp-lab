@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Projekcije";
     var selectedDayOfWeek = ViewBag.SelectedDayOfWeek?.ToString();
+    var search = ViewBag.Search as string;
     var dayOptions = new[]
     {
         (Value: "1", Label: "Ponedjeljak"),
@@ -17,93 +18,52 @@
 
 <div class="container py-4 animate-fade-in-up">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
-        <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis
-            projekcija</h1>
-            <span class="cinema-badge">Ukupno: @Model.Count</span>
+        <div>
+            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+                Popis projekcija</h1>
+            </div>
+            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu projekciju</a>
         </div>
 
         <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
-            <div class="cinema-card-header">Filtriranje po danu u tjednu</div>
+            <div class="cinema-card-header">Pretraživanje</div>
             <div class="cinema-card-body">
-                <div class="ui-field" style="max-width: 430px;">
-                    <label for="dayOfWeek" class="ui-field__label">Odaberite dan</label>
-                    <select id="dayOfWeek" class="ui-field__input" onchange="navigateScreeningsByDay(this.value)"
-                            aria-label="Filtriraj projekcije po danu u tjednu">
-                        <option value="">Svi dani</option>
-                        @foreach (var dayOption in dayOptions)
-                        {
-                            if (selectedDayOfWeek == dayOption.Value)
-                            {
-                                <option value="@dayOption.Value" selected="selected">@dayOption.Label</option>
-                            }
-                            else
-                            {
-                                <option value="@dayOption.Value">@dayOption.Label</option>
-                            }
-                        }
-                    </select>
-                </div>
+                <form asp-action="Index" asp-route-dayOfWeek="@selectedDayOfWeek" method="get"
+                      class="ui-form entity-index-search" data-ajax-search-form
+                      data-ajax-results-target="#screening-index-results">
+                    <div class="row g-4 align-items-end">
+                        <div class="col-12 col-lg-7">
+                            <div class="ui-field mb-0">
+                                <label for="screeningSearch" class="ui-field__label">Naziv filma</label>
+                                <input id="screeningSearch" name="search" value="@search" class="ui-field__input"
+                                       type="search" placeholder="Pretražite po naslovu filma..." autocomplete="off" />
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-5">
+                            <div class="ui-field mb-0">
+                                <label for="dayOfWeek" class="ui-field__label">Dan u tjednu</label>
+                                <select id="dayOfWeek" name="dayOfWeek" class="ui-field__input">
+                                    <option value="">Svi dani</option>
+                                    @foreach (var dayOption in dayOptions)
+                                    {
+                                        if (selectedDayOfWeek == dayOption.Value)
+                                        {
+                                            <option value="@dayOption.Value" selected="selected">@dayOption.Label</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@dayOption.Value">@dayOption.Label</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <div class="cinema-card">
-            <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                <table class="ui-table entity-index-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Film</th>
-                            <th>Kino</th>
-                            <th>Dvorana</th>
-                            <th>Početak</th>
-                            <th>Završetak</th>
-                            <th>3D projekcija</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var screening in Model)
-                        {
-                            <tr>
-                                <td class="text-muted">@screening.Id</td>
-                                <td>@(screening.Movie?.Title ?? "-")</td>
-                                <td>@(screening.Hall?.Cinema?.Name ?? "-")</td>
-                                <td>@(screening.Hall?.Name ?? "-")</td>
-                                <td>@screening.StartTime.ToString("dd.MM.yyyy HH:mm")</td>
-                                <td>@screening.EndTime.ToString("dd.MM.yyyy HH:mm")</td>
-                                <td>
-                                    @if (screening.Is3D)
-                                    {
-                                        <span class="cinema-status-yes">Da</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="cinema-status-no">Ne</span>
-                                    }
-                                </td>
-                                <td class="ui-table__actions">
-                                    <a asp-action="Details" asp-route-id="@screening.Id" class="ui-btn ui-btn--primary"
-                                       style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="mt-5 pt-3 text-end">
-            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu projekciju</a>
+        <div id="screening-index-results" data-ajax-search-results-container>
+            @await Html.PartialAsync("_IndexResults", Model)
         </div>
     </div>
-
-    <script>
-        function navigateScreeningsByDay(dayOfWeek) {
-            if (!dayOfWeek) {
-                window.location.href = '@Url.Content("~/projekcije")';
-                return;
-            }
-
-            window.location.href = '@Url.Content("~/projekcije")' + '?dayOfWeek=' + encodeURIComponent(dayOfWeek);
-        }
-    </script>

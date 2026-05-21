@@ -14,4 +14,5 @@ public class Cinema
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public virtual ICollection<Hall> Halls { get; set; } = new HashSet<Hall>();
+    public DateTime? DeletedAt { get; set; }
 }
