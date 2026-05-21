@@ -42,8 +42,7 @@ public class HallController : Controller
         }
 
         var halls = query
-            .OrderBy(hall => hall.Cinema.Name)
-            .ThenBy(hall => hall.Name)
+            .OrderBy(hall => hall.Id)
             .ToList();
 
         ViewBag.Supports3D = supports3D;
@@ -55,6 +54,30 @@ public class HallController : Controller
         }
 
         return View(halls);
+    }
+
+    [Route("pretraga")]
+    public IActionResult Search(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var halls = _dbContext.Halls
+            .Include(hall => hall.Cinema)
+            .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
+            .Where(hall => string.IsNullOrEmpty(normalizedQuery)
+                || EF.Functions.Like(hall.Name, $"%{normalizedQuery}%")
+                || EF.Functions.Like(hall.Cinema.Name, $"%{normalizedQuery}%"))
+            .OrderBy(hall => hall.Cinema.Name)
+            .ThenBy(hall => hall.Name)
+            .Take(12)
+            .Select(hall => new
+            {
+                value = hall.Id,
+                text = hall.Cinema.Name + " - " + hall.Name
+            })
+            .ToList();
+
+        return Json(halls);
     }
 
     [Route("detalji/{id}")]
@@ -209,7 +232,7 @@ public class HallController : Controller
         {
             InputName = nameof(model.CinemaId),
             Label = "Kino",
-            Endpoint = Url.Action(nameof(CinemaController.Index), "Cinema") ?? "/kina",
+            Endpoint = Url.Action(nameof(CinemaController.Search), "Cinema") ?? "/kina/pretraga",
             SearchPlaceholder = "Pretražite kino po nazivu",
             RequiredMessage = "Kino je obavezno.",
             Items = BuildSelectItems(

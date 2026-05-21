@@ -41,7 +41,7 @@
             ["Movies"] = "Odabir filma",
             ["Screenings"] = "Odabir projekcije",
             ["Seats"] = "Odabir sjedala",
-            ["Checkout"] = "Placanje"
+            ["Checkout"] = "Plaćanje"
         };
 
         var currentControllerLabel = uiControllerLabels.TryGetValue(currentController, out var controllerLabel)
@@ -61,30 +61,20 @@
     <header class="site-header">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="nav-brand" asp-area="" asp-controller="Home" asp-action="Index">Kino Sustav</a>
-            <nav>
+            <nav class="site-nav" aria-label="Glavna navigacija">
                 <ul class="nav-menu">
-                    <li><a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home"
-                               asp-action="Index">Početna</a></li>
-                        <li><a class="nav-link @(currentController == "Movie" ? "active" : "")" asp-controller="Movie"
-                                   asp-action="Index">Filmovi</a></li>
-                            <li><a class="nav-link @(currentController == "Screening" ? "active" : "")"
-                                       asp-controller="Screening" asp-action="Index">Projekcije</a></li>
-                                <li><a class="nav-link @(currentController == "Cinema" ? "active" : "")" asp-controller="Cinema"
-                                           asp-action="Index">Kina</a></li>
-                                    <li><a class="nav-link @(currentController == "Hall" ? "active" : "")" asp-controller="Hall"
-                                               asp-action="Index">Dvorane</a></li>
-                                        <li><a class="nav-link @(currentController == "Seat" ? "active" : "")" asp-controller="Seat"
-                                                   asp-action="Index">Sjedala</a></li>
-                                            <li><a class="nav-link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer"
-                                                       asp-action="Index">Kupci</a></li>
-                                                <li><a class="nav-link @(currentController == "Ticket" ? "active" : "")" asp-controller="Ticket"
-                                                           asp-action="Index">Ulaznice</a></li>
-                                                    <li><a class="nav-link @(currentController == "TicketBuilder" ? "active" : "")"
-                                                               asp-controller="TicketBuilder" asp-action="Index">Brza Kupnja</a></li>
-                                                    </ul>
-                                                </nav>
-                                            </div>
-                                        </header>
+                    <li><a class="nav-link @(currentController == "Movie" ? "active" : "")" asp-controller="Movie" asp-action="Index">Filmovi</a></li>
+                    <li><a class="nav-link @(currentController == "Screening" ? "active" : "")" asp-controller="Screening" asp-action="Index">Projekcije</a></li>
+                    <li><a class="nav-link @(currentController == "Cinema" ? "active" : "")" asp-controller="Cinema" asp-action="Index">Kina</a></li>
+                    <li><a class="nav-link @(currentController == "Hall" ? "active" : "")" asp-controller="Hall" asp-action="Index">Dvorane</a></li>
+                    <li><a class="nav-link @(currentController == "Seat" ? "active" : "")" asp-controller="Seat" asp-action="Index">Sjedala</a></li>
+                    <li><a class="nav-link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">Kupci</a></li>
+                    <li><a class="nav-link @(currentController == "Ticket" ? "active" : "")" asp-controller="Ticket" asp-action="Index">Ulaznice</a></li>
+                    <li><a class="nav-link @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Brza Kupnja</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
                                         <div class="container site-main-container">
                                             @if (!(currentController == "Home" && currentAction == "Index"))

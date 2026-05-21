@@ -34,6 +34,44 @@
 .tb-step-line {
   display: flex;
   justify-content: space-between;
+
+@keyframes tbReveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tbSeatPulse {
+  0% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes tbPanelPulse {
+  0% {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+  55% {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(16, 185, 129, 0.18);
+  }
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+}
   align-items: center;
   background: var(--color-bg-surface);
   border-radius: var(--radius-lg);
@@ -45,6 +83,17 @@
 
 .tb-step {
   color: var(--color-text-muted);
+
+.tb-page.is-ready .tb-header,
+.tb-page.is-ready .tb-step-line,
+.tb-page.is-ready .tb-grid-cards > *,
+.tb-page.is-ready .tb-list-item,
+.tb-page.is-ready .tb-seat-row,
+.tb-page.is-ready .tb-price-panel,
+.tb-page.is-ready .cinema-card {
+  animation: tbReveal 420ms cubic-bezier(0.2, 0.12, 0.1, 1) both;
+  animation-delay: var(--tb-delay, 0ms);
+}
   font-size: 0.9rem;
   font-weight: 500;
   text-decoration: none;
@@ -65,6 +114,7 @@
   width: 1px;
   height: 1.5rem;
   background: var(--color-border);
+  transform: translateY(-1px);
 }
 
 .tb-step.active {
@@ -74,6 +124,10 @@
 
 .tb-step.is-disabled {
   color: #6f757c;
+
+.tb-grid-cards > * {
+  will-change: transform, opacity;
+}
   opacity: 0.8;
   cursor: not-allowed;
 }
@@ -89,7 +143,7 @@ a.tb-step.is-link:hover {
   grid-template-columns: repeat(
     auto-fill,
     minmax(220px, 1fr)
-  ); /* smaller cards */
+  transform: translateY(-3px);
   gap: var(--spacing-3);
 }
 
@@ -109,6 +163,7 @@ a.tb-step.is-link:hover {
 .tb-card-link:hover {
   border-color: var(--color-accent);
   transform: translateY(-4px);
+  transform: translateY(-1px);
   box-shadow: 0 8px 16px rgba(0, 230, 118, 0.1);
   color: var(--color-text-main);
 }
@@ -134,7 +189,7 @@ a.tb-step.is-link:hover {
 /* Lists (Vertical list items for Screenings) */
 .tb-list {
   display: flex;
-  flex-direction: column;
+  transform: scale(1.08);
   gap: var(--spacing-2);
 }
 
@@ -142,7 +197,8 @@ a.tb-step.is-link:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--color-bg-surface);
+  transform: scale(1.03);
+  animation: tbSeatPulse 260ms ease-out;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--spacing-2) var(--spacing-3);
@@ -153,6 +209,10 @@ a.tb-step.is-link:hover {
 
 .tb-compact-list-item {
   /* optional specific compact styling */
+
+.tb-price-panel.is-updated {
+  animation: tbPanelPulse 280ms cubic-bezier(0.2, 0.12, 0.1, 1);
+}
   padding: var(--spacing-2) var(--spacing-3);
 }
 .tb-screening-info {

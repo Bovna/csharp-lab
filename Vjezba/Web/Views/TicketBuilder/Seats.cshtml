@@ -11,7 +11,7 @@
 <div class="tb-cinema tb-page tb-page-seats">
     <div class="tb-header">
         <h1>@Model.MovieTitle</h1>
-        <p>Korak 4/5: odaberi sjedalo i nastavi na placanje</p>
+        <p>Korak 4/5: odaberi sjedalo i nastavi na plaćanje</p>
         <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
     </div>
 
@@ -30,7 +30,7 @@
             <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings"
                asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">3 Projekcija</a>
             <span class="tb-step active" aria-current="step">4 Sjedalo</span>
-            <span class="tb-step is-disabled" aria-disabled="true">5 Placanje</span>
+                <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
         </div>
 
         <div class="tb-seat-layout">
@@ -133,7 +133,10 @@
                         });
                         const checkoutLink = `${checkoutBaseUrl}?${checkoutParams.toString()}`;
 
-                        panel.innerHTML = `<strong>Sjedalo:</strong> ${seatLabel} | <strong>Tip:</strong> ${seatType} | <strong>Cijena:</strong> <span style="color:var(--color-accent)">${price} EUR</span><div style="margin-top:16px"><a class="cinema-btn" href="${checkoutLink}">Nastavi na placanje</a></div>`;
+                        panel.innerHTML = `<strong>Sjedalo:</strong> ${seatLabel} | <strong>Tip:</strong> ${seatType} | <strong>Cijena:</strong> <span style="color:var(--color-accent)">${price} EUR</span><div style="margin-top:16px"><a class="cinema-btn" href="${checkoutLink}">Nastavi na plaćanje</a></div>`;
+                        panel.classList.remove("is-updated");
+                        void panel.offsetWidth;
+                        panel.classList.add("is-updated");
                     });
                 });
             })();

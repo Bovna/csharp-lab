@@ -1,8 +1,8 @@
-@model Vjezba.Model.Entities.Seat
+@model Vjezba.Web.ViewModels.SeatFormViewModel
 
 @{
     ViewData["Title"] = "Uredi sjedalo";
-    var halls = ViewBag.Halls as List<Vjezba.Model.Entities.Hall> ?? new List<Vjezba.Model.Entities.Hall>();
+    ViewData["IsEdit"] = true;
 }
 
 <div class="container py-4">
@@ -11,56 +11,7 @@
             <div class="cinema-card animate-fade-in-up">
                 <div class="cinema-card-header">Uredi sjedalo</div>
                 <div class="cinema-card-body">
-                    <form asp-action="Edit" method="post" class="ui-form"
-                          onsubmit="return CinemaUI.validateForm(this);">
-                        <input type="hidden" asp-for="Id" />
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3"
-                             style="background-color: rgba(255,0,0,0.1); border-radius: 4px;"></div>
-                        <div class="row g-4">
-                            <div class="col-md-4">
-                                <div class="ui-field"><label asp-for="RowLabel" class="ui-field__label">Oznaka reda
-                                    <span style="color: #ef4444;">*</span></label><input asp-for="RowLabel"
-                                                                                         class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ui-field"><label asp-for="SeatNumber" class="ui-field__label">Broj sjedala
-                                    <span style="color: #ef4444;">*</span></label><input asp-for="SeatNumber"
-                                                                                         class="ui-field__input" type="number" min="1" required /><span
-                                    class="ui-field__validation"></span></div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="ui-field"><label asp-for="SeatType" class="ui-field__label">Tip sjedala
-                                        <span style="color: #ef4444;">*</span></label><select asp-for="SeatType"
-                                                                                              class="ui-field__input"
-                                                                                              asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.SeatType>()"
-                                                                                              required></select><span class="ui-field__validation"></span></div>
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="ui-field"><label asp-for="HallId" class="ui-field__label">Dvorana <span
-                                            style="color: #ef4444;">*</span></label><select asp-for="HallId"
-                                                                                        class="ui-field__input" required>
-                                            <option value="">Odaberite dvoranu</option>@foreach (var hall in halls) { if
-                                            (hall.Id == Model.HallId) {
-                                                <option value="@hall.Id" selected>@hall.Cinema.Name
-                                                    - @hall.Name</option>
-                                                } else
-                                                {
-
-                                                    <option value="@hall.Id">@hall.Cinema.Name -
-                                                        @hall.Name</option>
-                                                    }
-                                                }
-                                            </select><span class="ui-field__validation"></span></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="ui-actions mt-4 pt-3 border-top ui-actions--stack-mobile">
-                                        <button type="submit" class="ui-btn ui-btn--primary">Spremi promjene</button>
-                                        <a asp-action="Details" asp-route-id="@Model.Id"
-                                           class="ui-btn ui-btn--secondary">Odustani</a>
-                                    </div>
-                                </form>
+                    <partial name="SeatForm" model="Model" view-data="ViewData" />
                             </div>
                         </div>
                     </div>

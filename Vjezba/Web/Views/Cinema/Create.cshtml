@@ -1,7 +1,8 @@
-@model Vjezba.Model.Entities.Cinema
+@model Vjezba.Web.ViewModels.CinemaFormViewModel
 
 @{
     ViewData["Title"] = "Dodaj kino";
+    ViewData["IsEdit"] = false;
 }
 
 <div class="container py-4">
@@ -10,101 +11,9 @@
             <div class="cinema-card animate-fade-in-up">
                 <div class="cinema-card-header">Dodaj novo kino</div>
                 <div class="cinema-card-body" style="padding: 32px;">
-                    <form asp-action="Create" method="post" class="ui-form"
-                          onsubmit="return CinemaUI.validateForm(this);">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3"
-                             style="background-color: rgba(255,0,0,0.1); border-radius: 4px;"></div>
-
-                        <div class="mb-5">
-                            <h5 class="mb-3"
-                                style="color: var(--color-accent); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                Osnovne informacije</h5>
-                                <div class="ui-field">
-                                    <label asp-for="Name" class="ui-field__label">Naziv kina <span
-                                        style="color: #ef4444;">*</span></label>
-                                        <input asp-for="Name" class="ui-field__input" placeholder="npr. Cinemaxx Zagreb"
-                                               required />
-                                        <span class="ui-field__validation"></span>
-                                    </div>
-
-                                    <div class="row g-4 mt-4" style="gap:24px;">
-                                        <div class="col-md-6">
-                                            <div class="ui-field">
-                                                <label asp-for="City" class="ui-field__label">Grad <span
-                                                    style="color: #ef4444;">*</span></label>
-                                                    <input asp-for="City" class="ui-field__input" placeholder="npr. Zagreb"
-                                                           required />
-                                                    <span class="ui-field__validation"></span>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <div class="ui-field">
-                                                    <label asp-for="PostalCode" class="ui-field__label">Poštanski broj <span
-                                                        style="color: #ef4444;">*</span></label>
-                                                        <input asp-for="PostalCode" class="ui-field__input" placeholder="npr. 10000"
-                                                               required />
-                                                        <span class="ui-field__validation"></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-5">
-                                            <h5 class="mb-3"
-                                                style="color: var(--color-accent); font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                                Adresa i kontakt</h5>
-                                                <div class="row g-4 mt-4" style="gap:24px;">
-                                                    <div class="col-md-8">
-                                                        <div class="ui-field">
-                                                            <label asp-for="Street" class="ui-field__label">Ulica <span
-                                                                style="color: #ef4444;">*</span></label>
-                                                                <input asp-for="Street" class="ui-field__input" placeholder="npr. Ilica"
-                                                                       required />
-                                                                <span class="ui-field__validation"></span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-4">
-                                                            <div class="ui-field">
-                                                                <label asp-for="HouseNumber" class="ui-field__label">Kućni broj <span
-                                                                    style="color: #ef4444;">*</span></label>
-                                                                    <input asp-for="HouseNumber" class="ui-field__input" placeholder="npr. 10"
-                                                                           required />
-                                                                    <span class="ui-field__validation"></span>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="col-md-6">
-                                                                <div class="ui-field">
-                                                                    <label asp-for="Email" class="ui-field__label">E-pošta <span
-                                                                        style="color: #ef4444;">*</span></label>
-                                                                        <input asp-for="Email" class="ui-field__input"
-                                                                               placeholder="npr. info@cinemaxx.hr" required />
-                                                                        <span class="ui-field__validation"></span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="col-md-6">
-                                                                    <div class="ui-field">
-                                                                        <label asp-for="Phone" class="ui-field__label">Telefon <span
-                                                                            style="color: #ef4444;">*</span></label>
-                                                                            <input asp-for="Phone" class="ui-field__input"
-                                                                                   placeholder="npr. +385 1 123 4567" required />
-                                                                            <span class="ui-field__validation"></span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="ui-actions mt-4 pt-3 border-top">
-                                                                <button type="submit" class="ui-btn ui-btn--primary">Spremi kino</button>
-                                                                <a asp-action="Index" class="ui-btn ui-btn--secondary"
-                                                                   style="width: 120px; padding: 0.36rem;">Odustani</a>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <partial name="CinemaForm" model="Model" view-data="ViewData" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

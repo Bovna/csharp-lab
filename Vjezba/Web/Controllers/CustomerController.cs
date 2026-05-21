@@ -17,29 +17,25 @@ public class CustomerController : Controller
     }
 
     [Route("")]
-    public IActionResult Index(string? firstName, string? lastName, bool partial = false)
+    public IActionResult Index(string? search, bool partial = false)
     {
+        var normalizedSearch = (search ?? string.Empty).Trim();
         var query = _dbContext.Customers
             .Where(customer => customer.DeletedAt == null)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(firstName))
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
         {
-            query = query.Where(customer => customer.FirstName.Contains(firstName));
-        }
-
-        if (!string.IsNullOrWhiteSpace(lastName))
-        {
-            query = query.Where(customer => customer.LastName.Contains(lastName));
+            query = query.Where(customer => EF.Functions.Like(customer.FirstName + " " + customer.LastName, $"%{normalizedSearch}%")
+                || EF.Functions.Like(customer.City, $"%{normalizedSearch}%")
+                || EF.Functions.Like(customer.Email, $"%{normalizedSearch}%"));
         }
 
         var customers = query
-            .OrderBy(customer => customer.LastName)
-            .ThenBy(customer => customer.FirstName)
+            .OrderBy(customer => customer.Id)
             .ToList();
 
-        ViewBag.FirstName = firstName;
-        ViewBag.LastName = lastName;
+        ViewBag.Search = search;
 
         if (partial)
         {
@@ -47,6 +43,30 @@ public class CustomerController : Controller
         }
 
         return View(customers);
+    }
+
+    [Route("pretraga")]
+    public IActionResult Search(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var customers = _dbContext.Customers
+            .Where(customer => customer.DeletedAt == null)
+            .Where(customer => string.IsNullOrEmpty(normalizedQuery)
+                || EF.Functions.Like(customer.FirstName + " " + customer.LastName, $"%{normalizedQuery}%")
+                || EF.Functions.Like(customer.City, $"%{normalizedQuery}%")
+                || EF.Functions.Like(customer.Email, $"%{normalizedQuery}%"))
+            .OrderBy(customer => customer.LastName)
+            .ThenBy(customer => customer.FirstName)
+            .Take(12)
+            .Select(customer => new
+            {
+                value = customer.Id,
+                text = customer.FirstName + " " + customer.LastName
+            })
+            .ToList();
+
+        return Json(customers);
     }
 
     [Route("detalji/{id}")]

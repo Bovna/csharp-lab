@@ -230,7 +230,7 @@ public class TicketController : Controller
         {
             InputName = nameof(model.CustomerId),
             Label = "Kupac",
-            Endpoint = Url.Action(nameof(CustomerController.Index), "Customer") ?? "/kupci",
+            Endpoint = Url.Action(nameof(CustomerController.Search), "Customer") ?? "/kupci/pretraga",
             SearchPlaceholder = "Pretražite kupca po imenu",
             RequiredMessage = "Kupac je obavezan.",
             Items = BuildSelectItems(
@@ -283,7 +283,7 @@ public class TicketController : Controller
         {
             InputName = nameof(model.SeatId),
             Label = "Sjedalo",
-            Endpoint = Url.Action(nameof(SeatController.Index), "Seat") ?? "/sjedala",
+            Endpoint = Url.Action(nameof(SeatController.Search), "Seat") ?? "/sjedala/pretraga",
             SearchPlaceholder = "Pretražite sjedalo po oznaci",
             RequiredMessage = string.Empty,
             Items = BuildSelectItems(

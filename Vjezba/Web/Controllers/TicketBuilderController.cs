@@ -6,6 +6,7 @@ using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[Route("brza kupovina")]
 public class TicketBuilderController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -19,7 +20,7 @@ public class TicketBuilderController : Controller
         _dbContext = dbContext;
     }
 
-    [HttpGet]
+    [Route("")]
     public IActionResult Index()
     {
         var model = new TicketBuilderCinemaListViewModel
@@ -33,7 +34,7 @@ public class TicketBuilderController : Controller
         return View(model);
     }
 
-    [HttpGet]
+    [Route("movies/{cinemaId}")]
     public IActionResult Movies(int cinemaId)
     {
         var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
@@ -70,7 +71,7 @@ public class TicketBuilderController : Controller
         return View(model);
     }
 
-    [HttpGet]
+    [Route("screenings/{cinemaId}/{movieId}")]
     public IActionResult Screenings(int cinemaId, int movieId)
     {
         var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
@@ -111,7 +112,7 @@ public class TicketBuilderController : Controller
         return View(model);
     }
 
-    [HttpGet]
+    [Route("seats/{cinemaId}/{movieId}/{screeningId}")]
     public IActionResult Seats(int cinemaId, int movieId, int screeningId)
     {
         var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == cinemaId && c.DeletedAt == null);
@@ -172,7 +173,7 @@ public class TicketBuilderController : Controller
         return View(model);
     }
 
-    [HttpGet]
+    [Route("checkout/{cinemaId}/{movieId}/{screeningId}/{seatId}")]
     public IActionResult Checkout(int cinemaId, int movieId, int screeningId, int seatId)
     {
         if (!TryGetPurchaseContext(cinemaId, movieId, screeningId, seatId, out var cinema, out var movie, out var screening, out var seat))

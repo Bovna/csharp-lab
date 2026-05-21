@@ -138,3 +138,93 @@ CinemaUI.showConfirm = function ({ title, body, onConfirm }) {
   btnCancel.addEventListener("click", handleCancel);
   btnConfirm.addEventListener("click", handleConfirm);
 };
+
+function initNavigationMotion() {
+  const navMenu = document.querySelector(".nav-menu");
+  if (!navMenu || navMenu.dataset.motionReady === "1") {
+    return;
+  }
+
+  navMenu.dataset.motionReady = "1";
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const navItems = Array.from(navMenu.querySelectorAll("li"));
+  const navLinks = Array.from(navMenu.querySelectorAll(".nav-link"));
+
+  navItems.forEach((item, index) => {
+    item.style.animationDelay = reduceMotion ? "0ms" : `${45 + index * 28}ms`;
+  });
+
+  if (reduceMotion) {
+    return;
+  }
+
+  const pulseLink = (link) => {
+    if (!link) {
+      return;
+    }
+
+    link.classList.remove("is-animated");
+    void link.offsetWidth;
+    link.classList.add("is-animated");
+  };
+
+  navLinks.forEach((link) => {
+    const handleAnimationEnd = () => {
+      link.classList.remove("is-animated");
+    };
+
+    link.addEventListener("mouseenter", () => pulseLink(link));
+    link.addEventListener("focus", () => pulseLink(link));
+    link.addEventListener("animationend", handleAnimationEnd);
+  });
+
+  const activeLink = navMenu.querySelector(".nav-link.active");
+  if (activeLink) {
+    window.setTimeout(() => pulseLink(activeLink), 160);
+  }
+}
+
+function initTicketBuilderMotion() {
+  const pages = Array.from(document.querySelectorAll(".tb-page"));
+  if (!pages.length) {
+    return;
+  }
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  pages.forEach((page) => {
+    if (page.dataset.motionReady === "1") {
+      return;
+    }
+
+    page.dataset.motionReady = "1";
+
+    if (reduceMotion) {
+      page.classList.add("is-ready");
+      return;
+    }
+
+    const staggerGroups = [
+      { selector: ".tb-grid-cards > *", delayStep: 70 },
+      { selector: ".tb-list-item", delayStep: 70 },
+      { selector: ".tb-seat-row", delayStep: 42 },
+      { selector: ".tb-step", delayStep: 30 },
+    ];
+
+    staggerGroups.forEach(({ selector, delayStep }) => {
+      Array.from(page.querySelectorAll(selector)).forEach((element, index) => {
+        element.style.setProperty("--tb-delay", `${index * delayStep}ms`);
+      });
+    });
+
+    window.requestAnimationFrame(() => {
+      page.classList.add("is-ready");
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initNavigationMotion();
+  initTicketBuilderMotion();
+});

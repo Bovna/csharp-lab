@@ -64,6 +64,36 @@ public class SeatController : Controller
         return View(seats);
     }
 
+    [Route("pretraga")]
+    public IActionResult Search(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var seats = _dbContext.Seats
+            .Include(seat => seat.Hall)
+                .ThenInclude(hall => hall.Cinema)
+            .Where(seat => seat.DeletedAt == null
+                && seat.Hall.DeletedAt == null
+                && seat.Hall.Cinema.DeletedAt == null)
+            .Where(seat => string.IsNullOrEmpty(normalizedQuery)
+                || EF.Functions.Like(seat.RowLabel, $"%{normalizedQuery}%")
+                || EF.Functions.Like(seat.Hall.Name, $"%{normalizedQuery}%")
+                || EF.Functions.Like(seat.Hall.Cinema.Name, $"%{normalizedQuery}%"))
+            .OrderBy(seat => seat.Hall.Cinema.Name)
+            .ThenBy(seat => seat.Hall.Name)
+            .ThenBy(seat => seat.RowLabel)
+            .ThenBy(seat => seat.SeatNumber)
+            .Take(12)
+            .Select(seat => new
+            {
+                value = seat.Id,
+                text = seat.Hall.Cinema.Name + " - " + seat.Hall.Name + " - " + seat.RowLabel + seat.SeatNumber
+            })
+            .ToList();
+
+        return Json(seats);
+    }
+
     [Route("detalji/{id}")]
     public IActionResult Details(int id)
     {
@@ -201,7 +231,7 @@ public class SeatController : Controller
         {
             InputName = nameof(model.HallId),
             Label = "Dvorana",
-            Endpoint = Url.Action(nameof(ScreeningController.Search), "Screening") ?? "/projekcije/search",
+            Endpoint = Url.Action(nameof(HallController.Search), "Hall") ?? "/dvorana/pretraga",
             SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
             RequiredMessage = "Dvorana je obavezna.",
             Items = BuildSelectItems(

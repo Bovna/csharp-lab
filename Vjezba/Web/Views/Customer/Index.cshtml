@@ -2,110 +2,31 @@
 
 @{
     ViewData["Title"] = "Kupci";
+    var search = ViewBag.Search as string;
 }
 
 <div class="container py-4 animate-fade-in-up">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
-                <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
-                    Popis kupaca</h1>
-                    <span class="cinema-badge">Ukupno: @Model.Count</span>
-                </div>
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+        <div>
+            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis kupaca</h1>
+            <span class="cinema-badge">Ukupno: @Model.Count</span>
+        </div>
+        <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novog kupca</a>
+    </div>
 
-                <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
-                    <div class="cinema-card-header">Filtriranje kupaca</div>
-                    <div class="cinema-card-body">
-                        <form method="get" asp-action="Index" class="ui-form">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="ui-field">
-                                        <label for="firstName" class="ui-field__label">Ime</label>
-                                             <input id="firstName" name="firstName" class="ui-field__input"
-                                                 value="@ViewBag.FirstName" placeholder="Pretraži po imenu"
-                                                 oninput="this.form.requestSubmit()" />
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="ui-field">
-                                        <label for="lastName" class="ui-field__label">Prezime</label>
-                                        <input id="lastName" name="lastName" class="ui-field__input"
-                                               value="@ViewBag.LastName" placeholder="Pretraži po prezimenu"
-                                               oninput="this.form.requestSubmit()" />
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+    <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+        <div class="cinema-card-header">Pretraživanje</div>
+        <div class="cinema-card-body">
+            <form asp-action="Index" method="get" class="ui-form entity-index-search" data-ajax-search-form data-ajax-results-target="#customer-index-results">
+                <div class="ui-field mb-0">
+                    <label for="customerSearch" class="ui-field__label">Ime, prezime, grad ili e-pošta</label>
+                    <input id="customerSearch" name="search" value="@search" class="ui-field__input" type="search" placeholder="Pretražite kupce..." autocomplete="off" />
                 </div>
-
-                <div class="cinema-card">
-                    <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                        <table class="ui-table entity-index-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Ime</th>
-                                    <th>Prezime</th>
-                                    <th>Grad</th>
-                                    <th>Adresa</th>
-                                    <th>E-pošta</th>
-                                    <th>Telefon</th>
-                                    <th>Registriran</th>
-                                    <th>Loyalty member</th>
-                                    <th>Loyalty points</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var customer in Model)
-                                {
-                                    <tr>
-                                        <td class="text-muted">@customer.Id</td>
-                                        <td>@customer.FirstName</td>
-                                        <td>@customer.LastName</td>
-                                        <td>@customer.City</td>
-                                        <td>@customer.Street @customer.HouseNumber</td>
-                                        <td>@customer.Email</td>
-                                        <td>@customer.Phone</td>
-                                        <td>@customer.RegisteredAt.ToString("dd.MM.yyyy")</td>
-                                        <td>
-                                            @if (customer.IsLoyaltyMember)
-                                            {
-                                                <span class="cinema-status-yes">Da</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="cinema-status-no">Ne</span>
-                                            }
-                                        </td>
-                                        <td>@customer.LoyaltyPoints</td>
-                                        <td class="ui-table__actions">
-                                            <a asp-action="Details" asp-route-id="@customer.Id" class="ui-btn ui-btn--primary"
-                                               style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="mt-5 pt-3 text-end">
-                    <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novog kupca</a>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
-    <script>
-        function handleDeleteClick(event, message) {
-            event.preventDefault();
-            CinemaUI.showConfirm({
-                title: 'Potvrda brisanja',
-                body: message,
-                onConfirm: () => event.target.form.submit()
-            });
-        }
-    </script>
+    <div id="customer-index-results" data-ajax-search-results-container>
+        @await Html.PartialAsync("_IndexResults", Model)
+    </div>
+</div>

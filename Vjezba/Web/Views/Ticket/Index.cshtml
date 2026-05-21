@@ -2,105 +2,34 @@
 
 @{
     ViewData["Title"] = "Ulaznice";
+    var search = ViewBag.Search as string;
 }
 
 <div class="container py-4 animate-fade-in-up">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
-        <h1 class="h3 mb-0" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis
-            ulaznica</h1>
-            <span class="cinema-badge">Ukupno: @Model.Count</span>
+        <div>
+            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
+                Popis ulaznica</h1>
+                <span class="cinema-badge">Ukupno: @Model.Count</span>
+            </div>
+            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu ulaznicu</a>
         </div>
 
         <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
-            <div class="cinema-card-header">Filtriranje po maksimalnoj cijeni</div>
+            <div class="cinema-card-header">Pretraživanje</div>
             <div class="cinema-card-body">
-                <form method="get" asp-action="Index" class="ui-form">
-                    <div class="row g-4 align-items-end">
-                        <div class="col-md-4">
-                            <div class="ui-field">
-                                <label for="price" class="ui-field__label">Maksimalna cijena (EUR)</label>
-                                <input id="price" name="price" class="ui-field__input" type="number" step="0.01" min="0"
-                                       value="@ViewBag.SelectedPrice" placeholder="npr. 12.50" />
-                            </div>
-                        </div>
-
-                        <div class="col-md-8">
-                            <div class="ui-actions ui-actions--end ui-actions--stack-mobile" style="margin-top: 29px;">
-                                <button type="submit" class="ui-btn ui-btn--primary">Filtriraj</button>
-                                <a asp-action="Index" class="ui-btn ui-btn--secondary">Obriši filtar</a>
-                            </div>
-                        </div>
+                <form asp-action="Index" method="get" class="ui-form entity-index-search" data-ajax-search-form
+                      data-ajax-results-target="#ticket-index-results">
+                    <div class="ui-field mb-0">
+                        <label for="ticketSearch" class="ui-field__label">Broj ulaznice, kupac ili film</label>
+                        <input id="ticketSearch" name="search" value="@search" class="ui-field__input" type="search"
+                               placeholder="Pretražite ulaznice..." autocomplete="off" />
                     </div>
-
                 </form>
             </div>
         </div>
 
-        <div class="cinema-card">
-            <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-                <table class="ui-table entity-index-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Broj ulaznice</th>
-                            <th>Kupac</th>
-                            <th>Film</th>
-                            <th>Kino</th>
-                            <th>Dvorana</th>
-                            <th>Sjedalo</th>
-                            <th>Vrijeme projekcije</th>
-                            <th>Cijena (EUR)</th>
-                            <th>Status</th>
-                            <th>Dodatno</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var ticket in Model)
-                        {
-                            <tr>
-                                <td class="text-muted">@ticket.Id</td>
-                                <td>@ticket.TicketNumber</td>
-                                <td>@(ticket.Customer is null ? "-" : $"{ticket.Customer.FirstName} {ticket.Customer.LastName}")
-                                </td>
-                                <td>@(ticket.Screening?.Movie?.Title ?? "-")</td>
-                                <td>@(ticket.Screening?.Hall?.Cinema?.Name ?? "-")</td>
-                                <td>@(ticket.Screening?.Hall?.Name ?? "-")</td>
-                                <td>@(ticket.Seat is null ? "-" : $"{ticket.Seat.RowLabel}{ticket.Seat.SeatNumber}")</td>
-                                <td>@(ticket.Screening is null ? "-" : ticket.Screening.StartTime.ToString("dd.MM.yyyy HH:mm"))
-                                </td>
-                                <td>@ticket.Price.ToString("0.00")</td>
-                                <td>
-                                    @(ticket.Status switch
-                                    {
-                                        Vjezba.Model.Entities.TicketStatus.Active => "Aktivna",
-                                        Vjezba.Model.Entities.TicketStatus.Cancelled => "Otkazana",
-                                        Vjezba.Model.Entities.TicketStatus.Used => "Iskoristena",
-                                        _ => ticket.Status.ToString()
-                                    })
-                                </td>
-                                <td class="ui-table__actions">
-                                    <a asp-action="Details" asp-route-id="@ticket.Id" class="ui-btn ui-btn--primary"
-                                       style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="mt-5 pt-3 text-end">
-            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu ulaznicu</a>
+        <div id="ticket-index-results" data-ajax-search-results-container>
+            @await Html.PartialAsync("_IndexResults", Model)
         </div>
     </div>
-
-    <script>
-        function handleDeleteClick(event, message) {
-            event.preventDefault();
-            CinemaUI.showConfirm({
-                title: 'Potvrda brisanja',
-                body: message,
-                onConfirm: () => event.target.form.submit()
-            });
-        }
-    </script>

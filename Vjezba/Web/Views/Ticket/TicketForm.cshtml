@@ -1,0 +1,89 @@
+@model Vjezba.Web.ViewModels.TicketFormViewModel
+
+@{
+    var isEdit = (ViewData["IsEdit"] as bool?) == true;
+    var purchasedAtName = Html.NameFor(m => m.PurchasedAt).ToString();
+    var purchasedAtValue = Model.PurchasedAt == default
+        ? DateTime.Now.ToString("yyyy-MM-ddTHH:mm")
+        : Model.PurchasedAt.ToString("yyyy-MM-ddTHH:mm");
+}
+
+@if (isEdit)
+{
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="ui-form" onsubmit="return CinemaUI.validateForm(this);">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="ui-field"><label asp-for="TicketNumber" class="ui-field__label">Broj ulaznice <span style="color: var(--color-danger);">*</span></label><input asp-for="TicketNumber" class="ui-field__input" required /><span asp-validation-for="TicketNumber" class="ui-field__validation"></span></div>
+            </div>
+            <div class="col-md-6">
+                <div class="ui-field">
+                    <label asp-for="PurchasedAt" class="ui-field__label">Vrijeme kupnje <span style="color: var(--color-danger);">*</span></label>
+                    @await Html.PartialAsync("_DatePicker", new ViewDataDictionary(ViewData) { { "Name", purchasedAtName }, { "Value", purchasedAtValue }, { "Type", "datetime-local" } })
+                    <span asp-validation-for="PurchasedAt" class="ui-field__validation"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="ui-field"><label asp-for="Price" class="ui-field__label">Cijena <span style="color: var(--color-danger);">*</span></label><input asp-for="Price" class="ui-field__input" type="number" step="0.01" min="0" required /><span asp-validation-for="Price" class="ui-field__validation"></span></div>
+            </div>
+            <div class="col-md-4">
+                <div class="ui-field"><label asp-for="Status" class="ui-field__label">Status <span style="color: var(--color-danger);">*</span></label><select asp-for="Status" class="ui-field__input" asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.TicketStatus>()" required></select><span asp-validation-for="Status" class="ui-field__validation"></span></div>
+            </div>
+            <div class="col-md-4">
+                @await Html.PartialAsync("_AutocompleteSelect", Model.SeatSelector)
+            </div>
+            <div class="col-md-6">
+                @await Html.PartialAsync("_AutocompleteSelect", Model.CustomerSelector)
+            </div>
+            <div class="col-md-6">
+                @await Html.PartialAsync("_AutocompleteSelect", Model.ScreeningSelector)
+            </div>
+        </div>
+
+        <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-4 pt-3 border-top">
+            <button type="submit" class="ui-btn ui-btn--primary">Spremi promjene</button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="ui-btn ui-btn--secondary">Odustani</a>
+        </div>
+    </form>
+}
+else
+{
+    <form asp-action="Create" method="post" class="ui-form" onsubmit="return CinemaUI.validateForm(this);">
+        <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="ui-field"><label asp-for="TicketNumber" class="ui-field__label">Broj ulaznice <span style="color: var(--color-danger);">*</span></label><input asp-for="TicketNumber" class="ui-field__input" required /><span asp-validation-for="TicketNumber" class="ui-field__validation"></span></div>
+            </div>
+            <div class="col-md-6">
+                <div class="ui-field">
+                    <label asp-for="PurchasedAt" class="ui-field__label">Vrijeme kupnje <span style="color: var(--color-danger);">*</span></label>
+                    @await Html.PartialAsync("_DatePicker", new ViewDataDictionary(ViewData) { { "Name", purchasedAtName }, { "Value", purchasedAtValue }, { "Type", "datetime-local" } })
+                    <span asp-validation-for="PurchasedAt" class="ui-field__validation"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="ui-field"><label asp-for="Price" class="ui-field__label">Cijena <span style="color: var(--color-danger);">*</span></label><input asp-for="Price" class="ui-field__input" type="number" step="0.01" min="0" required /><span asp-validation-for="Price" class="ui-field__validation"></span></div>
+            </div>
+            <div class="col-md-4">
+                <div class="ui-field"><label asp-for="Status" class="ui-field__label">Status <span style="color: var(--color-danger);">*</span></label><select asp-for="Status" class="ui-field__input" asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.TicketStatus>()" required></select><span asp-validation-for="Status" class="ui-field__validation"></span></div>
+            </div>
+            <div class="col-md-4">
+                @await Html.PartialAsync("_AutocompleteSelect", Model.SeatSelector)
+            </div>
+            <div class="col-md-6">
+                @await Html.PartialAsync("_AutocompleteSelect", Model.CustomerSelector)
+            </div>
+            <div class="col-md-6">
+                @await Html.PartialAsync("_AutocompleteSelect", Model.ScreeningSelector)
+            </div>
+        </div>
+
+        <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-4 pt-3 border-top">
+            <a asp-action="Index" class="ui-btn ui-btn--secondary">Odustani</a>
+            <button type="submit" class="ui-btn ui-btn--primary">Spremi ulaznicu</button>
+        </div>
+    </form>
+}

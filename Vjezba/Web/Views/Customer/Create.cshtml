@@ -1,7 +1,8 @@
-@model Vjezba.Model.Entities.Customer
+@model Vjezba.Web.ViewModels.CustomerFormViewModel
 
 @{
     ViewData["Title"] = "Dodaj kupca";
+    ViewData["IsEdit"] = false;
 }
 
 <div class="container py-4">
@@ -10,84 +11,7 @@
             <div class="cinema-card animate-fade-in-up">
                 <div class="cinema-card-header">Dodaj novog kupca</div>
                 <div class="cinema-card-body">
-                    <form asp-action="Create" method="post" class="ui-form"
-                          onsubmit="return CinemaUI.validateForm(this);">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-4 p-3"
-                             style="background-color: rgba(255,0,0,0.1); border-radius: 4px;"></div>
-
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="ui-field"><label asp-for="FirstName" class="ui-field__label">Ime <span
-                                    style="color: #ef4444;">*</span></label><input asp-for="FirstName"
-                                                                                   class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="ui-field"><label asp-for="LastName" class="ui-field__label">Prezime <span
-                                    style="color: #ef4444;">*</span></label><input asp-for="LastName"
-                                                                                   class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="ui-field"><label asp-for="City" class="ui-field__label">Grad <span
-                                    style="color: #ef4444;">*</span></label><input asp-for="City"
-                                                                                   class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="ui-field"><label asp-for="Street" class="ui-field__label">Ulica <span
-                                    style="color: #ef4444;">*</span></label><input asp-for="Street"
-                                                                                   class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ui-field"><label asp-for="HouseNumber" class="ui-field__label">Kućni broj
-                                    <span style="color: #ef4444;">*</span></label><input asp-for="HouseNumber"
-                                                                                         class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ui-field"><label asp-for="PostalCode" class="ui-field__label">Poštanski broj
-                                    <span style="color: #ef4444;">*</span></label><input asp-for="PostalCode"
-                                                                                         class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="ui-field"><label asp-for="Email" class="ui-field__label">E-pošta <span
-                                    style="color: #ef4444;">*</span></label><input asp-for="Email"
-                                                                                   class="ui-field__input" type="email" required /><span
-                                    class="ui-field__validation"></span></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="ui-field"><label asp-for="Phone" class="ui-field__label">Telefon <span
-                                        style="color: #ef4444;">*</span></label><input asp-for="Phone"
-                                                                                       class="ui-field__input" required /><span class="ui-field__validation"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="ui-field"><label asp-for="RegisteredAt" class="ui-field__label">Datum
-                                        registracije <span style="color: #ef4444;">*</span></label><input
-                                        asp-for="RegisteredAt" class="ui-field__input" type="datetime-local"
-                                        required /><span class="ui-field__validation"></span></div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="ui-field"><label asp-for="LoyaltyPoints" class="ui-field__label">Bodovi
-                                            vjernosti <span style="color: #ef4444;">*</span></label><input
-                                            asp-for="LoyaltyPoints" class="ui-field__input" type="number" min="0"
-                                            required /><span class="ui-field__validation"></span></div>
-                                        </div>
-                                        <div class="col-md-3 d-flex align-items-end">
-                                            <div class="ui-field"><label class="ui-field__label">&nbsp;</label><label
-                                                class="d-flex align-items-center gap-2"><input asp-for="IsLoyaltyMember"
-                                                                                               type="checkbox" /><span>Član vjernosti</span></label></div>
-                                            </div>
-                                        </div>
-
-                                        <div class="ui-actions mt-4 pt-3 border-top ui-actions--stack-mobile">
-                                            <button type="submit" class="ui-btn ui-btn--primary">Spremi kupca</button>
-                                            <a asp-action="Index" class="ui-btn ui-btn--secondary">Odustani</a>
-                                        </div>
-                                    </form>
+                    <partial name="CustomerForm" model="Model" view-data="ViewData" />
                                 </div>
                             </div>
                         </div>

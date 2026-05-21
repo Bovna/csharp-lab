@@ -50,7 +50,7 @@ public class CinemaController : Controller
         }
 
         var cinemas = query
-            .OrderBy(cinema => cinema.Name)
+            .OrderBy(cinema => cinema.Id)
             .ToList();
 
         if (partial)
@@ -59,6 +59,29 @@ public class CinemaController : Controller
         }
 
         return View(cinemas);
+    }
+
+    [Route("pretraga")]
+    public IActionResult Search(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var cinemas = _dbContext.Cinemas
+            .Where(cinema => cinema.DeletedAt == null)
+            .Where(cinema => string.IsNullOrEmpty(normalizedQuery)
+                || EF.Functions.Like(cinema.Name, $"%{normalizedQuery}%")
+                || EF.Functions.Like(cinema.City, $"%{normalizedQuery}%")
+                || EF.Functions.Like(cinema.Street, $"%{normalizedQuery}%"))
+            .OrderBy(cinema => cinema.Name)
+            .Take(12)
+            .Select(cinema => new
+            {
+                value = cinema.Id,
+                text = cinema.Name
+            })
+            .ToList();
+
+        return Json(cinemas);
     }
 
     [Route("detalji/{id}")]

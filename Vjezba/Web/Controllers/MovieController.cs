@@ -44,6 +44,7 @@ public class MovieController : Controller
         }
 
         var movies = query.ToList();
+        movies = movies.OrderBy(movie => movie.Id).ToList();
 
         if (partial)
         {

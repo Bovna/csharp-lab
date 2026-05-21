@@ -37,7 +37,7 @@ public class ScreeningController : Controller
         }
 
         var screenings = query
-            .OrderBy(screening => screening.StartTime)
+            .OrderBy(screening => screening.Id)
             .ToList();
 
         if (dayOfWeek.HasValue)
