@@ -6,6 +6,7 @@ using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[Route("[controller]")]
 [Route("brza kupovina")]
 public class TicketBuilderController : Controller
 {
@@ -173,6 +174,7 @@ public class TicketBuilderController : Controller
         return View(model);
     }
 
+    [HttpGet("Checkout")]
     [Route("checkout/{cinemaId}/{movieId}/{screeningId}/{seatId}")]
     public IActionResult Checkout(int cinemaId, int movieId, int screeningId, int seatId)
     {

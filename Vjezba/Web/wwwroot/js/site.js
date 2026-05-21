@@ -224,7 +224,181 @@ function initTicketBuilderMotion() {
   });
 }
 
+function initHomeExperience() {
+  if (!window.jQuery) {
+    return;
+  }
+
+  const $ = window.jQuery;
+  const $home = $(".home-page");
+  if (!$home.length || $home.data("homeReady") === true) {
+    return;
+  }
+
+  $home.data("homeReady", true);
+
+  const heroEl = $home.find("[data-home-hero]").get(0);
+  const $hero = $(heroEl);
+  const $heroPosters = $home.find("[data-hero-wall] .home-hero__poster");
+  const $viewport = $home.find("[data-carousel-viewport]");
+  const $track = $home.find("[data-carousel-track]");
+  const $cards = $track.find("[data-featured-card]");
+  const $counters = $home.find("[data-count-up]");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (heroEl && !reduceMotion) {
+    let heroFrame = 0;
+
+    const resetHero = () => {
+      heroEl.style.setProperty("--hero-x", "50%");
+      heroEl.style.setProperty("--hero-y", "40%");
+      $heroPosters.each(function (index) {
+        $(this).css("transform", `translate3d(0, 0, 0) rotateX(${index % 2 === 0 ? 1 : -1}deg) rotateY(0deg)`);
+      });
+    };
+
+    const updateHero = (clientX, clientY) => {
+      const rect = heroEl.getBoundingClientRect();
+      const percentX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const percentY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+      const moveX = (percentX - 50) / 10;
+      const moveY = (percentY - 50) / 12;
+
+      heroEl.style.setProperty("--hero-x", `${percentX.toFixed(1)}%`);
+      heroEl.style.setProperty("--hero-y", `${percentY.toFixed(1)}%`);
+
+      $heroPosters.each(function (index) {
+        const depth = index + 1;
+        const offsetX = moveX * depth * 0.7;
+        const offsetY = moveY * depth * 0.7;
+        const tiltX = moveY * -0.45;
+        const tiltY = moveX * 0.45;
+
+        $(this).css(
+          "transform",
+          `translate3d(${offsetX}px, ${offsetY}px, 0) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+        );
+      });
+    };
+
+    resetHero();
+
+    $hero.on("mousemove", (event) => {
+      if (heroFrame) {
+        return;
+      }
+
+      heroFrame = window.requestAnimationFrame(() => {
+        heroFrame = 0;
+        updateHero(event.clientX, event.clientY);
+      });
+    });
+
+    $hero.on("mouseleave", () => {
+      resetHero();
+    });
+  }
+
+  const animateCounter = (element) => {
+    const $element = $(element);
+    const target = Number($element.data("target")) || 0;
+    if ($element.data("counted") === true) {
+      return;
+    }
+
+    $element.data("counted", true);
+    $({ value: 0 }).animate(
+      { value: target },
+      {
+        duration: 1200,
+        easing: "swing",
+        step(now) {
+          $element.text(Math.round(now));
+        },
+        complete() {
+          $element.text(target);
+        },
+      },
+    );
+  };
+
+  if (window.IntersectionObserver && $counters.length) {
+    const observer = new IntersectionObserver(
+      (entries, io) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.45 },
+    );
+
+    $counters.each((_, element) => observer.observe(element));
+  } else {
+    $counters.each((_, element) => animateCounter(element));
+  }
+
+  if (!$viewport.length || !$track.length || !$cards.length) {
+    return;
+  }
+
+  $cards.each((index, element) => {
+    element.style.animationDelay = `${index * 60}ms`;
+  });
+
+  if (reduceMotion || !$track.length || !$cards.length) {
+    return;
+  }
+
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragScrollLeft = 0;
+
+  $viewport.on("wheel", (event) => {
+    const wheelEvent = event.originalEvent;
+    if (!wheelEvent || Math.abs(wheelEvent.deltaY) <= Math.abs(wheelEvent.deltaX)) {
+      return;
+    }
+
+    event.preventDefault();
+    $viewport.scrollLeft($viewport.scrollLeft() + wheelEvent.deltaY * 1.15);
+  });
+
+  $viewport.on("pointerdown", (event) => {
+    isDragging = true;
+    dragStartX = event.clientX;
+    dragScrollLeft = $viewport.scrollLeft();
+    $viewport.addClass("is-dragging");
+  });
+
+  $(document).on("pointermove.homeCarousel", (event) => {
+    if (!isDragging) {
+      return;
+    }
+
+    const deltaX = event.clientX - dragStartX;
+    $viewport.scrollLeft(dragScrollLeft - deltaX * 1.1);
+  });
+
+  $(document).on("pointerup.homeCarousel pointercancel.homeCarousel", () => {
+    if (!isDragging) {
+      return;
+    }
+
+    isDragging = false;
+    $viewport.removeClass("is-dragging");
+  });
+
+  $viewport.on("mouseleave", () => {
+    isDragging = false;
+    $viewport.removeClass("is-dragging");
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initNavigationMotion();
   initTicketBuilderMotion();
+  initHomeExperience();
 });
