@@ -15,37 +15,11 @@
     <section class="home-hero animate-fade-in-up" data-home-hero>
         <div class="home-hero__content">
             <h1 class="hero-title">Filmsko iskustvo na novoj razini</h1>
-            <p class="hero-subtitle">Vaše omiljene projekcije, vrhunska udobnost i brza kupnja karata na jednom mjestu.</p>
+            <p class="hero-subtitle">Vaše omiljene projekcije, vrhunska udobnost i brza kupnja karata na jednom mjestu.
+            </p>
             <div class="hero-actions">
                 <a href="~/TicketBuilder" class="btn btn-primary btn-lg buy-ticket-btn">Kupi ulaznicu</a>
                 <a href="~/filmovi" class="btn btn-lg">Svi filmovi</a>
-            </div>
-
-            <div class="home-stats" aria-label="Sažetak ponude kina">
-                @foreach (var stat in Model.Stats)
-                {
-                    <article class="home-stat">
-                        <strong class="home-stat__value" data-count-up data-target="@stat.Value">0</strong>
-                        <span class="home-stat__label">@stat.Label</span>
-                    </article>
-                }
-            </div>
-        </div>
-
-        <div class="home-hero__stage" aria-hidden="true">
-            <div class="home-hero__glow"></div>
-            <div class="home-hero__poster-wall" data-hero-wall>
-                @for (var index = 0; index < Math.Min(4, Model.FeaturedMovies.Count); index++)
-                {
-                    var movie = Model.FeaturedMovies[index];
-                    var tone = homeFeatureTones[index % homeFeatureTones.Length];
-
-                    <article class="home-hero__poster @movie.ThemeClass" style="--home-tone: @tone;">
-                        <span class="home-hero__poster-label">@movie.GenreLabel</span>
-                        <strong>@movie.Title</strong>
-                        <small>@movie.AgeRating · @movie.DurationMinutes min · @movie.ReleaseYear</small>
-                    </article>
-                }
             </div>
         </div>
     </section>
@@ -53,7 +27,7 @@
     <section class="home-featured animate-fade-in-up" data-featured-strip>
         <div class="home-section-head">
             <div>
-                <h2>Naslovi koji trenutačno vode program</h2>
+                <h2>Trenutni hitovi</h2>
             </div>
         </div>
 
@@ -79,31 +53,34 @@
                             <h3>@movie.Title</h3>
                             <p>@movie.Description</p>
                             <div class="ui-actions ui-actions--stack-mobile">
-                                <a class="ui-btn ui-btn--secondary" asp-controller="Movie" asp-action="Details" asp-route-id="@movie.Id">Detalji</a>
-                                <a class="ui-btn ui-btn--primary" asp-controller="TicketBuilder" asp-action="Index">Kupi ulaznicu</a>
+                                <a class="ui-btn ui-btn--secondary" asp-controller="Movie" asp-action="Details"
+                                   asp-route-id="@movie.Id">Detalji</a>
+                                <a class="ui-btn ui-btn--primary" asp-controller="TicketBuilder" asp-action="Index">Kupi
+                                    ulaznicu</a>
+                                </div>
                             </div>
-                        </div>
-                    </article>
-                }
+                        </article>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <div class="benefits-section">
+            <div class="benefit-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="benefit-icon">01</div>
+                <h3>Najnoviji hitovi</h3>
+                <p>Gledajte premijere i najpopularnije naslove na velikom platnu u najvišoj kvaliteti slike i zvuka.</p>
+            </div>
+            <div class="benefit-card animate-fade-in-up" style="animation-delay: 0.2s;">
+                <div class="benefit-icon">02</div>
+                <h3>Brza kupnja</h3>
+                <p>Osigurajte svoje ulaznice i omiljena sjedala u samo nekoliko jednostavnih koraka iz udobnosti svog doma.
+                </p>
+            </div>
+            <div class="benefit-card animate-fade-in-up" style="animation-delay: 0.3s;">
+                <div class="benefit-icon">03</div>
+                <h3>Premium sjedala</h3>
+                <p>Odaberite savršenu poziciju u dvorani za maksimalnu udobnost tijekom cijele projekcije.</p>
             </div>
         </div>
-    </section>
-
-    <div class="benefits-section">
-        <div class="benefit-card animate-fade-in-up" style="animation-delay: 0.1s;">
-            <div class="benefit-icon">01</div>
-            <h3>Najnoviji hitovi</h3>
-            <p>Gledajte premijere i najpopularnije naslove na velikom platnu u najvišoj kvaliteti slike i zvuka.</p>
-        </div>
-        <div class="benefit-card animate-fade-in-up" style="animation-delay: 0.2s;">
-            <div class="benefit-icon">02</div>
-            <h3>Brza kupnja</h3>
-            <p>Osigurajte svoje ulaznice i omiljena sjedala u samo nekoliko jednostavnih koraka iz udobnosti svog doma.</p>
-        </div>
-        <div class="benefit-card animate-fade-in-up" style="animation-delay: 0.3s;">
-            <div class="benefit-icon">03</div>
-            <h3>Premium sjedala</h3>
-            <p>Odaberite savršenu poziciju u dvorani za maksimalnu udobnost tijekom cijele projekcije.</p>
-        </div>
     </div>
-</div>

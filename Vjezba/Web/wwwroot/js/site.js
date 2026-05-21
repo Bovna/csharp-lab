@@ -348,13 +348,65 @@ function initHomeExperience() {
     element.style.animationDelay = `${index * 60}ms`;
   });
 
-  if (reduceMotion || !$track.length || !$cards.length) {
-    return;
-  }
-
   let isDragging = false;
   let dragStartX = 0;
   let dragScrollLeft = 0;
+  let isPaused = false;
+  let scrollRafId = 0;
+
+  const getScrollLimit = () => {
+    const viewport = $viewport.get(0);
+    if (!viewport) {
+      return 0;
+    }
+
+    return Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+  };
+
+  const stopAutoScroll = () => {
+    if (scrollRafId) {
+      window.cancelAnimationFrame(scrollRafId);
+      scrollRafId = 0;
+    }
+  };
+
+  const startAutoScroll = () => {
+    stopAutoScroll();
+
+    if (reduceMotion) {
+      return;
+    }
+
+    let lastTimestamp = 0;
+
+    const step = (timestamp) => {
+      if (isPaused || isDragging) {
+        lastTimestamp = timestamp;
+        scrollRafId = window.requestAnimationFrame(step);
+        return;
+      }
+
+      if (!lastTimestamp) {
+        lastTimestamp = timestamp;
+      }
+
+      const delta = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      const viewport = $viewport.get(0);
+      if (!viewport) {
+        return;
+      }
+
+      const nextLeft = viewport.scrollLeft + delta * 0.018;
+      const limit = getScrollLimit();
+      viewport.scrollLeft = nextLeft >= limit ? 0 : nextLeft;
+
+      scrollRafId = window.requestAnimationFrame(step);
+    };
+
+    scrollRafId = window.requestAnimationFrame(step);
+  };
 
   $viewport.on("wheel", (event) => {
     const wheelEvent = event.originalEvent;
@@ -368,6 +420,7 @@ function initHomeExperience() {
 
   $viewport.on("pointerdown", (event) => {
     isDragging = true;
+    isPaused = true;
     dragStartX = event.clientX;
     dragScrollLeft = $viewport.scrollLeft();
     $viewport.addClass("is-dragging");
@@ -389,12 +442,19 @@ function initHomeExperience() {
 
     isDragging = false;
     $viewport.removeClass("is-dragging");
+    isPaused = false;
   });
 
-  $viewport.on("mouseleave", () => {
-    isDragging = false;
+  $viewport.on("mouseenter focusin", () => {
+    isPaused = true;
+  });
+
+  $viewport.on("mouseleave focusout", () => {
+    isPaused = false;
     $viewport.removeClass("is-dragging");
   });
+
+  startAutoScroll();
 }
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -99,7 +99,12 @@
   text-decoration: none;
   padding: var(--spacing-2) var(--spacing-2);
   border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  transition:
+    color 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    background-color 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    transform 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    box-shadow 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    border-color 360ms cubic-bezier(0.2, 0.12, 0.1, 1);
   flex: 1;
   text-align: center;
   position: relative;
@@ -156,14 +161,18 @@ a.tb-step.is-link:hover {
   padding: var(--spacing-3);
   color: var(--color-text-main);
   text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    transform 420ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    border-color 420ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    box-shadow 420ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    color 420ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    background-color 420ms cubic-bezier(0.2, 0.12, 0.1, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .tb-card-link:hover {
   border-color: var(--color-accent);
-  transform: translateY(-4px);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 230, 118, 0.1);
   color: var(--color-text-main);
 }
@@ -204,7 +213,11 @@ a.tb-step.is-link:hover {
   padding: var(--spacing-2) var(--spacing-3);
   color: var(--color-text-main);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition:
+    transform 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    border-color 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    background-color 360ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    color 360ms cubic-bezier(0.2, 0.12, 0.1, 1);
 }
 
 .tb-compact-list-item {
@@ -350,12 +363,17 @@ a.tb-step.is-link:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    transform 320ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    background-color 320ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    box-shadow 320ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    color 320ms cubic-bezier(0.2, 0.12, 0.1, 1),
+    border-color 320ms cubic-bezier(0.2, 0.12, 0.1, 1);
   user-select: none;
 }
 
 .tb-seat:hover:not(.seat-taken) {
-  transform: scale(1.1);
+  transform: scale(1.06);
   border-color: var(--color-text-main);
 }
 
@@ -364,7 +382,7 @@ a.tb-step.is-link:hover {
   color: #000 !important;
   border-color: var(--color-accent-hover) !important;
   box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
-  transform: scale(1.1);
+  transform: scale(1.04);
 }
 
 /* Seat types */
