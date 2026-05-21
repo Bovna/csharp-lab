@@ -286,7 +286,6 @@ public class TicketController : Controller
             Endpoint = Url.Action(nameof(SeatController.Index), "Seat") ?? "/sjedala",
             SearchPlaceholder = "Pretražite sjedalo po oznaci",
             RequiredMessage = string.Empty,
-            IsRequired = false,
             Items = BuildSelectItems(
                 _dbContext.Seats
                     .Include(seat => seat.Hall)

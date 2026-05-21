@@ -1,6 +1,6 @@
 Sustav za prodaju kino ulaznica
 
-Za lab 3:
+Za lab 4:
 
-U lab-3 folderu se nalazi semantic model i sitemap
+Prebacio sam se na localDB
 
