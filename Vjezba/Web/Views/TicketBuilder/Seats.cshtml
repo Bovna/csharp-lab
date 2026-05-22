@@ -24,58 +24,56 @@
 
     <div class="tb-step-line" aria-label="Koraci brze kupnje">
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
-        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies"
-               asp-route-cinemaId="@Model.CinemaId">2
-            Film</a>
-            <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings"
-               asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">3 Projekcija</a>
-            <span class="tb-step active" aria-current="step">4 Sjedalo</span>
-                <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2 Film</a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">3 Projekcija</a>
+        <span class="tb-step active" aria-current="step">4 Sjedalo</span>
+        <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
+    </div>
+
+    <div class="tb-seat-layout tb-panel animate-fade-in-up">
+        <div class="tb-screen">PLATNO</div>
+
+        <div class="tb-seat-grid">
+            @foreach (var row in groupedSeats)
+            {
+                <div class="tb-seat-row">
+                    <span class="tb-row-label">@row.Key</span>
+
+                    @foreach (var seat in row.OrderBy(s => s.SeatNumber))
+                    {
+                        var status = Model.SeatStatuses.TryGetValue(seat.Id, out var seatStatus)
+                            ? seatStatus
+                            : "available";
+                        var seatTypeLower = seat.SeatType.ToLowerInvariant();
+                        var seatTypeClass = seatTypeLower switch
+                        {
+                            "vip" => "seat-vip",
+                            "couple" => "seat-couple",
+                            _ => "seat-standard"
+                        };
+                        var statusClass = status == "taken" ? "seat-taken" : string.Empty;
+
+                        <button type="button" class="tb-seat @seatTypeClass @statusClass" data-seat-id="@seat.Id"
+                                data-seat-label="@seat.RowLabel@seat.SeatNumber" data-seat-type="@seat.SeatType"
+                                data-seat-status="@status" data-is-3d="@(Model.Is3D ? "1" : "0")">
+                            @seat.RowLabel@seat.SeatNumber
+                        </button>
+                    }
+                </div>
+            }
         </div>
 
-        <div class="tb-seat-layout">
-            <div class="tb-screen">PLATNO</div>
+        <div class="tb-legend">
+            <span><i class="tb-seat seat-standard"></i> Standard</span>
+            <span><i class="tb-seat seat-vip"></i> VIP</span>
+            <span><i class="tb-seat seat-couple"></i> Couple</span>
+            <span><i class="tb-seat seat-taken"></i> Zauzeto</span>
+        </div>
 
-            <div class="tb-seat-grid">
-                @foreach (var row in groupedSeats)
-                {
-                    <div class="tb-seat-row">
-                        <span class="tb-row-label">@row.Key</span>
-
-                        @foreach (var seat in row.OrderBy(s => s.SeatNumber))
-                        {
-                            var status = Model.SeatStatuses.TryGetValue(seat.Id, out var seatStatus)
-                                ? seatStatus
-                                : "available";
-                            var seatTypeLower = seat.SeatType.ToLowerInvariant();
-                            var seatTypeClass = seatTypeLower switch
-                            {
-                                "vip" => "seat-vip",
-                                "couple" => "seat-couple",
-                                _ => "seat-standard"
-                            };
-                            var statusClass = status == "taken" ? "seat-taken" : string.Empty;
-
-                            <button type="button" class="tb-seat @seatTypeClass @statusClass" data-seat-id="@seat.Id"
-                                    data-seat-label="@seat.RowLabel@seat.SeatNumber" data-seat-type="@seat.SeatType"
-                                    data-seat-status="@status" data-is-3d="@(Model.Is3D ? "1" : "0")">
-                                @seat.RowLabel@seat.SeatNumber
-                            </button>
-                        }
-                    </div>
-                }
-            </div>
-
-            <div class="tb-legend">
-                <span><i class="tb-seat seat-standard"></i> Standard</span>
-                <span><i class="tb-seat seat-vip"></i> VIP</span>
-                <span><i class="tb-seat seat-couple"></i> Couple</span>
-                <span><i class="tb-seat seat-taken"></i> Zauzeto</span>
-            </div>
-
-            <div id="tb-price-panel" class="tb-price-panel">
-                Odaberi sjedalo za prikaz cijene.
-            </div>
+        <div id="tb-price-panel" class="tb-price-panel">
+            <div class="tb-price-panel__title">Korak 5: plaćanje</div>
+            <div class="tb-price-panel__value">Odaberi sjedalo za prikaz cijene.</div>
+            <div class="tb-price-panel__meta">Plaćanje je uvijek vidljivo kao završni korak nakon odabira sjedala.</div>
         </div>
     </div>
 
@@ -115,13 +113,15 @@
                         const seatId = seat.dataset.seatId;
 
                         if (seatStatus === "taken") {
-                            panel.textContent = `${seatLabel} je zauzeto. Odaberi drugo sjedalo.`;
+                            panel.innerHTML = `
+                                <div class="tb-price-panel__title">Sjedalo nedostupno</div>
+                                <div class="tb-price-panel__value">${seatLabel} je zauzeto</div>
+                                <div class="tb-price-panel__meta">Odaberi drugo sjedalo ili osvježi prikaz ako se stanje promijenilo.</div>
+                            `;
                             return;
                         }
 
-                        // Remove selected class from all other seats
-                        seats.forEach(s => s.classList.remove("selected"));
-                        // Add selected class to the clicked seat
+                        seats.forEach((currentSeat) => currentSeat.classList.remove("selected"));
                         seat.classList.add("selected");
 
                         const price = calculatePrice(seatType, is3D).toFixed(2);
@@ -133,7 +133,15 @@
                         });
                         const checkoutLink = `${checkoutBaseUrl}?${checkoutParams.toString()}`;
 
-                        panel.innerHTML = `<strong>Sjedalo:</strong> ${seatLabel} | <strong>Tip:</strong> ${seatType} | <strong>Cijena:</strong> <span style="color:var(--color-accent)">${price} EUR</span><div style="margin-top:16px"><a class="cinema-btn" href="${checkoutLink}">Nastavi na plaćanje</a></div>`;
+                        panel.innerHTML = `
+                            <div class="tb-price-panel__title">Odabrano sjedalo</div>
+                            <div class="tb-price-panel__value">${seatLabel} · ${seatType} · ${price} EUR</div>
+                            <div class="tb-price-panel__meta">${is3D ? "Uključena je 3D nadoplata." : "Standardna projekcija."}</div>
+                            <div class="tb-price-panel__actions">
+                                <a class="ui-btn ui-btn--primary" href="${checkoutLink}">Nastavi na plaćanje</a>
+                            </div>
+                        `;
+
                         panel.classList.remove("is-updated");
                         void panel.offsetWidth;
                         panel.classList.add("is-updated");

@@ -6,7 +6,7 @@
 <div class="tb-cinema tb-page animate-fade-in-up">
     <div class="tb-header">
         <h1>Brza kupnja ulaznica</h1>
-        <p>Korak 1/4: odaberi kino</p>
+        <p>Korak 1/5: odaberi kino</p>
     </div>
 
     <div class="tb-step-line animate-fade-in-up" aria-label="Koraci brze kupnje">
@@ -14,21 +14,24 @@
         <span class="tb-step is-disabled" aria-disabled="true">2 Film</span>
         <span class="tb-step is-disabled" aria-disabled="true">3 Projekcija</span>
         <span class="tb-step is-disabled" aria-disabled="true">4 Sjedalo</span>
+        <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
     </div>
 
-    <div class="tb-grid-cards animate-fade-in-up">
-        @{
-            int delayMs = 100;
-        }
-        @foreach (var cinema in Model.Cinemas)
-        {
-            <a class="tb-card-link animate-fade-in-up" style="animation-delay: @(delayMs)ms;" asp-controller="TicketBuilder"
-               asp-action="Movies" asp-route-cinemaId="@cinema.Id">
-                <strong>@cinema.Name</strong>
-                <span>@cinema.City</span>
-                <small>@cinema.Street @cinema.HouseNumber</small>
-            </a>
-            delayMs += 50;
-        }
+    <div class="tb-panel animate-fade-in-up">
+        <div class="tb-grid-cards animate-fade-in-up">
+            @{
+                int delayMs = 100;
+            }
+            @foreach (var cinema in Model.Cinemas)
+            {
+                <a class="tb-card-link animate-fade-in-up" style="animation-delay: @(delayMs)ms;"
+                   asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@cinema.Id">
+                    <strong>@cinema.Name</strong>
+                    <span>@cinema.City</span>
+                    <small>@cinema.Street @cinema.HouseNumber</small>
+                </a>
+                delayMs += 50;
+            }
+        </div>
     </div>
 </div>

@@ -6,7 +6,7 @@
 <div class="tb-cinema tb-page animate-fade-in-up">
     <div class="tb-header">
         <h1>@Model.CinemaName</h1>
-        <p>Korak 2/4: odaberi film</p>
+        <p>Korak 2/5: odaberi film</p>
     </div>
 
     <div class="tb-step-line animate-fade-in-up" aria-label="Koraci brze kupnje">
@@ -14,6 +14,7 @@
         <span class="tb-step active" aria-current="step">2 Film</span>
         <span class="tb-step is-disabled" aria-disabled="true">3 Projekcija</span>
         <span class="tb-step is-disabled" aria-disabled="true">4 Sjedalo</span>
+        <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
     </div>
 
     @if (!Model.Movies.Any())
@@ -22,20 +23,23 @@
     }
     else
     {
-        <div class="tb-grid-cards animate-fade-in-up">
-            @{
-                int delayMs = 100;
-            }
-            @foreach (var movie in Model.Movies)
-            {
-                <a class="tb-card-link animate-fade-in-up" style="animation-delay: @(delayMs)ms;" asp-controller="TicketBuilder"
-                   asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@movie.Id">
-                    <strong>@movie.Title</strong>
-                    <span>@movie.Genre | @movie.DurationMinutes min</span>
-                    <small>@movie.Language | @movie.AgeRating</small>
-                </a>
-                delayMs += 50;
-            }
+        <div class="tb-panel animate-fade-in-up">
+            <div class="tb-grid-cards animate-fade-in-up">
+                @{
+                    int delayMs = 100;
+                }
+                @foreach (var movie in Model.Movies)
+                {
+                    <a class="tb-card-link animate-fade-in-up" style="animation-delay: @(delayMs)ms;"
+                       asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
+                       asp-route-movieId="@movie.Id">
+                        <strong>@movie.Title</strong>
+                        <span>@movie.Genre | @movie.DurationMinutes min</span>
+                        <small>@movie.Language | @movie.AgeRating</small>
+                    </a>
+                    delayMs += 50;
+                }
+            </div>
         </div>
     }
 </div>
