@@ -234,22 +234,28 @@ public class SeatController : Controller
             Endpoint = Url.Action(nameof(HallController.Search), "Hall") ?? "/dvorana/pretraga",
             SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
             RequiredMessage = "Dvorana je obavezna.",
-            Items = BuildSelectItems(
-                _dbContext.Halls
-                    .Include(hall => hall.Cinema)
-                    .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
-                    .OrderBy(hall => hall.Cinema.Name)
-                    .ThenBy(hall => hall.Name)
-                    .Select(hall => new SelectListItem
-                    {
-                        Value = hall.Id.ToString(),
-                        Text = hall.Cinema.Name + " - " + hall.Name,
-                        Selected = model.HallId.HasValue && hall.Id == model.HallId.Value
-                    })
-                    .ToList(),
-                model.HallId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedHallItems(model.HallId)
         };
+    }
+
+    private List<SelectListItem> BuildSelectedHallItems(int? selectedHallId)
+    {
+        if (!selectedHallId.HasValue)
+        {
+            return new List<SelectListItem>();
+        }
+
+        return _dbContext.Halls
+            .Include(h => h.Cinema)
+            .Where(h => h.DeletedAt == null && h.Cinema.DeletedAt == null && h.Id == selectedHallId.Value)
+            .Select(h => new SelectListItem
+            {
+                Value = h.Id.ToString(),
+                Text = h.Cinema.Name + " - " + h.Name,
+                Selected = true
+            })
+            .ToList();
     }
 
     private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)

@@ -235,20 +235,27 @@ public class HallController : Controller
             Endpoint = Url.Action(nameof(CinemaController.Search), "Cinema") ?? "/kina/pretraga",
             SearchPlaceholder = "Pretražite kino po nazivu",
             RequiredMessage = "Kino je obavezno.",
-            Items = BuildSelectItems(
-                _dbContext.Cinemas
-                    .Where(cinema => cinema.DeletedAt == null)
-                    .OrderBy(cinema => cinema.Name)
-                    .Select(cinema => new SelectListItem
-                    {
-                        Value = cinema.Id.ToString(),
-                        Text = cinema.Name,
-                        Selected = model.CinemaId.HasValue && cinema.Id == model.CinemaId.Value
-                    })
-                    .ToList(),
-                model.CinemaId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedCinemaItems(model.CinemaId)
         };
+    }
+
+    private List<SelectListItem> BuildSelectedCinemaItems(int? selectedCinemaId)
+    {
+        if (!selectedCinemaId.HasValue)
+        {
+            return new List<SelectListItem>();
+        }
+
+        return _dbContext.Cinemas
+            .Where(c => c.DeletedAt == null && c.Id == selectedCinemaId.Value)
+            .Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name,
+                Selected = true
+            })
+            .ToList();
     }
 
     private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)

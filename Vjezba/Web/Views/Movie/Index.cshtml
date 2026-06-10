@@ -12,20 +12,22 @@
             <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
                 Popis filmova</h1>
             </div>
-            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novi film</a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+            {
+                <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novi film</a>
+            }
         </div>
 
         <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
             <div class="cinema-card-header">Pretraživanje</div>
             <div class="cinema-card-body">
-                <form asp-action="Index" asp-route-language="@selectedLanguage" method="get"
-                      class="ui-form entity-index-search" data-ajax-search-form
-                      data-ajax-results-target="#movie-index-results">
+                <form asp-action="Search" method="get" class="ui-form entity-index-search"
+                      data-ajax-search-form data-ajax-results-target="#movie-index-results">
                     <div class="row g-4 align-items-end">
                         <div class="col-12 col-lg-7">
                             <div class="ui-field mb-0">
                                 <label for="movieSearch" class="ui-field__label">Naziv filma</label>
-                                <input id="movieSearch" name="search" value="@search" class="ui-field__input" type="search"
+                                <input id="movieSearch" name="query" value="@search" class="ui-field__input" type="search"
                                        placeholder="Pretražite po naslovu..." autocomplete="off" />
                             </div>
                         </div>

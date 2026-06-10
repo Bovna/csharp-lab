@@ -95,7 +95,10 @@
       if (!value) {
         fieldContainer.classList.add("is-invalid");
         if (validationEl) {
-          validationEl.textContent = "Ovo polje je obavezno.";
+          validationEl.textContent =
+            hidden?.dataset?.valRequired ||
+            field?.dataset?.valRequired ||
+            "Ovo polje je obavezno.";
         }
         isValid = false;
       } else {
@@ -119,26 +122,33 @@
    */
   window.CinemaUI.validateAutocompleteFields = function (form) {
     let isValid = true;
-    const acFields = form.querySelectorAll('.autocomplete-field');
+    const acFields = form.querySelectorAll(".autocomplete-field");
 
     acFields.forEach((ac) => {
-      const hidden = ac.querySelector('[data-autocomplete-value]');
+      const hidden = ac.querySelector("[data-autocomplete-value]");
       if (!hidden) return;
 
-      const label = ac.querySelector('.ui-field__label');
-      const isMarkedRequired = label && label.textContent && label.textContent.indexOf('*') !== -1;
+      const label = ac.querySelector(".ui-field__label");
+      const isMarkedRequired =
+        label && label.textContent && label.textContent.indexOf("*") !== -1;
       if (!isMarkedRequired) return; // not required
 
-      const fieldContainer = ac.closest('.ui-field');
-      const validationEl = fieldContainer ? fieldContainer.querySelector('.ui-field__validation') : null;
+      const fieldContainer = ac.closest(".ui-field");
+      const validationEl = fieldContainer
+        ? fieldContainer.querySelector(".ui-field__validation")
+        : null;
 
-      if (!hidden.value || hidden.value.trim() === '') {
-        if (fieldContainer) fieldContainer.classList.add('is-invalid');
-        if (validationEl) validationEl.textContent = 'Ovo polje je obavezno.';
+      if (!hidden.value || hidden.value.trim() === "") {
+        if (fieldContainer) fieldContainer.classList.add("is-invalid");
+        if (validationEl)
+          validationEl.textContent =
+            hidden?.dataset?.valRequired ||
+            field?.dataset?.valRequired ||
+            "Ovo polje je obavezno.";
         isValid = false;
       } else {
-        if (fieldContainer) fieldContainer.classList.remove('is-invalid');
-        if (validationEl) validationEl.textContent = '';
+        if (fieldContainer) fieldContainer.classList.remove("is-invalid");
+        if (validationEl) validationEl.textContent = "";
       }
     });
 
@@ -166,7 +176,10 @@
         if (!value) {
           fieldContainer.classList.add("is-invalid");
           if (validationEl) {
-            validationEl.textContent = "Ovo polje je obavezno.";
+            validationEl.textContent =
+              hidden?.dataset?.valRequired ||
+              field?.dataset?.valRequired ||
+              "Ovo polje je obavezno.";
           }
         } else {
           fieldContainer.classList.remove("is-invalid");
@@ -179,36 +192,47 @@
     );
 
     // Autocomplete inputs: validate on blur/input
-    document.addEventListener('input', (e) => {
-      const target = e.target;
-      if (!target.matches('.autocomplete-field__input')) return;
+    document.addEventListener(
+      "input",
+      (e) => {
+        const target = e.target;
+        if (!target.matches(".autocomplete-field__input")) return;
 
-      const ac = target.closest('.autocomplete-field');
-      if (!ac) return;
+        const ac = target.closest(".autocomplete-field");
+        if (!ac) return;
 
-      const hidden = ac.querySelector('[data-autocomplete-value]');
-      const fieldContainer = ac.closest('.ui-field');
-      const validationEl = fieldContainer ? fieldContainer.querySelector('.ui-field__validation') : null;
+        const hidden = ac.querySelector("[data-autocomplete-value]");
+        const fieldContainer = ac.closest(".ui-field");
+        const validationEl = fieldContainer
+          ? fieldContainer.querySelector(".ui-field__validation")
+          : null;
 
-      const label = ac.querySelector('.ui-field__label');
-      const isMarkedRequired = label && label.textContent && label.textContent.indexOf('*') !== -1;
+        const label = ac.querySelector(".ui-field__label");
+        const isMarkedRequired =
+          label && label.textContent && label.textContent.indexOf("*") !== -1;
 
-      if (!isMarkedRequired) {
-        if (fieldContainer && validationEl) {
-          fieldContainer.classList.remove('is-invalid');
-          validationEl.textContent = '';
+        if (!isMarkedRequired) {
+          if (fieldContainer && validationEl) {
+            fieldContainer.classList.remove("is-invalid");
+            validationEl.textContent = "";
+          }
+          return;
         }
-        return;
-      }
 
-      if (!hidden || !hidden.value || hidden.value.trim() === '') {
-        if (fieldContainer) fieldContainer.classList.add('is-invalid');
-        if (validationEl) validationEl.textContent = 'Ovo polje je obavezno.';
-      } else {
-        if (fieldContainer) fieldContainer.classList.remove('is-invalid');
-        if (validationEl) validationEl.textContent = '';
-      }
-    }, true);
+        if (!hidden || !hidden.value || hidden.value.trim() === "") {
+          if (fieldContainer) fieldContainer.classList.add("is-invalid");
+          if (validationEl)
+            validationEl.textContent =
+              hidden?.dataset?.valRequired ||
+              field?.dataset?.valRequired ||
+              "Ovo polje je obavezno.";
+        } else {
+          if (fieldContainer) fieldContainer.classList.remove("is-invalid");
+          if (validationEl) validationEl.textContent = "";
+        }
+      },
+      true,
+    );
   };
 
   // Auto-init on DOMContentLoaded

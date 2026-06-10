@@ -57,6 +57,15 @@ function isEmptyRequiredValue(element) {
 }
 
 function getValidationMessage(element) {
+  const explicitMessage =
+    element.getAttribute("data-required-message") ||
+    element.dataset.requiredMessage ||
+    element.getAttribute("data-msg-required");
+
+  if (explicitMessage && element.hasAttribute("data-autocomplete-value")) {
+    return String(explicitMessage).trim();
+  }
+
   const rawMessage =
     element.getAttribute("data-val-required") ||
     element.dataset.valRequired ||
@@ -77,8 +86,28 @@ function setFieldState(element, isValid, message) {
   const { field, validationEl } = context;
   field.classList.toggle("is-invalid", !isValid);
 
+  // If this is an autocomplete field, prefer the explicit required message
+  // emitted in the hidden input (`data-required-message`) so we show the
+  // exact ViewModel text instead of falling back to label-based heuristics.
+  let finalMessage = message;
+  if (!isValid) {
+    try {
+      const acHidden = field.querySelector("[data-autocomplete-value]");
+      const explicit =
+        (acHidden &&
+          (acHidden.getAttribute("data-required-message") ||
+            acHidden.dataset.requiredMessage)) ||
+        null;
+      if (explicit) {
+        finalMessage = String(explicit).trim();
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
   if (validationEl) {
-    validationEl.textContent = isValid ? "" : message || validationMessage;
+    validationEl.textContent = isValid ? "" : finalMessage || validationMessage;
   }
 }
 

@@ -58,7 +58,7 @@
     }
 
     <header class="site-header">
-        <div class="container d-flex justify-content-between align-items-center">
+        <div class="container d-flex flex-wrap align-items-center gap-3">
             <a class="nav-brand" asp-area="" asp-controller="Home" asp-action="Index">Kino Sustav</a>
             <nav class="site-nav" aria-label="Glavna navigacija">
                 <ul class="nav-menu">
@@ -72,6 +72,9 @@
                     <li><a class="nav-link @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Brza kupnja</a></li>
                 </ul>
             </nav>
+            <div class="site-header__auth ms-auto">
+                <partial name="_LoginPartial" />
+            </div>
         </div>
     </header>
 

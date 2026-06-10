@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
@@ -7,19 +9,21 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("filmovi")]
-public class MovieController : Controller
+[Authorize]
+public class MovieController : BaseController
 {
     private readonly CinemaDbContext _dbContext;
 
-    public MovieController(CinemaDbContext dbContext)
+    public MovieController(CinemaDbContext dbContext, UserManager<AppUser> userManager)
+        : base(userManager)
     {
         _dbContext = dbContext;
     }
 
     [Route("pretraga")]
-    public IActionResult Index(string? language, string? search, bool partial = false)
+    [AllowAnonymous]
+    public IActionResult Index(string? language, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
         var query = _dbContext.Movies.Where(m => m.DeletedAt == null).AsQueryable();
 
         ViewBag.Languages = _dbContext.Movies
@@ -31,16 +35,11 @@ public class MovieController : Controller
             .ToList();
 
         ViewBag.SelectedLanguage = language;
-        ViewBag.Search = search;
+        ViewBag.Search = null;
 
         if (!string.IsNullOrWhiteSpace(language))
         {
             query = query.Where(m => m.Language == language);
-        }
-
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-        {
-            query = query.Where(movie => EF.Functions.Like(movie.Title, $"%{normalizedSearch}%"));
         }
 
         var movies = query.ToList();
@@ -54,27 +53,47 @@ public class MovieController : Controller
         return View(movies);
     }
 
-    public IActionResult Search(string? query)
+    [AllowAnonymous]
+    public IActionResult Search(string? query, string? language, bool partial = false)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
-        var movies = _dbContext.Movies
-            .Where(movie => movie.DeletedAt == null)
-            .Where(movie => string.IsNullOrEmpty(normalizedQuery)
-                || EF.Functions.Like(movie.Title, $"%{normalizedQuery}%"))
-            .OrderBy(movie => movie.Title)
-            .Take(12)
-            .Select(movie => new
-            {
-                value = movie.Id,
-                text = movie.Title
-            })
+        ViewBag.Languages = _dbContext.Movies
+            .Where(m => m.DeletedAt == null)
+            .Select(m => m.Language)
+            .Where(l => l != null && l != "")
+            .Distinct()
+            .OrderBy(l => l)
             .ToList();
 
-        return Json(movies);
+        ViewBag.SelectedLanguage = null;
+        ViewBag.Search = query;
+
+        var moviesQuery = _dbContext.Movies.Where(movie => movie.DeletedAt == null).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            moviesQuery = moviesQuery.Where(movie => movie.Language == language);
+            ViewBag.SelectedLanguage = language;
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            moviesQuery = moviesQuery.Where(movie => EF.Functions.Like(movie.Title, $"%{normalizedQuery}%"));
+        }
+
+        var movies = moviesQuery.OrderBy(movie => movie.Id).ToList();
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", movies);
+        }
+
+        return View(nameof(Index), movies);
     }
 
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
         var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == id && m.DeletedAt == null);
@@ -88,12 +107,14 @@ public class MovieController : Controller
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         return View(new MovieFormViewModel());
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(MovieFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -120,6 +141,7 @@ public class MovieController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
         var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == id && m.DeletedAt == null);
@@ -145,6 +167,7 @@ public class MovieController : Controller
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> EditPost(int id)
     {
         var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == id && m.DeletedAt == null);
@@ -179,6 +202,7 @@ public class MovieController : Controller
     }
 
     [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
         var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == id && m.DeletedAt == null);

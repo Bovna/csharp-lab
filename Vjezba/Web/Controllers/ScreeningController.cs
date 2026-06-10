@@ -262,19 +262,8 @@ public class ScreeningController : Controller
             Endpoint = Url.Action(nameof(MovieController.Search), "Movie") ?? "/filmovi/search",
             SearchPlaceholder = "Pretražite film po naslovu",
             RequiredMessage = "Film je obavezan.",
-            Items = BuildSelectItems(
-                _dbContext.Movies
-                    .Where(movie => movie.DeletedAt == null)
-                    .OrderBy(movie => movie.Title)
-                    .Select(movie => new SelectListItem
-                    {
-                        Value = movie.Id.ToString(),
-                        Text = movie.Title,
-                        Selected = model.MovieId.HasValue && movie.Id == model.MovieId.Value
-                    })
-                    .ToList(),
-                model.MovieId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedMovieItems(model.MovieId)
         };
 
         model.HallSelector = new AutocompleteViewModel
@@ -284,39 +273,47 @@ public class ScreeningController : Controller
             Endpoint = Url.Action(nameof(Search), "Screening") ?? "/projekcije/search",
             SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
             RequiredMessage = "Dvorana je obavezna.",
-            Items = BuildSelectItems(
-                _dbContext.Halls
-                    .Include(hall => hall.Cinema)
-                    .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
-                    .OrderBy(hall => hall.Cinema.Name)
-                    .ThenBy(hall => hall.Name)
-                    .Select(hall => new SelectListItem
-                    {
-                        Value = hall.Id.ToString(),
-                        Text = hall.Cinema.Name + " - " + hall.Name,
-                        Selected = model.HallId.HasValue && hall.Id == model.HallId.Value
-                    })
-                    .ToList(),
-                model.HallId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedHallItems(model.HallId)
         };
     }
 
-    private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)
+    private List<SelectListItem> BuildSelectedMovieItems(int? selectedMovieId)
     {
-        var selectItems = new List<SelectListItem>();
-
-        if (!isCreate)
+        if (!selectedMovieId.HasValue)
         {
-            selectItems.Add(new SelectListItem
-            {
-                Text = "- odaberite -",
-                Value = string.Empty,
-                Selected = !selectedValue.HasValue
-            });
+            return new List<SelectListItem>();
         }
 
-        selectItems.AddRange(items);
-        return selectItems;
+        return _dbContext.Movies
+            .Where(movie => movie.DeletedAt == null && movie.Id == selectedMovieId.Value)
+            .Select(movie => new SelectListItem
+            {
+                Value = movie.Id.ToString(),
+                Text = movie.Title,
+                Selected = true
+            })
+            .ToList();
+    }
+
+    private List<SelectListItem> BuildSelectedHallItems(int? selectedHallId)
+    {
+        if (!selectedHallId.HasValue)
+        {
+            return new List<SelectListItem>();
+        }
+
+        return _dbContext.Halls
+            .Include(hall => hall.Cinema)
+            .Where(hall => hall.DeletedAt == null
+                && hall.Cinema.DeletedAt == null
+                && hall.Id == selectedHallId.Value)
+            .Select(hall => new SelectListItem
+            {
+                Value = hall.Id.ToString(),
+                Text = hall.Cinema.Name + " - " + hall.Name,
+                Selected = true
+            })
+            .ToList();
     }
 }

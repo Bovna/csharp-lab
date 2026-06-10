@@ -1,7 +1,9 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Vjezba.DAL;
+using Vjezba.Web.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,27 @@ builder.Services.AddDbContext<CinemaDbContext>(options =>
         builder.Configuration.GetConnectionString("CinemaDbContext"),
         sql => sql.MigrationsAssembly("Vjezba.DAL")));
 
+builder.Services
+    .AddDefaultIdentity<AppUser>(options => { options.SignIn.RequireConfirmedAccount = false; })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<CinemaDbContext>();
+
+builder.Services
+    .AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? string.Empty;
+        options.ClientSecret = ***REMOVED***"Authentication:Google:ClientSecret"] ?? string.Empty;
+    });
+
+builder.Services.AddRazorPages();
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    await IdentityDataSeeder.SeedRoles(scope.ServiceProvider);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -28,6 +50,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 var supportedCultures = new[]
@@ -46,4 +69,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.MapRazorPages();
+
 app.Run();
+

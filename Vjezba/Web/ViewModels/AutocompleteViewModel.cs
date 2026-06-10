@@ -10,5 +10,6 @@ public class AutocompleteViewModel
     public string SearchPlaceholder { get; set; } = string.Empty;
     public string EmptyText { get; set; } = "- odaberite -";
     public string RequiredMessage { get; set; } = string.Empty;
+    public bool EnableRemoteSearch { get; set; }
     public List<SelectListItem> Items { get; set; } = new();
 }

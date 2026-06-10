@@ -1,0 +1,76 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Prijava";
+    var hasExternalLogins = Model.ExternalLogins.Count > 0;
+}
+
+<div class="container py-4 animate-fade-in-up">
+    <div class="row justify-content-center">
+        <div class="col-12 @(hasExternalLogins ? "col-xl-9" : "col-lg-6") entity-form auth-card-form">
+            <div class="cinema-card">
+                <div class="cinema-card-header">Prijava</div>
+                <div class="cinema-card-body">
+                    <div class="@(hasExternalLogins ? "auth-login-grid" : string.Empty)">
+                        <div>
+                            <form method="post" class="ui-form">
+                                <div class="auth-top-action">
+                                    <span>Nemate račun?</span>
+                                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="ui-btn ui-btn--secondary">Registracija</a>
+                                </div>
+
+                                <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
+
+                                <div class="mb-4">
+                                    <h5 class="ui-form__section-title">Podaci za prijavu</h5>
+
+                                    <div class="ui-field">
+                                        <label asp-for="Input.Email" class="ui-field__label">E-pošta</label>
+                                        <input asp-for="Input.Email" class="ui-field__input" placeholder="ime@domena.com" autocomplete="email" />
+                                        <span asp-validation-for="Input.Email" class="ui-field__validation"></span>
+                                    </div>
+
+                                    <div class="ui-field">
+                                        <label asp-for="Input.Password" class="ui-field__label">Lozinka</label>
+                                        <input asp-for="Input.Password" class="ui-field__input" placeholder="Unesi lozinku" autocomplete="current-password" />
+                                        <span asp-validation-for="Input.Password" class="ui-field__validation"></span>
+                                    </div>
+
+                                    <div class="ui-field ui-field--checkbox">
+                                        <label class="ui-field__checkbox-label">
+                                            <input asp-for="Input.RememberMe" class="ui-field__checkbox" />
+                                            <span class="ui-field__checkbox-text">Zapamti me</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-3 pt-3 border-top">
+                                    <button type="submit" class="ui-btn ui-btn--primary">Prijavi se</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        @if (hasExternalLogins)
+                        {
+                            <div class="auth-login-separator" aria-hidden="true"></div>
+                            <div>
+                                <section class="auth-provider-panel" aria-label="Vanjska prijava">
+                                    <h5 class="ui-form__section-title">Prijavi se na drugi način</h5>
+
+                                    <div class="auth-provider-list">
+                                        @foreach (var provider in Model.ExternalLogins)
+                                        {
+                                            <form method="post" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl">
+                                                <button type="submit" class="ui-btn ui-btn--secondary auth-provider-btn" name="provider" value="@provider.Name">Prijavi se putem @provider.DisplayName</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </section>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

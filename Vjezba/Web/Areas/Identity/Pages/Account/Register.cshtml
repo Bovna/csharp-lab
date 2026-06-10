@@ -1,0 +1,67 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Registracija";
+}
+
+<div class="container py-4 animate-fade-in-up">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-7 entity-form auth-card-form">
+            <div class="cinema-card">
+                <div class="cinema-card-header">Registracija</div>
+                <div class="cinema-card-body">
+                    <form method="post" class="ui-form">
+                        <div class="auth-top-action">
+                            <span>Već imate račun?</span>
+                            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="ui-btn ui-btn--secondary">Prijava</a>
+                        </div>
+
+                        <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
+
+                        <div class="mb-4">
+                            <h5 class="ui-form__section-title">Podaci korisnika</h5>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.Email" class="ui-field__label">E-pošta</label>
+                                <input asp-for="Input.Email" class="ui-field__input" placeholder="ime@domena.com" autocomplete="email" />
+                                <span asp-validation-for="Input.Email" class="ui-field__validation"></span>
+                            </div>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.OIB" class="ui-field__label"></label>
+                                <input asp-for="Input.OIB" class="ui-field__input" placeholder="12345678901" autocomplete="off" />
+                                <span asp-validation-for="Input.OIB" class="ui-field__validation"></span>
+                            </div>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.JMBAG" class="ui-field__label"></label>
+                                <input asp-for="Input.JMBAG" class="ui-field__input" placeholder="1234567890123" autocomplete="off" />
+                                <span asp-validation-for="Input.JMBAG" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="ui-form__section-title">Lozinka</h5>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.Password" class="ui-field__label">Lozinka</label>
+                                <input asp-for="Input.Password" class="ui-field__input" placeholder="Unesi lozinku" autocomplete="new-password" />
+                                <span asp-validation-for="Input.Password" class="ui-field__validation"></span>
+                            </div>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.ConfirmPassword" class="ui-field__label">Potvrdi lozinku</label>
+                                <input asp-for="Input.ConfirmPassword" class="ui-field__input" placeholder="Ponovi lozinku" autocomplete="new-password" />
+                                <span asp-validation-for="Input.ConfirmPassword" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+
+                        <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-3 pt-3 border-top">
+                            <button type="submit" class="ui-btn ui-btn--primary">Registriraj se</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

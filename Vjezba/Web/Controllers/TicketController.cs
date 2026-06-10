@@ -233,20 +233,8 @@ public class TicketController : Controller
             Endpoint = Url.Action(nameof(CustomerController.Search), "Customer") ?? "/kupci/pretraga",
             SearchPlaceholder = "Pretražite kupca po imenu",
             RequiredMessage = "Kupac je obavezan.",
-            Items = BuildSelectItems(
-                _dbContext.Customers
-                    .Where(customer => customer.DeletedAt == null)
-                    .OrderBy(customer => customer.LastName)
-                    .ThenBy(customer => customer.FirstName)
-                    .Select(customer => new SelectListItem
-                    {
-                        Value = customer.Id.ToString(),
-                        Text = customer.FirstName + " " + customer.LastName,
-                        Selected = model.CustomerId.HasValue && customer.Id == model.CustomerId.Value
-                    })
-                    .ToList(),
-                model.CustomerId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedCustomerItems(model.CustomerId)
         };
 
         model.ScreeningSelector = new AutocompleteViewModel
@@ -256,27 +244,8 @@ public class TicketController : Controller
             Endpoint = Url.Action(nameof(ScreeningController.Search), "Screening") ?? "/projekcije/search",
             SearchPlaceholder = "Pretražite projekciju po filmu",
             RequiredMessage = "Projekcija je obavezna.",
-            Items = BuildSelectItems(
-                _dbContext.Screenings
-                    .Include(screening => screening.Movie)
-                    .Include(screening => screening.Hall)
-                        .ThenInclude(hall => hall.Cinema)
-                    .Where(screening => screening.DeletedAt == null
-                        && screening.Movie.DeletedAt == null
-                        && screening.Hall.DeletedAt == null
-                        && screening.Hall.Cinema.DeletedAt == null)
-                    .OrderBy(screening => screening.StartTime)
-                    .Select(screening => new SelectListItem
-                    {
-                        Value = screening.Id.ToString(),
-                        Text = screening.Movie.Title + " - "
-                               + screening.Hall.Cinema.Name + " / " + screening.Hall.Name + " - "
-                               + screening.StartTime.ToString("dd.MM.yyyy HH:mm"),
-                        Selected = model.ScreeningId.HasValue && screening.Id == model.ScreeningId.Value
-                    })
-                    .ToList(),
-                model.ScreeningId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedScreeningItems(model.ScreeningId)
         };
 
         model.SeatSelector = new AutocompleteViewModel
@@ -286,27 +255,68 @@ public class TicketController : Controller
             Endpoint = Url.Action(nameof(SeatController.Search), "Seat") ?? "/sjedala/pretraga",
             SearchPlaceholder = "Pretražite sjedalo po oznaci",
             RequiredMessage = string.Empty,
-            Items = BuildSelectItems(
-                _dbContext.Seats
-                    .Include(seat => seat.Hall)
-                        .ThenInclude(hall => hall.Cinema)
-                    .Where(seat => seat.DeletedAt == null
-                        && seat.Hall.DeletedAt == null
-                        && seat.Hall.Cinema.DeletedAt == null)
-                    .OrderBy(seat => seat.Hall.Cinema.Name)
-                    .ThenBy(seat => seat.Hall.Name)
-                    .ThenBy(seat => seat.RowLabel)
-                    .ThenBy(seat => seat.SeatNumber)
-                    .Select(seat => new SelectListItem
-                    {
-                        Value = seat.Id.ToString(),
-                        Text = seat.Hall.Cinema.Name + " - " + seat.Hall.Name + " - " + seat.RowLabel + seat.SeatNumber,
-                        Selected = model.SeatId.HasValue && seat.Id == model.SeatId.Value
-                    })
-                    .ToList(),
-                model.SeatId,
-                isCreate)
+            EnableRemoteSearch = true,
+            Items = BuildSelectedSeatItems(model.SeatId)
         };
+    }
+
+    private List<SelectListItem> BuildSelectedCustomerItems(int? selectedCustomerId)
+    {
+        if (!selectedCustomerId.HasValue)
+        {
+            return new List<SelectListItem>();
+        }
+
+        return _dbContext.Customers
+            .Where(c => c.DeletedAt == null && c.Id == selectedCustomerId.Value)
+            .Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.FirstName + " " + c.LastName,
+                Selected = true
+            })
+            .ToList();
+    }
+
+    private List<SelectListItem> BuildSelectedScreeningItems(int? selectedScreeningId)
+    {
+        if (!selectedScreeningId.HasValue)
+        {
+            return new List<SelectListItem>();
+        }
+
+        return _dbContext.Screenings
+            .Include(s => s.Movie)
+            .Include(s => s.Hall)
+                .ThenInclude(h => h.Cinema)
+            .Where(s => s.DeletedAt == null && s.Id == selectedScreeningId.Value)
+            .Select(s => new SelectListItem
+            {
+                Value = s.Id.ToString(),
+                Text = s.Movie.Title + " - " + s.Hall.Cinema.Name + " / " + s.Hall.Name + " - " + s.StartTime.ToString("dd.MM.yyyy HH:mm"),
+                Selected = true
+            })
+            .ToList();
+    }
+
+    private List<SelectListItem> BuildSelectedSeatItems(int? selectedSeatId)
+    {
+        if (!selectedSeatId.HasValue)
+        {
+            return new List<SelectListItem>();
+        }
+
+        return _dbContext.Seats
+            .Include(seat => seat.Hall)
+                .ThenInclude(h => h.Cinema)
+            .Where(seat => seat.DeletedAt == null && seat.Id == selectedSeatId.Value)
+            .Select(seat => new SelectListItem
+            {
+                Value = seat.Id.ToString(),
+                Text = seat.Hall.Cinema.Name + " - " + seat.Hall.Name + " - " + seat.RowLabel + seat.SeatNumber,
+                Selected = true
+            })
+            .ToList();
     }
 
     private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)

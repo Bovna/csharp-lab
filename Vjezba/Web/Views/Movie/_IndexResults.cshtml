@@ -32,8 +32,11 @@
                                 <td>@movie.Language</td>
                                 <td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td>
                                 <td class="ui-table__actions">
-                                    <a asp-action="Details" asp-route-id="@movie.Id" class="ui-btn ui-btn--primary"
-                                       style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <a asp-action="Details" asp-route-id="@movie.Id" class="ui-btn ui-btn--primary"
+                                           style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
+                                    }
                                 </td>
                             </tr>
                         }

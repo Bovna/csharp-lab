@@ -1,0 +1,47 @@
+@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "Vanjska prijava";
+}
+
+<div class="container py-4 animate-fade-in-up">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-7 entity-form auth-card-form">
+            <div class="cinema-card">
+                <div class="cinema-card-header">
+                    @(string.IsNullOrWhiteSpace(Model.ProviderDisplayName) ? "Vanjska prijava" : $"Prijava preko {Model.ProviderDisplayName}")
+                </div>
+                <div class="cinema-card-body">
+                    <form method="post" class="ui-form" asp-page-handler="Confirmation">
+                        <div class="mb-4">
+                            <h5 class="ui-form__section-title">Podaci korisnika</h5>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.Email" class="ui-field__label">E-pošta</label>
+                                <input asp-for="Input.Email" class="ui-field__input" placeholder="ime@domena.com" autocomplete="email" />
+                                <span asp-validation-for="Input.Email" class="ui-field__validation"></span>
+                            </div>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.OIB" class="ui-field__label"></label>
+                                <input asp-for="Input.OIB" class="ui-field__input" placeholder="12345678901" autocomplete="off" />
+                                <span asp-validation-for="Input.OIB" class="ui-field__validation"></span>
+                            </div>
+
+                            <div class="ui-field">
+                                <label asp-for="Input.JMBAG" class="ui-field__label"></label>
+                                <input asp-for="Input.JMBAG" class="ui-field__input" placeholder="1234567890123" autocomplete="off" />
+                                <span asp-validation-for="Input.JMBAG" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+
+                        <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-3 pt-3 border-top">
+                            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="ui-btn ui-btn--secondary">Natrag na prijavu</a>
+                            <button type="submit" class="ui-btn ui-btn--primary">Kreiraj i nastavi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

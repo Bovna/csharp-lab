@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Vjezba.Model.Entities;
 
 namespace Vjezba.DAL;
 
-public class CinemaDbContext : DbContext
+public class CinemaDbContext : IdentityDbContext<AppUser>
 {
     protected CinemaDbContext()
     {
