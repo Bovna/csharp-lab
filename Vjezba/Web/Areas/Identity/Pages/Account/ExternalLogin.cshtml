@@ -1,16 +1,19 @@
 @page
 @model ExternalLoginModel
 @{
-    ViewData["Title"] = "Vanjska prijava";
+    ViewData["Title"] = "Prijava preko Googla";
+    var pageTitle = string.Equals(Model.ProviderDisplayName, "Google", StringComparison.OrdinalIgnoreCase)
+        ? "Prijava preko Googla"
+        : string.IsNullOrWhiteSpace(Model.ProviderDisplayName)
+            ? "Vanjska prijava"
+            : $"Prijava preko {Model.ProviderDisplayName}";
 }
 
 <div class="container py-4 animate-fade-in-up">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-7 entity-form auth-card-form">
             <div class="cinema-card">
-                <div class="cinema-card-header">
-                    @(string.IsNullOrWhiteSpace(Model.ProviderDisplayName) ? "Vanjska prijava" : $"Prijava preko {Model.ProviderDisplayName}")
-                </div>
+                <div class="cinema-card-header">@pageTitle</div>
                 <div class="cinema-card-body">
                     <form method="post" class="ui-form" asp-page-handler="Confirmation">
                         <div class="mb-4">
@@ -35,7 +38,7 @@
                             </div>
                         </div>
 
-                        <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-3 pt-3 border-top">
+                        <div class="ui-actions ui-actions--end ui-actions--stack-mobile auth-submit-actions">
                             <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="ui-btn ui-btn--secondary">Natrag na prijavu</a>
                             <button type="submit" class="ui-btn ui-btn--primary">Kreiraj i nastavi</button>
                         </div>

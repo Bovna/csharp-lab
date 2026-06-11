@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("dvorana")]
+[Authorize]
 public class HallController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -18,35 +20,21 @@ public class HallController : Controller
     }
 
     [Route("")]
-    public IActionResult Index(string? supports3D, string? search, bool partial = false)
+    [Route("pretraga")]
+    [AllowAnonymous]
+    public IActionResult Index(bool? supports3D, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var query = _dbContext.Halls
-            .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
-            .Include(h => h.Cinema)
-            .AsQueryable();
+        var hallsQuery = ActiveHallsQuery();
 
-        if (string.Equals(supports3D, "true", StringComparison.OrdinalIgnoreCase))
+        if (supports3D.HasValue)
         {
-            query = query.Where(hall => hall.Supports3D);
+            hallsQuery = hallsQuery.Where(hall => hall.Supports3D == supports3D.Value);
         }
-        else if (string.Equals(supports3D, "false", StringComparison.OrdinalIgnoreCase))
-        {
-            query = query.Where(hall => !hall.Supports3D);
-        }
-
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-        {
-            query = query.Where(hall => EF.Functions.Like(hall.Name, $"%{normalizedSearch}%")
-                || EF.Functions.Like(hall.Cinema.Name, $"%{normalizedSearch}%"));
-        }
-
-        var halls = query
-            .OrderBy(hall => hall.Id)
-            .ToList();
 
         ViewBag.Supports3D = supports3D;
-        ViewBag.Search = search;
+        ViewBag.Search = null;
+
+        var halls = hallsQuery.OrderBy(hall => hall.Id).ToList();
 
         if (partial)
         {
@@ -56,17 +44,48 @@ public class HallController : Controller
         return View(halls);
     }
 
-    [Route("pretraga")]
-    public IActionResult Search(string? query)
+    [HttpGet("rezultati")]
+    [AllowAnonymous]
+    public IActionResult Search(string? query, bool? supports3D, bool partial = false)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var hallsQuery = ActiveHallsQuery();
+
+        if (supports3D.HasValue)
+        {
+            hallsQuery = hallsQuery.Where(hall => hall.Supports3D == supports3D.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            hallsQuery = hallsQuery.Where(hall =>
+                hall.Name.Contains(normalizedQuery) ||
+                hall.Cinema.Name.Contains(normalizedQuery));
+        }
+
+        ViewBag.Supports3D = supports3D;
+        ViewBag.Search = query;
+
+        var halls = hallsQuery.OrderBy(hall => hall.Id).ToList();
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", halls);
+        }
+
+        return View(nameof(Index), halls);
+    }
+
+    [HttpGet("autocomplete")]
+    [AllowAnonymous]
+    public IActionResult Autocomplete(string? query)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
-        var halls = _dbContext.Halls
-            .Include(hall => hall.Cinema)
-            .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
+        var halls = ActiveHallsQuery()
             .Where(hall => string.IsNullOrEmpty(normalizedQuery)
-                || EF.Functions.Like(hall.Name, $"%{normalizedQuery}%")
-                || EF.Functions.Like(hall.Cinema.Name, $"%{normalizedQuery}%"))
+                || hall.Name.Contains(normalizedQuery)
+                || hall.Cinema.Name.Contains(normalizedQuery))
             .OrderBy(hall => hall.Cinema.Name)
             .ThenBy(hall => hall.Name)
             .Take(12)
@@ -81,11 +100,10 @@ public class HallController : Controller
     }
 
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
-        var hall = _dbContext.Halls
-            .Include(h => h.Cinema)
-            .FirstOrDefault(h => h.Id == id && h.DeletedAt == null && h.Cinema.DeletedAt == null);
+        var hall = ActiveHallsQuery().FirstOrDefault(hall => hall.Id == id);
 
         if (hall is null)
         {
@@ -93,51 +111,48 @@ public class HallController : Controller
         }
 
         var seats = _dbContext.Seats
-            .Where(s => s.HallId == hall.Id && s.DeletedAt == null)
-            .OrderBy(s => s.RowLabel)
-            .ThenBy(s => s.SeatNumber)
+            .Where(seat => seat.HallId == hall.Id && seat.DeletedAt == null)
+            .OrderBy(seat => seat.RowLabel)
+            .ThenBy(seat => seat.SeatNumber)
             .ToList();
 
         var screenings = _dbContext.Screenings
-            .Where(s => s.HallId == hall.Id && s.DeletedAt == null && s.Movie.DeletedAt == null)
-            .Include(s => s.Movie)
-            .OrderBy(s => s.StartTime)
+            .Where(screening => screening.HallId == hall.Id
+                && screening.DeletedAt == null
+                && screening.Movie.DeletedAt == null)
+            .Include(screening => screening.Movie)
+            .OrderBy(screening => screening.StartTime)
             .ToList();
 
-        var viewModel = new HallDetailsViewModel
+        return View(new HallDetailsViewModel
         {
             Hall = hall,
             Seats = seats,
             Screenings = screenings
-        };
-
-        return View(viewModel);
+        });
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         var model = new HallFormViewModel();
-        PrepareHallForm(model, isCreate: true);
+        PrepareHallForm(model);
         return View(model);
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(HallFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            PrepareHallForm(model, isCreate: true);
+            PrepareHallForm(model);
             return View(model);
         }
 
-        var hall = new Hall
-        {
-            Name = model.Name,
-            Capacity = model.Capacity,
-            Supports3D = model.Supports3D,
-            CinemaId = model.CinemaId!.Value
-        };
+        var hall = new Hall();
+        MapHallForm(model, hall);
 
         _dbContext.Halls.Add(hall);
         _dbContext.SaveChanges();
@@ -147,73 +162,51 @@ public class HallController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
-        var hall = _dbContext.Halls.FirstOrDefault(h => h.Id == id && h.DeletedAt == null);
+        var hall = ActiveHallsQuery().FirstOrDefault(hall => hall.Id == id);
 
         if (hall is null)
         {
             return NotFound();
         }
 
-        var model = new HallFormViewModel
-        {
-            Id = hall.Id,
-            Name = hall.Name,
-            Capacity = hall.Capacity,
-            Supports3D = hall.Supports3D,
-            CinemaId = hall.CinemaId
-        };
-
-        PrepareHallForm(model, isCreate: false);
+        var model = ToHallForm(hall);
+        PrepareHallForm(model);
         return View(model);
     }
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
-    public async Task<IActionResult> EditPost(int id)
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult EditPost(int id, HallFormViewModel model)
     {
-        var hall = _dbContext.Halls.FirstOrDefault(h => h.Id == id && h.DeletedAt == null);
+        var hall = ActiveHallsQuery().FirstOrDefault(hall => hall.Id == id);
 
         if (hall is null)
         {
             return NotFound();
         }
 
-        var model = new HallFormViewModel
+        if (!ModelState.IsValid)
         {
-            Id = hall.Id,
-            Name = hall.Name,
-            Capacity = hall.Capacity,
-            Supports3D = hall.Supports3D,
-            CinemaId = hall.CinemaId
-        };
-
-        var ok = await TryUpdateModelAsync(model, string.Empty,
-            m => m.Name,
-            m => m.Capacity,
-            m => m.Supports3D,
-            m => m.CinemaId);
-
-        if (ok && ModelState.IsValid)
-        {
-            hall.Name = model.Name;
-            hall.Capacity = model.Capacity;
-            hall.Supports3D = model.Supports3D;
-            hall.CinemaId = model.CinemaId!.Value;
-
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            model.Id = id;
+            PrepareHallForm(model);
+            return View(model);
         }
 
-        PrepareHallForm(model, isCreate: false);
-        return View(model);
+        MapHallForm(model, hall);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 
-    [HttpPost("izbrisi/{id}")]
+    [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
-        var hall = _dbContext.Halls.FirstOrDefault(h => h.Id == id && h.DeletedAt == null);
+        var hall = ActiveHallsQuery().FirstOrDefault(hall => hall.Id == id);
 
         if (hall is null)
         {
@@ -226,14 +219,21 @@ public class HallController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private void PrepareHallForm(HallFormViewModel model, bool isCreate = false)
+    private IQueryable<Hall> ActiveHallsQuery()
+    {
+        return _dbContext.Halls
+            .Include(hall => hall.Cinema)
+            .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null);
+    }
+
+    private void PrepareHallForm(HallFormViewModel model)
     {
         model.CinemaSelector = new AutocompleteViewModel
         {
             InputName = nameof(model.CinemaId),
             Label = "Kino",
-            Endpoint = Url.Action(nameof(CinemaController.Search), "Cinema") ?? "/kina/pretraga",
-            SearchPlaceholder = "Pretražite kino po nazivu",
+            Endpoint = Url.Action(nameof(CinemaController.Autocomplete), "Cinema") ?? "/kina/autocomplete",
+            SearchPlaceholder = "Pretrazite kino po nazivu",
             RequiredMessage = "Kino je obavezno.",
             EnableRemoteSearch = true,
             Items = BuildSelectedCinemaItems(model.CinemaId)
@@ -248,32 +248,34 @@ public class HallController : Controller
         }
 
         return _dbContext.Cinemas
-            .Where(c => c.DeletedAt == null && c.Id == selectedCinemaId.Value)
-            .Select(c => new SelectListItem
+            .Where(cinema => cinema.DeletedAt == null && cinema.Id == selectedCinemaId.Value)
+            .Select(cinema => new SelectListItem
             {
-                Value = c.Id.ToString(),
-                Text = c.Name,
+                Value = cinema.Id.ToString(),
+                Text = cinema.Name,
                 Selected = true
             })
             .ToList();
     }
 
-    private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)
+    private static HallFormViewModel ToHallForm(Hall hall)
     {
-        var selectItems = new List<SelectListItem>();
-
-        if (!isCreate)
+        return new HallFormViewModel
         {
-            selectItems.Add(new SelectListItem
-            {
-                Text = "- odaberite -",
-                Value = string.Empty,
-                Selected = !selectedValue.HasValue
-            });
-        }
+            Id = hall.Id,
+            Name = hall.Name,
+            Capacity = hall.Capacity,
+            Supports3D = hall.Supports3D,
+            CinemaId = hall.CinemaId
+        };
+    }
 
-        selectItems.AddRange(items);
-        return selectItems;
+    private static void MapHallForm(HallFormViewModel model, Hall hall)
+    {
+        hall.Name = model.Name;
+        hall.Capacity = model.Capacity;
+        hall.Supports3D = model.Supports3D;
+        hall.CinemaId = model.CinemaId!.Value;
     }
 
     private void SoftDeleteHall(Hall hall)

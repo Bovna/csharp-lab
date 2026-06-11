@@ -38,7 +38,6 @@ public class LoginModel : PageModel
         [Display(Name = "Lozinka")]
         public string Password { get; set; } = string.Empty;
 
-        public bool RememberMe { get; set; }
     }
 
     public async Task OnGetAsync(string? returnUrl = null)
@@ -57,7 +56,7 @@ public class LoginModel : PageModel
             return Page();
         }
 
-        var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, isPersistent: false, lockoutOnFailure: false);
 
         if (result.Succeeded)
         {

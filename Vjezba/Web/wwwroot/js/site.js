@@ -265,6 +265,10 @@ function initTicketBuilderMotion() {
   ).matches;
 
   pages.forEach((page) => {
+    if (page.hasAttribute("data-ticket-builder-page")) {
+      return;
+    }
+
     if (page.dataset.motionReady === "1") {
       return;
     }

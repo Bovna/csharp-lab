@@ -1,58 +1,63 @@
 @model List<Vjezba.Model.Entities.Ticket>
 
-<div class="cinema-card">
+<div class="cinema-card animate-fade-in-up" data-ajax-search-results>
     <div class="cinema-card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
         <span>Rezultati</span>
         <span class="cinema-badge">Prikazano: @Model.Count</span>
     </div>
-    <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
-        <table class="ui-table entity-index-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Broj ulaznice</th>
-                    <th>Kupac</th>
-                    <th>Film</th>
-                    <th>Kino</th>
-                    <th>Dvorana</th>
-                    <th>Sjedalo</th>
-                    <th>Vrijeme projekcije</th>
-                    <th>Cijena</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Any())
-                {
-                    foreach (var ticket in Model)
+    <div class="cinema-card-body p-0">
+        <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
+            <table class="ui-table entity-index-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Broj ulaznice</th>
+                        <th>Kupac</th>
+                        <th>Film</th>
+                        <th>Kino</th>
+                        <th>Dvorana</th>
+                        <th>Sjedalo</th>
+                        <th>Vrijeme projekcije</th>
+                        <th>Cijena</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
                     {
-                        <tr>
-                            <td class="text-muted">@ticket.Id</td>
-                            <td>@ticket.TicketNumber</td>
-                            <td>@(ticket.Customer is null ? "-" : $"{ticket.Customer.FirstName} {ticket.Customer.LastName}")
-                            </td>
-                            <td>@(ticket.Screening?.Movie?.Title ?? "-")</td>
-                            <td>@(ticket.Screening?.Hall?.Cinema?.Name ?? "-")</td>
-                            <td>@(ticket.Screening?.Hall?.Name ?? "-")</td>
-                            <td>@(ticket.Seat is null ? "-" : $"{ticket.Seat.RowLabel}{ticket.Seat.SeatNumber}")</td>
-                            <td>@(ticket.Screening is null ? "-" : ticket.Screening.StartTime.ToString("dd.MM.yyyy HH:mm"))</td>
-                            <td>@ticket.Price.ToString("0.00")</td>
-                            <td>
-                                @(ticket.Status switch
-                                {
-                                    Vjezba.Model.Entities.TicketStatus.Active => "Aktivna",
-                                    Vjezba.Model.Entities.TicketStatus.Cancelled => "Otkazana",
-                                    Vjezba.Model.Entities.TicketStatus.Used => "Iskorištena",
-                                    _ => ticket.Status.ToString()
-                                })
-                            </td>
-                            <td class="ui-table__actions"><a asp-action="Details" asp-route-id="@ticket.Id"
-                                                                 class="ui-btn ui-btn--primary">Detalji</a></td>
+                        foreach (var ticket in Model)
+                        {
+                            var statusLabel = ticket.Status switch
+                            {
+                                Vjezba.Model.Entities.TicketStatus.Active => "Aktivna",
+                                Vjezba.Model.Entities.TicketStatus.Cancelled => "Otkazana",
+                                Vjezba.Model.Entities.TicketStatus.Used => "Iskoristena",
+                                _ => ticket.Status.ToString()
+                            };
+
+                            <tr>
+                                <td class="text-muted">@ticket.Id</td>
+                                <td>@ticket.TicketNumber</td>
+                                <td>@(ticket.Customer is null ? "-" : $"{ticket.Customer.FirstName} {ticket.Customer.LastName}")</td>
+                                <td>@(ticket.Screening?.Movie?.Title ?? "-")</td>
+                                <td>@(ticket.Screening?.Hall?.Cinema?.Name ?? "-")</td>
+                                <td>@(ticket.Screening?.Hall?.Name ?? "-")</td>
+                                <td>@(ticket.Seat is null ? "-" : $"{ticket.Seat.RowLabel}{ticket.Seat.SeatNumber}")</td>
+                                <td>@(ticket.Screening is null ? "-" : ticket.Screening.StartTime.ToString("dd.MM.yyyy HH:mm"))</td>
+                                <td>@ticket.Price.ToString("0.00")</td>
+                                <td>@statusLabel</td>
+                                <td class="ui-table__actions">
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <a asp-action="Details" asp-route-id="@ticket.Id" class="ui-btn ui-btn--primary"
+                                           style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
+                                    }
+                                </td>
                             </tr>
                         }
                     }
-                else
+                    else
                     {
                         <tr>
                             <td colspan="11" class="text-center text-muted py-4">Nema rezultata pretrage.</td>
@@ -62,3 +67,4 @@
             </table>
         </div>
     </div>
+</div>

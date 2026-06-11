@@ -13,11 +13,16 @@ namespace Vjezba.Web.Controllers;
 public class MovieController : BaseController
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public MovieController(CinemaDbContext dbContext, UserManager<AppUser> userManager)
+    public MovieController(
+        CinemaDbContext dbContext,
+        UserManager<AppUser> userManager,
+        IWebHostEnvironment webHostEnvironment)
         : base(userManager)
     {
         _dbContext = dbContext;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     [Route("pretraga")]
@@ -79,7 +84,9 @@ public class MovieController : BaseController
 
         if (!string.IsNullOrWhiteSpace(normalizedQuery))
         {
-            moviesQuery = moviesQuery.Where(movie => EF.Functions.Like(movie.Title, $"%{normalizedQuery}%"));
+            moviesQuery = moviesQuery.Where(movie =>
+                movie.Title.Contains(normalizedQuery) ||
+                movie.Description.Contains(normalizedQuery));
         }
 
         var movies = moviesQuery.OrderBy(movie => movie.Id).ToList();
@@ -90,6 +97,28 @@ public class MovieController : BaseController
         }
 
         return View(nameof(Index), movies);
+    }
+
+    [HttpGet("autocomplete")]
+    [AllowAnonymous]
+    public IActionResult Autocomplete(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var movies = _dbContext.Movies
+            .Where(movie => movie.DeletedAt == null)
+            .Where(movie => string.IsNullOrEmpty(normalizedQuery)
+                || movie.Title.Contains(normalizedQuery))
+            .OrderBy(movie => movie.Title)
+            .Take(12)
+            .Select(movie => new
+            {
+                value = movie.Id,
+                text = movie.Title
+            })
+            .ToList();
+
+        return Json(movies);
     }
 
     [Route("detalji/{id}")]
@@ -217,6 +246,102 @@ public class MovieController : BaseController
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("uredi/{movieId}/datoteke/objavi")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> UploadAttachment(int movieId, IFormFile? file)
+    {
+        var movieExists = await _dbContext.Movies.AnyAsync(movie => movie.Id == movieId && movie.DeletedAt == null);
+
+        if (!movieExists)
+        {
+            return NotFound();
+        }
+
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest();
+        }
+
+        var uploadsPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "uploads",
+            "movies",
+            movieId.ToString()
+        );
+
+        Directory.CreateDirectory(uploadsPath);
+
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+        var filePath = Path.Combine(uploadsPath, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var attachment = new Attachment
+        {
+            MovieId = movieId,
+            FileName = file.FileName,
+            FilePath = "/uploads/movies/" + movieId + "/" + fileName,
+            ContentType = file.ContentType,
+            FileSize = file.Length,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _dbContext.Attachments.Add(attachment);
+        await _dbContext.SaveChangesAsync();
+
+        return Json(new { success = true });
+    }
+
+    [HttpGet("uredi/{movieId}/datoteke")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> GetAttachments(int movieId)
+    {
+        var movieExists = await _dbContext.Movies.AnyAsync(movie => movie.Id == movieId && movie.DeletedAt == null);
+
+        if (!movieExists)
+        {
+            return NotFound();
+        }
+
+        var attachments = await _dbContext.Attachments
+            .Where(attachment => attachment.MovieId == movieId)
+            .OrderByDescending(attachment => attachment.CreatedAt)
+            .ToListAsync();
+
+        return PartialView("_AttachmentList", attachments);
+    }
+
+    [HttpPost("datoteke/obrisi")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<IActionResult> DeleteAttachment(int id)
+    {
+        var attachment = await _dbContext.Attachments.FirstOrDefaultAsync(attachment => attachment.Id == id);
+
+        if (attachment is null)
+        {
+            return NotFound();
+        }
+
+        var physicalPath = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            attachment.FilePath.TrimStart('/'));
+
+        if (System.IO.File.Exists(physicalPath))
+        {
+            System.IO.File.Delete(physicalPath);
+        }
+
+        _dbContext.Attachments.Remove(attachment);
+        await _dbContext.SaveChangesAsync();
+
+        return Json(new { success = true });
     }
 
     private void SoftDeleteMovie(Movie movie)

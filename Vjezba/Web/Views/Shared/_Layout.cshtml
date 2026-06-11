@@ -39,7 +39,8 @@
             ["Movies"] = "Odabir filma",
             ["Screenings"] = "Odabir projekcije",
             ["Seats"] = "Odabir sjedala",
-              ["Checkout"] = "Plaćanje - Korak 5"
+            ["Checkout"] = "Plaćanje - Korak 5",
+            ["Success"] = "Kupnja dovršena"
         };
 
         var currentControllerLabel = uiControllerLabels.TryGetValue(currentController, out var controllerLabel)
@@ -145,6 +146,7 @@
     <script src="~/js/ui/ajaxSearch.js" asp-append-version="true"></script>
     <script src="~/js/ui/datepicker.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/ui/ticketBuilder.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
 </body>

@@ -45,7 +45,7 @@
     });
 
     form.querySelectorAll("input, select").forEach((control) => {
-      if (control.tagName === "INPUT") {
+      if (control.tagName === "INPUT" && control.type !== "radio" && control.type !== "checkbox") {
         control.addEventListener("input", () => {
           window.clearTimeout(debounceTimer);
           debounceTimer = window.setTimeout(() => refreshResults(form), 220);

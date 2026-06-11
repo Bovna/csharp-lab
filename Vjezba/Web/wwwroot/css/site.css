@@ -1718,6 +1718,12 @@ a:hover {
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.ui-btn--sm {
+  min-height: 32px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+}
+
 /* Shared Actions Container */
 .ui-actions {
   display: flex;
@@ -1862,8 +1868,8 @@ a:hover {
 }
 
 .auth-card-form .ui-actions {
-  margin-top: 0.55rem;
-  padding-top: 0.6rem;
+  margin-top: 0.45rem;
+  padding-top: 0.55rem;
 }
 
 .auth-card-form .ui-field + .ui-field,
@@ -1879,11 +1885,16 @@ a:hover {
 .auth-top-action {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  margin-bottom: 0.85rem;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
   color: var(--color-text-muted);
   font-size: 0.9rem;
+}
+
+.auth-top-action .ui-btn {
+  min-height: 34px;
+  padding: 0.42rem 0.78rem;
 }
 
 .auth-login-grid {
@@ -1898,6 +1909,65 @@ a:hover {
   min-height: 100%;
   background: linear-gradient(
     180deg,
+    transparent,
+    var(--color-border),
+    transparent
+  );
+}
+
+.auth-submit-actions {
+  position: relative;
+  border-top: 0;
+}
+
+.auth-submit-actions::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-border),
+    transparent
+  );
+}
+
+.movie-page-form .cinema-card-body {
+  padding: 1.45rem;
+}
+
+.movie-form {
+  gap: 0.55rem;
+}
+
+.movie-form .ui-field + .ui-field,
+.movie-form .ui-form__section-title + .ui-field {
+  margin-top: 0.25rem;
+}
+
+.movie-form .ui-field__validation {
+  min-height: 0.65rem;
+}
+
+.movie-form-actions {
+  position: relative;
+  margin-top: 0.55rem;
+  padding-top: 0.65rem;
+  border-top: 0;
+}
+
+.movie-form-actions::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
     transparent,
     var(--color-border),
     transparent
@@ -2170,7 +2240,7 @@ a:hover {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.9rem;
 }
 
@@ -2180,6 +2250,57 @@ a:hover {
 
 .auth-provider-btn {
   width: 100%;
+}
+
+.movie-dropzone.dropzone {
+  min-height: 170px;
+  padding: 1.1rem;
+  color: var(--color-text-muted);
+  border: 1px dashed rgba(0, 230, 118, 0.45);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(0, 230, 118, 0.08),
+      transparent 34%
+    ),
+    rgba(18, 19, 20, 0.72);
+}
+
+.movie-dropzone.dropzone .dz-message {
+  margin: 2.25rem 0;
+  color: var(--color-text-muted);
+}
+
+.movie-dropzone.dropzone .dz-preview .dz-details,
+.movie-dropzone.dropzone .dz-preview .dz-error-message,
+.movie-dropzone.dropzone .dz-preview .dz-success-mark,
+.movie-dropzone.dropzone .dz-preview .dz-error-mark {
+  color: #111827;
+}
+
+.movie-attachment-list {
+  min-height: 48px;
+}
+
+.movie-attachment-table {
+  table-layout: fixed;
+}
+
+.movie-attachment-table th:nth-child(1),
+.movie-attachment-table td:nth-child(1) {
+  width: 48%;
+}
+
+.movie-attachment-table th:nth-child(2),
+.movie-attachment-table td:nth-child(2) {
+  width: 80px;
+}
+
+.movie-attachment-table th:nth-child(3),
+.movie-attachment-table td:nth-child(3) {
+  width: 88px;
+  text-align: right;
 }
 
 .auth-footnote {

@@ -61,12 +61,18 @@
                 </dl>
 
                 <div class="ui-actions ui-actions--center ui-actions--stack-mobile entity-actions">
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary">Uredi</a>
-                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="ui-btn ui-btn--danger"
-                                onclick="return handleDeleteSeat(event);">Obriši</button>
-                    </form>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="ui-btn ui-btn--primary">Uredi</a>
+                    }
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="ui-btn ui-btn--danger"
+                                    onclick="return handleDeleteSeat(event);">Obriši</button>
+                        </form>
+                    }
                 </div>
             </div>
         </article>
@@ -100,10 +106,15 @@
         <script>
             function handleDeleteSeat(event) {
                 event.preventDefault();
+                const form = event.currentTarget.form;
+
+                if (!form) {
+                    return false;
+                }
                 CinemaUI.showConfirm({
                     title: 'Potvrdite brisanje',
                     body: 'Jeste li sigurni da želite trajno obrisati ovo sjedalo?',
-                    onConfirm: () => event.currentTarget.form.submit()
+                    onConfirm: () => HTMLFormElement.prototype.submit.call(form)
                 });
                 return false;
             }

@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
 using Vjezba.Model.Entities;
 using Vjezba.Web.ViewModels;
@@ -8,49 +10,35 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("projekcije")]
-public class ScreeningController : Controller
+[Authorize]
+public class ScreeningController : BaseController
 {
     private readonly CinemaDbContext _dbContext;
 
-    public ScreeningController(CinemaDbContext dbContext)
+    public ScreeningController(CinemaDbContext dbContext, UserManager<AppUser> userManager)
+        : base(userManager)
     {
         _dbContext = dbContext;
     }
 
     [Route("pretraga")]
-    public IActionResult Index(int? dayOfWeek, string? search, bool partial = false)
+    [AllowAnonymous]
+    public IActionResult Index(int? dayOfWeek, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var query = _dbContext.Screenings
-            .Where(screening => screening.DeletedAt == null
-                && screening.Movie.DeletedAt == null
-                && screening.Hall.DeletedAt == null
-                && screening.Hall.Cinema.DeletedAt == null)
-            .Include(s => s.Movie)
-            .Include(s => s.Hall)
-                .ThenInclude(h => h.Cinema)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-        {
-            query = query.Where(screening => EF.Functions.Like(screening.Movie.Title, $"%{normalizedSearch}%"));
-        }
-
-        var screenings = query
+        var screenings = ActiveScreeningsQuery()
             .OrderBy(screening => screening.Id)
             .ToList();
 
         if (dayOfWeek.HasValue)
         {
             var targetDayOfWeek = (DayOfWeek)(dayOfWeek.Value % 7);
-
             screenings = screenings
                 .Where(screening => screening.StartTime.DayOfWeek == targetDayOfWeek)
                 .ToList();
         }
 
         ViewBag.SelectedDayOfWeek = dayOfWeek;
-        ViewBag.Search = search;
+        ViewBag.Search = null;
 
         if (partial)
         {
@@ -60,16 +48,55 @@ public class ScreeningController : Controller
         return View(screenings);
     }
 
-    public IActionResult Search(string? query)
+    [AllowAnonymous]
+    public IActionResult Search(string? query, int? dayOfWeek, bool partial = false)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var screeningsQuery = ActiveScreeningsQuery();
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            screeningsQuery = screeningsQuery.Where(screening =>
+                screening.Movie.Title.Contains(normalizedQuery) ||
+                screening.Hall.Name.Contains(normalizedQuery) ||
+                screening.Hall.Cinema.Name.Contains(normalizedQuery));
+        }
+
+        var screenings = screeningsQuery
+            .OrderBy(screening => screening.Id)
+            .ToList();
+
+        if (dayOfWeek.HasValue)
+        {
+            var targetDayOfWeek = (DayOfWeek)(dayOfWeek.Value % 7);
+            screenings = screenings
+                .Where(screening => screening.StartTime.DayOfWeek == targetDayOfWeek)
+                .ToList();
+        }
+
+        ViewBag.SelectedDayOfWeek = dayOfWeek;
+        ViewBag.Search = query;
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", screenings);
+        }
+
+        return View(nameof(Index), screenings);
+    }
+
+    [HttpGet("dvorane/autocomplete")]
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult HallAutocomplete(string? query)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
         var halls = _dbContext.Halls
             .Include(hall => hall.Cinema)
-            .Where(hall => string.IsNullOrEmpty(normalizedQuery)
-                || EF.Functions.Like(hall.Name, $"%{normalizedQuery}%")
-                || EF.Functions.Like(hall.Cinema.Name + " - " + hall.Name, $"%{normalizedQuery}%"))
             .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null)
+            .Where(hall => string.IsNullOrEmpty(normalizedQuery)
+                || hall.Name.Contains(normalizedQuery)
+                || hall.Cinema.Name.Contains(normalizedQuery))
             .OrderBy(hall => hall.Cinema.Name)
             .ThenBy(hall => hall.Name)
             .Take(12)
@@ -83,17 +110,35 @@ public class ScreeningController : Controller
         return Json(halls);
     }
 
+    [HttpGet("autocomplete")]
+    [AllowAnonymous]
+    public IActionResult ScreeningAutocomplete(string? query)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+
+        var screenings = ActiveScreeningsQuery()
+            .Where(screening => string.IsNullOrEmpty(normalizedQuery)
+                || screening.Movie.Title.Contains(normalizedQuery)
+                || screening.Hall.Name.Contains(normalizedQuery)
+                || screening.Hall.Cinema.Name.Contains(normalizedQuery))
+            .OrderBy(screening => screening.StartTime)
+            .Take(12)
+            .AsEnumerable()
+            .Select(screening => new
+            {
+                value = screening.Id,
+                text = screening.Movie.Title + " - " + screening.Hall.Cinema.Name + " / " + screening.Hall.Name + " - " + screening.StartTime.ToString("dd.MM.yyyy HH:mm")
+            })
+            .ToList();
+
+        return Json(screenings);
+    }
+
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
-        var screening = _dbContext.Screenings
-            .Where(s => s.DeletedAt == null
-                && s.Movie.DeletedAt == null
-                && s.Hall.DeletedAt == null
-                && s.Hall.Cinema.DeletedAt == null)
-            .Include(s => s.Movie)
-            .Include(s => s.Hall)
-                .ThenInclude(h => h.Cinema)
+        var screening = ActiveScreeningsQuery()
             .FirstOrDefault(s => s.Id == id);
 
         if (screening is null)
@@ -121,6 +166,7 @@ public class ScreeningController : Controller
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         var model = new ScreeningFormViewModel
@@ -129,16 +175,17 @@ public class ScreeningController : Controller
             EndTime = DateTime.Now.AddHours(2)
         };
 
-        PrepareScreeningForm(model, isCreate: true);
+        PrepareScreeningForm(model);
         return View(model);
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(ScreeningFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            PrepareScreeningForm(model, isCreate: true);
+            PrepareScreeningForm(model);
             return View(model);
         }
 
@@ -159,6 +206,7 @@ public class ScreeningController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
         var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
@@ -178,13 +226,14 @@ public class ScreeningController : Controller
             HallId = screening.HallId
         };
 
-        PrepareScreeningForm(model, isCreate: false);
+        PrepareScreeningForm(model);
         return View(model);
     }
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
-    public async Task<IActionResult> EditPost(int id)
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult EditPost(int id, ScreeningFormViewModel model)
     {
         var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
 
@@ -193,35 +242,26 @@ public class ScreeningController : Controller
             return NotFound();
         }
 
-        var ok = await TryUpdateModelAsync(screening, string.Empty,
-            s => s.StartTime,
-            s => s.EndTime,
-            s => s.Is3D,
-            s => s.MovieId,
-            s => s.HallId);
-
-        if (ok && ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            model.Id = id;
+            PrepareScreeningForm(model);
+            return View(model);
         }
 
-        var model = new ScreeningFormViewModel
-        {
-            Id = screening.Id,
-            StartTime = screening.StartTime,
-            EndTime = screening.EndTime,
-            Is3D = screening.Is3D,
-            MovieId = screening.MovieId,
-            HallId = screening.HallId
-        };
+        screening.StartTime = model.StartTime;
+        screening.EndTime = model.EndTime;
+        screening.Is3D = model.Is3D;
+        screening.MovieId = model.MovieId!.Value;
+        screening.HallId = model.HallId!.Value;
 
-        PrepareScreeningForm(model, isCreate: false);
+        _dbContext.SaveChanges();
 
-        return View(model);
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
         var screening = _dbContext.Screenings.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
@@ -231,11 +271,22 @@ public class ScreeningController : Controller
             return NotFound();
         }
 
-        screening.DeletedAt = DateTime.UtcNow;
         SoftDeleteScreening(screening);
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private IQueryable<Screening> ActiveScreeningsQuery()
+    {
+        return _dbContext.Screenings
+            .Where(screening => screening.DeletedAt == null
+                && screening.Movie.DeletedAt == null
+                && screening.Hall.DeletedAt == null
+                && screening.Hall.Cinema.DeletedAt == null)
+            .Include(screening => screening.Movie)
+            .Include(screening => screening.Hall)
+                .ThenInclude(hall => hall.Cinema);
     }
 
     private void SoftDeleteScreening(Screening screening)
@@ -253,13 +304,13 @@ public class ScreeningController : Controller
         }
     }
 
-    private void PrepareScreeningForm(ScreeningFormViewModel model, bool isCreate = false)
+    private void PrepareScreeningForm(ScreeningFormViewModel model)
     {
         model.MovieSelector = new AutocompleteViewModel
         {
             InputName = nameof(model.MovieId),
             Label = "Film",
-            Endpoint = Url.Action(nameof(MovieController.Search), "Movie") ?? "/filmovi/search",
+            Endpoint = Url.Action(nameof(MovieController.Autocomplete), "Movie") ?? "/filmovi/autocomplete",
             SearchPlaceholder = "Pretražite film po naslovu",
             RequiredMessage = "Film je obavezan.",
             EnableRemoteSearch = true,
@@ -270,7 +321,7 @@ public class ScreeningController : Controller
         {
             InputName = nameof(model.HallId),
             Label = "Dvorana",
-            Endpoint = Url.Action(nameof(Search), "Screening") ?? "/projekcije/search",
+            Endpoint = Url.Action(nameof(HallAutocomplete), "Screening") ?? "/projekcije/dvorane/autocomplete",
             SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
             RequiredMessage = "Dvorana je obavezna.",
             EnableRemoteSearch = true,

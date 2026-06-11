@@ -6,15 +6,87 @@
 }
 
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-8 entity-form">
+    <div class="row g-4 align-items-start">
+        <div class="col-12 col-xl-8 entity-form movie-page-form">
             <div class="cinema-card animate-fade-in-up">
                 <div class="cinema-card-header">Uredi film</div>
                 <div class="cinema-card-body">
                     <partial name="MovieForm" model="Model" view-data="ViewData" />
+                </div>
+            </div>
+        </div>
 
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+        <div class="col-12 col-xl-4 entity-form movie-page-form">
+            <div class="cinema-card animate-fade-in-up">
+                <div class="cinema-card-header">Posteri i datoteke</div>
+                <div class="cinema-card-body">
+                    <div class="mb-4">
+                        <h5 class="ui-form__section-title">Objava datoteka</h5>
+
+                        <form id="attachmentDz"
+                              asp-controller="Movie"
+                              asp-action="UploadAttachment"
+                              asp-route-movieId="@Model.Id"
+                              enctype="multipart/form-data"
+                              class="dropzone movie-dropzone">
+                        </form>
+                    </div>
+
+                    <div>
+                        <h5 class="ui-form__section-title">Objavljene datoteke</h5>
+                        <div id="attachmentList" class="movie-attachment-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+    <script>
+        Dropzone.autoDiscover = false;
+
+        const attachmentListUrl = '@Url.Action("GetAttachments", "Movie", new { movieId = Model.Id })';
+        const deleteAttachmentUrl = '@Url.Action("DeleteAttachment", "Movie")';
+
+        function loadAttachments() {
+            $("#attachmentList").load(attachmentListUrl);
+        }
+
+        function deleteAttachment(id) {
+            CinemaUI.showConfirm({
+                title: "Potvrdite brisanje",
+                body: "Jeste li sigurni da želite obrisati ovu datoteku?",
+                onConfirm: function () {
+                    $.ajax({
+                        url: deleteAttachmentUrl,
+                        method: "POST",
+                        data: { id: id },
+                        success: function () {
+                            loadAttachments();
+                        }
+                    });
+                }
+            });
+        }
+
+        const attachmentDropzone = new Dropzone("#attachmentDz", {
+            paramName: "file",
+            addRemoveLinks: true,
+            dictDefaultMessage: "Povucite poster ili datoteku ovdje, ili kliknite za odabir.",
+            dictFallbackMessage: "Vaš preglednik ne podržava drag-and-drop upload.",
+            dictRemoveFile: "Ukloni",
+            success: function () {
+                loadAttachments();
+                this.removeAllFiles(true);
+            }
+        });
+
+        $(function () {
+            loadAttachments();
+        });
+    </script>
+}

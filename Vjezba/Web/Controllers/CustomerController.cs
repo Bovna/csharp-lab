@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
@@ -7,6 +8,7 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("kupci")]
+[Authorize]
 public class CustomerController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -17,25 +19,21 @@ public class CustomerController : Controller
     }
 
     [Route("")]
-    public IActionResult Index(string? search, bool partial = false)
+    [Route("pretraga")]
+    [AllowAnonymous]
+    public IActionResult Index(bool? loyaltyMember, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var query = _dbContext.Customers
-            .Where(customer => customer.DeletedAt == null)
-            .AsQueryable();
+        var customersQuery = ActiveCustomersQuery();
 
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        if (loyaltyMember.HasValue)
         {
-            query = query.Where(customer => EF.Functions.Like(customer.FirstName + " " + customer.LastName, $"%{normalizedSearch}%")
-                || EF.Functions.Like(customer.City, $"%{normalizedSearch}%")
-                || EF.Functions.Like(customer.Email, $"%{normalizedSearch}%"));
+            customersQuery = customersQuery.Where(customer => customer.IsLoyaltyMember == loyaltyMember.Value);
         }
 
-        var customers = query
-            .OrderBy(customer => customer.Id)
-            .ToList();
+        ViewBag.SelectedLoyaltyMember = loyaltyMember;
+        ViewBag.Search = null;
 
-        ViewBag.Search = search;
+        var customers = customersQuery.OrderBy(customer => customer.Id).ToList();
 
         if (partial)
         {
@@ -45,17 +43,50 @@ public class CustomerController : Controller
         return View(customers);
     }
 
-    [Route("pretraga")]
-    public IActionResult Search(string? query)
+    [HttpGet("rezultati")]
+    [AllowAnonymous]
+    public IActionResult Search(string? query, bool? loyaltyMember, bool partial = false)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var customersQuery = ActiveCustomersQuery();
+
+        if (loyaltyMember.HasValue)
+        {
+            customersQuery = customersQuery.Where(customer => customer.IsLoyaltyMember == loyaltyMember.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            customersQuery = customersQuery.Where(customer =>
+                (customer.FirstName + " " + customer.LastName).Contains(normalizedQuery) ||
+                customer.City.Contains(normalizedQuery) ||
+                customer.Email.Contains(normalizedQuery));
+        }
+
+        ViewBag.SelectedLoyaltyMember = loyaltyMember;
+        ViewBag.Search = query;
+
+        var customers = customersQuery.OrderBy(customer => customer.Id).ToList();
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", customers);
+        }
+
+        return View(nameof(Index), customers);
+    }
+
+    [HttpGet("autocomplete")]
+    [AllowAnonymous]
+    public IActionResult Autocomplete(string? query)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
-        var customers = _dbContext.Customers
-            .Where(customer => customer.DeletedAt == null)
+        var customers = ActiveCustomersQuery()
             .Where(customer => string.IsNullOrEmpty(normalizedQuery)
-                || EF.Functions.Like(customer.FirstName + " " + customer.LastName, $"%{normalizedQuery}%")
-                || EF.Functions.Like(customer.City, $"%{normalizedQuery}%")
-                || EF.Functions.Like(customer.Email, $"%{normalizedQuery}%"))
+                || (customer.FirstName + " " + customer.LastName).Contains(normalizedQuery)
+                || customer.City.Contains(normalizedQuery)
+                || customer.Email.Contains(normalizedQuery))
             .OrderBy(customer => customer.LastName)
             .ThenBy(customer => customer.FirstName)
             .Take(12)
@@ -70,9 +101,10 @@ public class CustomerController : Controller
     }
 
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var customer = ActiveCustomersQuery().FirstOrDefault(customer => customer.Id == id);
 
         if (customer is null)
         {
@@ -80,29 +112,28 @@ public class CustomerController : Controller
         }
 
         var tickets = _dbContext.Tickets
-            .Where(t => t.CustomerId == customer.Id
-                && t.DeletedAt == null
-                && t.Screening.DeletedAt == null
-                && t.Screening.Hall.DeletedAt == null
-                && t.Screening.Hall.Cinema.DeletedAt == null)
-            .Include(t => t.Screening)
-                .ThenInclude(s => s.Movie)
-            .Include(t => t.Screening)
-                .ThenInclude(s => s.Hall)
-                    .ThenInclude(h => h.Cinema)
-            .OrderByDescending(t => t.PurchasedAt)
+            .Where(ticket => ticket.CustomerId == customer.Id
+                && ticket.DeletedAt == null
+                && ticket.Screening.DeletedAt == null
+                && ticket.Screening.Hall.DeletedAt == null
+                && ticket.Screening.Hall.Cinema.DeletedAt == null)
+            .Include(ticket => ticket.Screening)
+                .ThenInclude(screening => screening.Movie)
+            .Include(ticket => ticket.Screening)
+                .ThenInclude(screening => screening.Hall)
+                    .ThenInclude(hall => hall.Cinema)
+            .OrderByDescending(ticket => ticket.PurchasedAt)
             .ToList();
 
-        var viewModel = new CustomerDetailsViewModel
+        return View(new CustomerDetailsViewModel
         {
             Customer = customer,
             Tickets = tickets
-        };
-
-        return View(viewModel);
+        });
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         return View(new CustomerFormViewModel
@@ -112,6 +143,7 @@ public class CustomerController : Controller
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(CustomerFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -124,20 +156,8 @@ public class CustomerController : Controller
             model.RegisteredAt = DateTime.Now;
         }
 
-        var customer = new Customer
-        {
-            FirstName = model.FirstName,
-            LastName = model.LastName,
-            City = model.City,
-            Street = model.Street,
-            HouseNumber = model.HouseNumber,
-            PostalCode = model.PostalCode,
-            Email = model.Email,
-            Phone = model.Phone,
-            RegisteredAt = model.RegisteredAt,
-            IsLoyaltyMember = model.IsLoyaltyMember,
-            LoyaltyPoints = model.LoyaltyPoints
-        };
+        var customer = new Customer();
+        MapCustomerForm(model, customer);
 
         _dbContext.Customers.Add(customer);
         _dbContext.SaveChanges();
@@ -147,99 +167,48 @@ public class CustomerController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var customer = ActiveCustomersQuery().FirstOrDefault(customer => customer.Id == id);
 
         if (customer is null)
         {
             return NotFound();
         }
 
-        var model = new CustomerFormViewModel
-        {
-            Id = customer.Id,
-            FirstName = customer.FirstName,
-            LastName = customer.LastName,
-            City = customer.City,
-            Street = customer.Street,
-            HouseNumber = customer.HouseNumber,
-            PostalCode = customer.PostalCode,
-            Email = customer.Email,
-            Phone = customer.Phone,
-            RegisteredAt = customer.RegisteredAt,
-            IsLoyaltyMember = customer.IsLoyaltyMember,
-            LoyaltyPoints = customer.LoyaltyPoints
-        };
-
-        return View(model);
+        return View(ToCustomerForm(customer));
     }
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
-    public async Task<IActionResult> EditPost(int id)
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult EditPost(int id, CustomerFormViewModel model)
     {
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var customer = ActiveCustomersQuery().FirstOrDefault(customer => customer.Id == id);
 
         if (customer is null)
         {
             return NotFound();
         }
 
-        var model = new CustomerFormViewModel
+        if (!ModelState.IsValid)
         {
-            Id = customer.Id,
-            FirstName = customer.FirstName,
-            LastName = customer.LastName,
-            City = customer.City,
-            Street = customer.Street,
-            HouseNumber = customer.HouseNumber,
-            PostalCode = customer.PostalCode,
-            Email = customer.Email,
-            Phone = customer.Phone,
-            RegisteredAt = customer.RegisteredAt,
-            IsLoyaltyMember = customer.IsLoyaltyMember,
-            LoyaltyPoints = customer.LoyaltyPoints
-        };
-
-        var ok = await TryUpdateModelAsync(model, string.Empty,
-            m => m.FirstName,
-            m => m.LastName,
-            m => m.City,
-            m => m.Street,
-            m => m.HouseNumber,
-            m => m.PostalCode,
-            m => m.Email,
-            m => m.Phone,
-            m => m.RegisteredAt,
-            m => m.IsLoyaltyMember,
-            m => m.LoyaltyPoints);
-
-        if (ok && ModelState.IsValid)
-        {
-            customer.FirstName = model.FirstName;
-            customer.LastName = model.LastName;
-            customer.City = model.City;
-            customer.Street = model.Street;
-            customer.HouseNumber = model.HouseNumber;
-            customer.PostalCode = model.PostalCode;
-            customer.Email = model.Email;
-            customer.Phone = model.Phone;
-            customer.RegisteredAt = model.RegisteredAt;
-            customer.IsLoyaltyMember = model.IsLoyaltyMember;
-            customer.LoyaltyPoints = model.LoyaltyPoints;
-
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            model.Id = id;
+            return View(model);
         }
 
-        return View(model);
+        MapCustomerForm(model, customer);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
-        var customer = _dbContext.Customers.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var customer = ActiveCustomersQuery().FirstOrDefault(customer => customer.Id == id);
 
         if (customer is null)
         {
@@ -250,6 +219,45 @@ public class CustomerController : Controller
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private IQueryable<Customer> ActiveCustomersQuery()
+    {
+        return _dbContext.Customers.Where(customer => customer.DeletedAt == null);
+    }
+
+    private static CustomerFormViewModel ToCustomerForm(Customer customer)
+    {
+        return new CustomerFormViewModel
+        {
+            Id = customer.Id,
+            FirstName = customer.FirstName,
+            LastName = customer.LastName,
+            City = customer.City,
+            Street = customer.Street,
+            HouseNumber = customer.HouseNumber,
+            PostalCode = customer.PostalCode,
+            Email = customer.Email,
+            Phone = customer.Phone,
+            RegisteredAt = customer.RegisteredAt,
+            IsLoyaltyMember = customer.IsLoyaltyMember,
+            LoyaltyPoints = customer.LoyaltyPoints
+        };
+    }
+
+    private static void MapCustomerForm(CustomerFormViewModel model, Customer customer)
+    {
+        customer.FirstName = model.FirstName;
+        customer.LastName = model.LastName;
+        customer.City = model.City;
+        customer.Street = model.Street;
+        customer.HouseNumber = model.HouseNumber;
+        customer.PostalCode = model.PostalCode;
+        customer.Email = model.Email;
+        customer.Phone = model.Phone;
+        customer.RegisteredAt = model.RegisteredAt;
+        customer.IsLoyaltyMember = model.IsLoyaltyMember;
+        customer.LoyaltyPoints = model.LoyaltyPoints;
     }
 
     private void SoftDeleteCustomer(Customer customer)

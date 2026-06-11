@@ -1,0 +1,55 @@
+@model IEnumerable<Vjezba.Model.Entities.Attachment>
+
+@functions {
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes >= 1024 * 1024)
+        {
+            return $"{bytes / 1024d / 1024d:0.##} MB";
+        }
+
+        if (bytes >= 1024)
+        {
+            return $"{bytes / 1024d:0.##} KB";
+        }
+
+        return $"{bytes} B";
+    }
+}
+
+@if (!Model.Any())
+{
+    <p class="text-muted mb-0">Još nema objavljenih datoteka za ovaj film.</p>
+}
+else
+{
+    <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
+        <table class="ui-table entity-related-table movie-attachment-table">
+            <thead>
+                <tr>
+                    <th>Datoteka</th>
+                    <th>Veličina</th>
+                    <th>Akcija</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attachment in Model)
+                {
+                    <tr>
+                        <td class="ui-table__cell--truncate">
+                            <a href="@attachment.FilePath" target="_blank" rel="noopener" title="@attachment.FileName">@attachment.FileName</a>
+                        </td>
+                        <td>@FormatFileSize(attachment.FileSize)</td>
+                        <td class="ui-table__actions">
+                            <button type="button"
+                                    class="ui-btn ui-btn--danger ui-btn--sm"
+                                    onclick="deleteAttachment(@attachment.Id)">
+                                Obriši
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

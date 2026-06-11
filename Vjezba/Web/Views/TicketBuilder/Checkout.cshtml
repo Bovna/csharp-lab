@@ -1,16 +1,17 @@
 @model Vjezba.Web.ViewModels.TicketBuilderCheckoutViewModel
 @{
-    ViewData["Title"] = "Brza kupnja - Plaćanje";
+    ViewData["Title"] = "Brza kupnja - Placanje";
+    var hasKnownEmail = Model.IsAuthenticated && !string.IsNullOrWhiteSpace(Model.KnownEmail);
 }
 
-<div class="tb-cinema tb-page">
+<div class="tb-cinema tb-page tb-page-checkout" data-ticket-builder-page data-current-step="5">
     <div class="tb-header">
         <h1>@Model.MovieTitle</h1>
-        <p>Korak 5/5: odaberi kupca i potvrdi kupnju</p>
+        <p>Korak 5/5: unesi podatke kupca i potvrdi kupnju</p>
         <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
     </div>
 
-    <div class="tb-step-line" aria-label="Koraci brze kupnje">
+    <div class="tb-step-line" data-ticket-builder-steps data-current-step="5" aria-label="Koraci brze kupnje">
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies"
            asp-route-cinemaId="@Model.CinemaId">2 Film</a>
@@ -19,10 +20,10 @@
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Seats"
            asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId"
            asp-route-screeningId="@Model.ScreeningId">4 Sjedalo</a>
-        <span class="tb-step active" aria-current="step">5 Plaćanje</span>
+        <span class="tb-step active" aria-current="step">5 Placanje</span>
     </div>
 
-    <div class="tb-checkout-panel animate-fade-in-up" style="animation-delay: 0.1s;">
+    <div class="tb-checkout-panel">
         <div class="tb-checkout-summary">
             <dl>
                 <dt>Kino</dt>
@@ -50,32 +51,138 @@
             </dl>
         </div>
 
-        <form asp-controller="TicketBuilder" asp-action="Purchase" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="CinemaId" value="@Model.CinemaId" />
-            <input type="hidden" name="MovieId" value="@Model.MovieId" />
-            <input type="hidden" name="ScreeningId" value="@Model.ScreeningId" />
-            <input type="hidden" name="SeatId" value="@Model.SeatId" />
+        <div class="tb-checkout-grid">
+            <form asp-controller="TicketBuilder" asp-action="Purchase" method="post" class="ui-form tb-checkout-form"
+                  data-ticket-checkout-form data-authenticated="@(Model.IsAuthenticated ? "true" : "false")"
+                  onsubmit="return CinemaUI.validateForm(this);">
+                @Html.AntiForgeryToken()
+                <input asp-for="Input.CinemaId" type="hidden" />
+                <input asp-for="Input.MovieId" type="hidden" />
+                <input asp-for="Input.ScreeningId" type="hidden" />
+                <input asp-for="Input.SeatId" type="hidden" />
 
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
 
-            <div class="mb-4">
-                <label for="CustomerId" class="form-label">Kupac</label>
-                <select id="CustomerId" name="CustomerId" class="form-select" required>
-                    <option value="">Odaberite kupca</option>
-                    @foreach (var customer in Model.Customers)
+                <div class="tb-account-banner @(hasKnownEmail ? "is-known" : "is-guest")">
+                    <span class="tb-account-banner__eyebrow">Kupac</span>
+                    @if (hasKnownEmail)
                     {
-                        <option value="@customer.Id">@customer.FullName</option>
+                        <strong>Prepoznat je prijavljeni korisnik</strong>
+                        <span>@Model.KnownEmail</span>
                     }
-                </select>
-            </div>
+                    else
+                    {
+                        <strong>Gost kupnja</strong>
+                        <span>Unesi sve podatke kupca jer korisnik nije prijavljen.</span>
+                    }
+                </div>
 
-            <div class="ui-actions ui-actions--end tb-checkout-actions">
-                <button type="submit" class="ui-btn ui-btn--primary">Potvrdi i kupi</button>
-                <a class="ui-btn ui-btn--secondary" asp-controller="TicketBuilder" asp-action="Seats"
-                   asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId"
-                   asp-route-screeningId="@Model.ScreeningId">Natrag</a>
-            </div>
-        </form>
+                <div class="tb-form-progress" aria-hidden="true">
+                    <span data-ticket-form-progress></span>
+                </div>
+
+                <div class="tb-form-section" data-ticket-form-section>
+                    <h2>Osnovni podaci</h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="ui-field">
+                                <label asp-for="Input.FirstName" class="ui-field__label">Ime <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.FirstName" class="ui-field__input" required data-ticket-field data-ticket-live-name />
+                                <span asp-validation-for="Input.FirstName" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="ui-field">
+                                <label asp-for="Input.LastName" class="ui-field__label">Prezime <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.LastName" class="ui-field__input" required data-ticket-field data-ticket-live-name />
+                                <span asp-validation-for="Input.LastName" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="ui-field">
+                                <label asp-for="Input.Phone" class="ui-field__label">Telefon <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.Phone" class="ui-field__input" required data-ticket-field data-ticket-live-phone />
+                                <span asp-validation-for="Input.Phone" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="ui-field">
+                                <label asp-for="Input.Email" class="ui-field__label">E-posta <span style="color: var(--color-danger);">*</span></label>
+                                @if (hasKnownEmail)
+                                {
+                                    <input asp-for="Input.Email" class="ui-field__input" type="email" required readonly data-ticket-field data-ticket-live-email />
+                                }
+                                else
+                                {
+                                    <input asp-for="Input.Email" class="ui-field__input" type="email" required data-ticket-field data-ticket-live-email />
+                                }
+                                <span asp-validation-for="Input.Email" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tb-form-section" data-ticket-form-section>
+                    <h2>Adresa</h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="ui-field">
+                                <label asp-for="Input.City" class="ui-field__label">Grad <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.City" class="ui-field__input" required data-ticket-field />
+                                <span asp-validation-for="Input.City" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="ui-field">
+                                <label asp-for="Input.PostalCode" class="ui-field__label">Postanski broj <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.PostalCode" class="ui-field__input" required data-ticket-field />
+                                <span asp-validation-for="Input.PostalCode" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="ui-field">
+                                <label asp-for="Input.Street" class="ui-field__label">Ulica <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.Street" class="ui-field__input" required data-ticket-field />
+                                <span asp-validation-for="Input.Street" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="ui-field">
+                                <label asp-for="Input.HouseNumber" class="ui-field__label">Kucni broj <span style="color: var(--color-danger);">*</span></label>
+                                <input asp-for="Input.HouseNumber" class="ui-field__input" required data-ticket-field />
+                                <span asp-validation-for="Input.HouseNumber" class="ui-field__validation"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tb-loyalty-choice">
+                    <label class="d-flex align-items-center gap-2">
+                        <input asp-for="Input.IsLoyaltyMember" type="checkbox" />
+                        <span>Zelim biti clan programa vjernosti</span>
+                    </label>
+                </div>
+
+                <div class="ui-actions ui-actions--end tb-checkout-actions">
+                    <a class="ui-btn ui-btn--secondary" asp-controller="TicketBuilder" asp-action="Seats"
+                       asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId"
+                       asp-route-screeningId="@Model.ScreeningId">Natrag</a>
+                    <button type="submit" class="ui-btn ui-btn--primary" data-ticket-submit>Potvrdi i kupi</button>
+                </div>
+            </form>
+
+            <aside class="tb-live-ticket" data-ticket-live-summary aria-live="polite">
+                <span class="tb-live-ticket__eyebrow">Pregled prije kupnje</span>
+                <strong>@Model.SeatLabel | @Model.Price.ToString("0.00") EUR</strong>
+                <dl>
+                    <dt>Kupac</dt>
+                    <dd data-ticket-live-customer>Podaci jos nisu uneseni</dd>
+                    <dt>E-posta</dt>
+                    <dd data-ticket-live-email-value>@(hasKnownEmail ? Model.KnownEmail : "-")</dd>
+                    <dt>Telefon</dt>
+                    <dd data-ticket-live-phone-value>-</dd>
+                </dl>
+            </aside>
+        </div>
     </div>
 </div>

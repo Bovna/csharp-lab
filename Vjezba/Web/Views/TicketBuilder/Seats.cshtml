@@ -8,29 +8,34 @@
     var checkoutUrl = Url.Action("Checkout", "TicketBuilder") ?? "/TicketBuilder/Checkout";
 }
 
-<div class="tb-cinema tb-page tb-page-seats">
+<div class="tb-cinema tb-page tb-page-seats" data-ticket-builder-page data-current-step="4">
     <div class="tb-header">
         <h1>@Model.MovieTitle</h1>
-        <p>Korak 4/5: odaberi sjedalo i nastavi na plaćanje</p>
+        <p>Korak 4/5: odaberi sjedalo i nastavi na placanje</p>
         <small>@Model.HallName | @Model.StartTime.ToString("dd.MM.yyyy HH:mm") @(Model.Is3D ? "| 3D" : "")</small>
     </div>
 
     @if (TempData["PurchaseError"] is string purchaseError)
     {
-        <div class="tb-price-panel mb-4" style="border-color:#ef4444; background:rgba(239,68,68,0.08);">
+        <div class="tb-price-panel tb-alert-panel mb-4">
             @purchaseError
         </div>
     }
 
-    <div class="tb-step-line" aria-label="Koraci brze kupnje">
+    <div class="tb-step-line" data-ticket-builder-steps data-current-step="4" aria-label="Koraci brze kupnje">
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@Model.CinemaId">2 Film</a>
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">3 Projekcija</a>
         <span class="tb-step active" aria-current="step">4 Sjedalo</span>
-        <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
+        <span class="tb-step is-disabled" aria-disabled="true">5 Placanje</span>
     </div>
 
-    <div class="tb-seat-layout tb-panel animate-fade-in-up">
+    <div class="tb-seat-layout tb-panel"
+         data-ticket-seats
+         data-checkout-url="@checkoutUrl"
+         data-cinema-id="@Model.CinemaId"
+         data-movie-id="@Model.MovieId"
+         data-screening-id="@Model.ScreeningId">
         <div class="tb-screen">PLATNO</div>
 
         <div class="tb-seat-grid">
@@ -70,83 +75,10 @@
             <span><i class="tb-seat seat-taken"></i> Zauzeto</span>
         </div>
 
-        <div id="tb-price-panel" class="tb-price-panel">
-            <div class="tb-price-panel__title">Korak 5: plaćanje</div>
+        <div id="tb-price-panel" class="tb-price-panel" data-ticket-price-panel>
+            <div class="tb-price-panel__title">Korak 5: placanje</div>
             <div class="tb-price-panel__value">Odaberi sjedalo za prikaz cijene.</div>
-            <div class="tb-price-panel__meta">Plaćanje je uvijek vidljivo kao završni korak nakon odabira sjedala.</div>
+            <div class="tb-price-panel__meta">Pregled cijene i gumb za nastavak pojavit ce se ovdje.</div>
         </div>
     </div>
-
-    @section Scripts {
-        <script>
-            (() => {
-                const panel = document.getElementById("tb-price-panel");
-                const seats = document.querySelectorAll(".tb-seat[data-seat-id]");
-                const checkoutBaseUrl = "@checkoutUrl";
-                const cinemaId = @Model.CinemaId;
-                const movieId = @Model.MovieId;
-                const screeningId = @Model.ScreeningId;
-
-                function calculatePrice(type, is3D) {
-                    const normalized = (type || "standard").toLowerCase();
-                    let basePrice = 7.50;
-
-                    if (normalized === "vip") {
-                        basePrice = 11.00;
-                    } else if (normalized === "couple") {
-                        basePrice = 13.50;
-                    }
-
-                    if (is3D) {
-                        basePrice += 2.00;
-                    }
-
-                    return basePrice;
-                }
-
-                seats.forEach((seat) => {
-                    seat.addEventListener("click", () => {
-                        const seatLabel = seat.dataset.seatLabel || "";
-                        const seatType = seat.dataset.seatType || "Standard";
-                        const seatStatus = seat.dataset.seatStatus || "available";
-                        const is3D = seat.dataset.is3d === "1";
-                        const seatId = seat.dataset.seatId;
-
-                        if (seatStatus === "taken") {
-                            panel.innerHTML = `
-                                <div class="tb-price-panel__title">Sjedalo nedostupno</div>
-                                <div class="tb-price-panel__value">${seatLabel} je zauzeto</div>
-                                <div class="tb-price-panel__meta">Odaberi drugo sjedalo ili osvježi prikaz ako se stanje promijenilo.</div>
-                            `;
-                            return;
-                        }
-
-                        seats.forEach((currentSeat) => currentSeat.classList.remove("selected"));
-                        seat.classList.add("selected");
-
-                        const price = calculatePrice(seatType, is3D).toFixed(2);
-                        const checkoutParams = new URLSearchParams({
-                            cinemaId: cinemaId.toString(),
-                            movieId: movieId.toString(),
-                            screeningId: screeningId.toString(),
-                            seatId: seatId
-                        });
-                        const checkoutLink = `${checkoutBaseUrl}?${checkoutParams.toString()}`;
-
-                        panel.innerHTML = `
-                            <div class="tb-price-panel__title">Odabrano sjedalo</div>
-                            <div class="tb-price-panel__value">${seatLabel} · ${seatType} · ${price} EUR</div>
-                            <div class="tb-price-panel__meta">${is3D ? "Uključena je 3D nadoplata." : "Standardna projekcija."}</div>
-                            <div class="tb-price-panel__actions">
-                                <a class="ui-btn ui-btn--primary" href="${checkoutLink}">Nastavi na plaćanje</a>
-                            </div>
-                        `;
-
-                        panel.classList.remove("is-updated");
-                        void panel.offsetWidth;
-                        panel.classList.add("is-updated");
-                    });
-                });
-            })();
-        </script>
-    }
+</div>

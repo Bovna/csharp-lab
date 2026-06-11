@@ -1,0 +1,162 @@
+using System.Net;
+using System.Net.Http.Json;
+using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using Vjezba.DAL;
+using Vjezba.Web.DTOs;
+
+namespace Vjezba.Tests;
+
+public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplicationFactory>
+{
+    private readonly CustomWebApplicationFactory _factory;
+    private readonly HttpClient _client;
+
+    public ScreeningApiControllerTests(CustomWebApplicationFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateAuthenticatedClient();
+    }
+
+    [Fact]
+    public async Task GetAllScreenings_ReturnsCollection()
+    {
+        await _factory.ClearDatabaseAsync();
+        var screening = await ApiTestData.CreateScreeningAsync(_factory);
+
+        var response = await _client.GetAsync("/api/projekcije");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var screenings = await response.Content.ReadFromJsonAsync<List<ScreeningDTO>>();
+        screenings.Should().NotBeNull();
+        screenings.Should().ContainSingle(s => s.Id == screening.Id);
+    }
+
+    [Fact]
+    public async Task GetScreeningById_ReturnsScreening_WhenScreeningExists()
+    {
+        await _factory.ClearDatabaseAsync();
+        var screening = await ApiTestData.CreateScreeningAsync(_factory);
+
+        var response = await _client.GetAsync($"/api/projekcije/{screening.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await response.Content.ReadFromJsonAsync<ScreeningDTO>();
+        dto.Should().NotBeNull();
+        dto!.Id.Should().Be(screening.Id);
+    }
+
+    [Fact]
+    public async Task GetScreeningById_ReturnsNotFound_WhenScreeningDoesNotExist()
+    {
+        await _factory.ClearDatabaseAsync();
+
+        var response = await _client.GetAsync("/api/projekcije/9999");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PostScreening_CreatesScreening_AndReturnsCreated()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var request = CreateScreeningWriteDto(movie.Id, hall.Id);
+
+        var response = await _client.PostAsJsonAsync("/api/projekcije", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var dto = await response.Content.ReadFromJsonAsync<ScreeningDTO>();
+        dto.Should().NotBeNull();
+        dto!.Movie.Id.Should().Be(movie.Id);
+        dto.Hall.Id.Should().Be(hall.Id);
+    }
+
+    [Fact]
+    public async Task PostScreening_ReturnsBadRequest_WhenModelIsInvalid()
+    {
+        await _factory.ClearDatabaseAsync();
+
+        var response = await _client.PostAsJsonAsync("/api/projekcije", new ScreeningWriteDTO());
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task PutScreening_UpdatesExistingScreening()
+    {
+        await _factory.ClearDatabaseAsync();
+        var screening = await ApiTestData.CreateScreeningAsync(_factory);
+        var movie = await ApiTestData.CreateMovieAsync(_factory, "Updated Movie");
+        var hall = await ApiTestData.CreateHallAsync(_factory, "Updated Hall");
+        var request = CreateScreeningWriteDto(movie.Id, hall.Id, is3D: true);
+
+        var response = await _client.PutAsJsonAsync($"/api/projekcije/{screening.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await response.Content.ReadFromJsonAsync<ScreeningDTO>();
+        dto.Should().NotBeNull();
+        dto!.Movie.Id.Should().Be(movie.Id);
+        dto.Hall.Id.Should().Be(hall.Id);
+        dto.Is3D.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PutScreening_ReturnsNotFound_WhenScreeningDoesNotExist()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var request = CreateScreeningWriteDto(movie.Id, hall.Id);
+
+        var response = await _client.PutAsJsonAsync("/api/projekcije/9999", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteScreening_SoftDeletesExistingScreening()
+    {
+        await _factory.ClearDatabaseAsync();
+        var screening = await ApiTestData.CreateScreeningAsync(_factory);
+
+        var response = await _client.DeleteAsync($"/api/projekcije/{screening.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+        var deleted = await dbContext.Screenings.FindAsync(screening.Id);
+        deleted!.DeletedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteScreening_ReturnsNotFound_WhenScreeningDoesNotExist()
+    {
+        await _factory.ClearDatabaseAsync();
+
+        var response = await _client.DeleteAsync("/api/projekcije/9999");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task ScreeningApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
+    {
+        var response = await _factory.CreateClient().GetAsync("/api/projekcije");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    private static ScreeningWriteDTO CreateScreeningWriteDto(int movieId, int hallId, bool is3D = false)
+    {
+        return new ScreeningWriteDTO
+        {
+            StartTime = new DateTime(2026, 3, 2, 18, 0, 0),
+            EndTime = new DateTime(2026, 3, 2, 20, 0, 0),
+            Is3D = is3D,
+            MovieId = movieId,
+            HallId = hallId
+        };
+    }
+}

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vjezba.DAL;
 using Vjezba.Model.Entities;
@@ -6,6 +7,7 @@ using Vjezba.Web.DTOs;
 namespace Vjezba.Web.Controllers.Api;
 
 [ApiController]
+[Authorize]
 [Route("api/film")]
 public class MovieApiController : ControllerBase
 {
@@ -17,10 +19,21 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<MovieDTO>> Get()
+    public ActionResult<IEnumerable<MovieDTO>> Get(string? language)
     {
-        var movies = _dbContext.Movies
+        var normalizedLanguage = (language ?? string.Empty).Trim();
+
+        var moviesQuery = _dbContext.Movies
             .Where(movie => movie.DeletedAt == null)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(normalizedLanguage))
+        {
+            moviesQuery = moviesQuery.Where(movie => movie.Language == normalizedLanguage);
+        }
+
+        var movies = moviesQuery
+            .OrderBy(movie => movie.Id)
             .ToList()
             .Select(ToDTO)
             .ToList();
@@ -42,15 +55,29 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
-    public ActionResult<IEnumerable<MovieDTO>> Search(string query)
+    public ActionResult<IEnumerable<MovieDTO>> Search(string query, string? language)
     {
         var normalizedQuery = query.Trim();
+        var normalizedLanguage = (language ?? string.Empty).Trim();
 
-        var movies = _dbContext.Movies
+        var moviesQuery = _dbContext.Movies
             .Where(movie => movie.DeletedAt == null)
-            .Where(movie =>
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(normalizedLanguage))
+        {
+            moviesQuery = moviesQuery.Where(movie => movie.Language == normalizedLanguage);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            moviesQuery = moviesQuery.Where(movie =>
                 movie.Title.Contains(normalizedQuery) ||
-                movie.Description.Contains(normalizedQuery))
+                movie.Description.Contains(normalizedQuery));
+        }
+
+        var movies = moviesQuery
+            .OrderBy(movie => movie.Id)
             .ToList()
             .Select(ToDTO)
             .ToList();

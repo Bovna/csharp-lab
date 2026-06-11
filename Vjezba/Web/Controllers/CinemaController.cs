@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
@@ -7,6 +8,7 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("kina")]
+[Authorize]
 public class CinemaController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -17,39 +19,20 @@ public class CinemaController : Controller
     }
 
     [Route("")]
-    [Route("grad={city}")]
-    public IActionResult Index(string? city, string? search, bool partial = false)
+    [Route("pretraga")]
+    [AllowAnonymous]
+    public IActionResult Index(string? city, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var query = _dbContext.Cinemas
-            .Where(cinema => cinema.DeletedAt == null)
-            .AsQueryable();
-
-        ViewBag.Cities = _dbContext.Cinemas
-            .Where(cinema => cinema.DeletedAt == null)
-            .Select(c => c.City)
-            .Where(c => c != null && c != "")
-            .Distinct()
-            .OrderBy(c => c)
-            .ToList();
-
-        ViewBag.SelectedCity = city;
-        ViewBag.Search = search;
+        var cinemasQuery = ActiveCinemasQuery();
 
         if (!string.IsNullOrWhiteSpace(city))
         {
-            query = query.Where(c => c.City == city);
+            cinemasQuery = cinemasQuery.Where(cinema => cinema.City == city);
         }
 
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-        {
-            query = query.Where(cinema =>
-                EF.Functions.Like(cinema.Name, $"%{normalizedSearch}%")
-                || EF.Functions.Like(cinema.City, $"%{normalizedSearch}%")
-                || EF.Functions.Like(cinema.Street, $"%{normalizedSearch}%"));
-        }
+        PrepareCinemaIndex(city, null);
 
-        var cinemas = query
+        var cinemas = cinemasQuery
             .OrderBy(cinema => cinema.Id)
             .ToList();
 
@@ -61,17 +44,51 @@ public class CinemaController : Controller
         return View(cinemas);
     }
 
-    [Route("pretraga")]
-    public IActionResult Search(string? query)
+    [HttpGet("rezultati")]
+    [AllowAnonymous]
+    public IActionResult Search(string? query, string? city, bool partial = false)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var cinemasQuery = ActiveCinemasQuery();
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            cinemasQuery = cinemasQuery.Where(cinema => cinema.City == city);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            cinemasQuery = cinemasQuery.Where(cinema =>
+                cinema.Name.Contains(normalizedQuery) ||
+                cinema.City.Contains(normalizedQuery) ||
+                cinema.Street.Contains(normalizedQuery));
+        }
+
+        PrepareCinemaIndex(city, query);
+
+        var cinemas = cinemasQuery
+            .OrderBy(cinema => cinema.Id)
+            .ToList();
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", cinemas);
+        }
+
+        return View(nameof(Index), cinemas);
+    }
+
+    [HttpGet("autocomplete")]
+    [AllowAnonymous]
+    public IActionResult Autocomplete(string? query)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
-        var cinemas = _dbContext.Cinemas
-            .Where(cinema => cinema.DeletedAt == null)
+        var cinemas = ActiveCinemasQuery()
             .Where(cinema => string.IsNullOrEmpty(normalizedQuery)
-                || EF.Functions.Like(cinema.Name, $"%{normalizedQuery}%")
-                || EF.Functions.Like(cinema.City, $"%{normalizedQuery}%")
-                || EF.Functions.Like(cinema.Street, $"%{normalizedQuery}%"))
+                || cinema.Name.Contains(normalizedQuery)
+                || cinema.City.Contains(normalizedQuery)
+                || cinema.Street.Contains(normalizedQuery))
             .OrderBy(cinema => cinema.Name)
             .Take(12)
             .Select(cinema => new
@@ -85,12 +102,12 @@ public class CinemaController : Controller
     }
 
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
-        var cinema = _dbContext.Cinemas
-            .Where(c => c.DeletedAt == null)
-            .Include(c => c.Halls.Where(hall => hall.DeletedAt == null))
-            .FirstOrDefault(c => c.Id == id);
+        var cinema = ActiveCinemasQuery()
+            .Include(cinema => cinema.Halls.Where(hall => hall.DeletedAt == null))
+            .FirstOrDefault(cinema => cinema.Id == id);
 
         if (cinema is null)
         {
@@ -101,12 +118,14 @@ public class CinemaController : Controller
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         return View(new CinemaFormViewModel());
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(CinemaFormViewModel model)
     {
         if (!ModelState.IsValid)
@@ -114,16 +133,8 @@ public class CinemaController : Controller
             return View(model);
         }
 
-        var cinema = new Cinema
-        {
-            Name = model.Name,
-            City = model.City,
-            Street = model.Street,
-            HouseNumber = model.HouseNumber,
-            PostalCode = model.PostalCode,
-            Email = model.Email,
-            Phone = model.Phone
-        };
+        var cinema = new Cinema();
+        MapCinemaForm(model, cinema);
 
         _dbContext.Cinemas.Add(cinema);
         _dbContext.SaveChanges();
@@ -133,83 +144,48 @@ public class CinemaController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
-        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var cinema = ActiveCinemasQuery().FirstOrDefault(cinema => cinema.Id == id);
 
         if (cinema is null)
         {
             return NotFound();
         }
 
-        var model = new CinemaFormViewModel
-        {
-            Id = cinema.Id,
-            Name = cinema.Name,
-            City = cinema.City,
-            Street = cinema.Street,
-            HouseNumber = cinema.HouseNumber,
-            PostalCode = cinema.PostalCode,
-            Email = cinema.Email,
-            Phone = cinema.Phone
-        };
-
-        return View(model);
+        return View(ToCinemaForm(cinema));
     }
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
-    public async Task<IActionResult> EditPost(int id)
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult EditPost(int id, CinemaFormViewModel model)
     {
-        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var cinema = ActiveCinemasQuery().FirstOrDefault(cinema => cinema.Id == id);
 
         if (cinema is null)
         {
             return NotFound();
         }
 
-        var model = new CinemaFormViewModel
+        if (!ModelState.IsValid)
         {
-            Id = cinema.Id,
-            Name = cinema.Name,
-            City = cinema.City,
-            Street = cinema.Street,
-            HouseNumber = cinema.HouseNumber,
-            PostalCode = cinema.PostalCode,
-            Email = cinema.Email,
-            Phone = cinema.Phone
-        };
-
-        var ok = await TryUpdateModelAsync(model, string.Empty,
-            m => m.Name,
-            m => m.City,
-            m => m.Street,
-            m => m.HouseNumber,
-            m => m.PostalCode,
-            m => m.Email,
-            m => m.Phone);
-
-        if (ok && ModelState.IsValid)
-        {
-            cinema.Name = model.Name;
-            cinema.City = model.City;
-            cinema.Street = model.Street;
-            cinema.HouseNumber = model.HouseNumber;
-            cinema.PostalCode = model.PostalCode;
-            cinema.Email = model.Email;
-            cinema.Phone = model.Phone;
-
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            model.Id = id;
+            return View(model);
         }
 
-        return View(model);
+        MapCinemaForm(model, cinema);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 
-    [HttpPost("izbrisi/{id}")]
+    [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
-        var cinema = _dbContext.Cinemas.FirstOrDefault(c => c.Id == id && c.DeletedAt == null);
+        var cinema = ActiveCinemasQuery().FirstOrDefault(cinema => cinema.Id == id);
 
         if (cinema is null)
         {
@@ -220,6 +196,49 @@ public class CinemaController : Controller
         _dbContext.SaveChanges();
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private IQueryable<Cinema> ActiveCinemasQuery()
+    {
+        return _dbContext.Cinemas.Where(cinema => cinema.DeletedAt == null);
+    }
+
+    private void PrepareCinemaIndex(string? city, string? search)
+    {
+        ViewBag.Cities = ActiveCinemasQuery()
+            .Select(cinema => cinema.City)
+            .Where(cityName => cityName != null && cityName != "")
+            .Distinct()
+            .OrderBy(cityName => cityName)
+            .ToList();
+        ViewBag.SelectedCity = city;
+        ViewBag.Search = search;
+    }
+
+    private static CinemaFormViewModel ToCinemaForm(Cinema cinema)
+    {
+        return new CinemaFormViewModel
+        {
+            Id = cinema.Id,
+            Name = cinema.Name,
+            City = cinema.City,
+            Street = cinema.Street,
+            HouseNumber = cinema.HouseNumber,
+            PostalCode = cinema.PostalCode,
+            Email = cinema.Email,
+            Phone = cinema.Phone
+        };
+    }
+
+    private static void MapCinemaForm(CinemaFormViewModel model, Cinema cinema)
+    {
+        cinema.Name = model.Name;
+        cinema.City = model.City;
+        cinema.Street = model.Street;
+        cinema.HouseNumber = model.HouseNumber;
+        cinema.PostalCode = model.PostalCode;
+        cinema.Email = model.Email;
+        cinema.Phone = model.Phone;
     }
 
     private void SoftDeleteCinema(Cinema cinema)

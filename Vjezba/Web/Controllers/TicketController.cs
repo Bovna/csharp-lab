@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("ulaznice")]
+[Authorize]
 public class TicketController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -18,44 +20,21 @@ public class TicketController : Controller
     }
 
     [Route("")]
-    public IActionResult Index(decimal? price, string? search, bool partial = false)
+    [Route("pretraga")]
+    [AllowAnonymous]
+    public IActionResult Index(TicketStatus? status, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var query = _dbContext.Tickets
-            .Where(ticket => ticket.DeletedAt == null
-                && ticket.Customer.DeletedAt == null
-                && ticket.Screening.DeletedAt == null
-                && ticket.Screening.Hall.DeletedAt == null
-                && ticket.Screening.Hall.Cinema.DeletedAt == null
-                && (ticket.Seat == null || ticket.Seat.DeletedAt == null))
-            .Include(t => t.Customer)
-            .Include(t => t.Seat)
-            .Include(t => t.Screening)
-                .ThenInclude(s => s.Movie)
-            .Include(t => t.Screening)
-                .ThenInclude(s => s.Hall)
-                    .ThenInclude(h => h.Cinema)
-            .AsQueryable();
+        var ticketsQuery = ActiveTicketsQuery();
 
-        if (price.HasValue)
+        if (status.HasValue)
         {
-            query = query.Where(ticket => ticket.Price <= price.Value);
+            ticketsQuery = ticketsQuery.Where(ticket => ticket.Status == status.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-        {
-            query = query.Where(ticket =>
-                EF.Functions.Like(ticket.TicketNumber, $"%{normalizedSearch}%")
-                || EF.Functions.Like(ticket.Customer.FirstName + " " + ticket.Customer.LastName, $"%{normalizedSearch}%")
-                || EF.Functions.Like(ticket.Screening.Movie.Title, $"%{normalizedSearch}%"));
-        }
+        ViewBag.SelectedStatus = status?.ToString();
+        ViewBag.Search = null;
 
-        var tickets = query
-            .OrderBy(ticket => ticket.Id)
-            .ToList();
-
-        ViewBag.SelectedPrice = price?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-        ViewBag.Search = search;
+        var tickets = ticketsQuery.OrderBy(ticket => ticket.Id).ToList();
 
         if (partial)
         {
@@ -65,24 +44,45 @@ public class TicketController : Controller
         return View(tickets);
     }
 
+    [HttpGet("rezultati")]
+    [AllowAnonymous]
+    public IActionResult Search(string? query, TicketStatus? status, bool partial = false)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var ticketsQuery = ActiveTicketsQuery();
+
+        if (status.HasValue)
+        {
+            ticketsQuery = ticketsQuery.Where(ticket => ticket.Status == status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            ticketsQuery = ticketsQuery.Where(ticket =>
+                ticket.TicketNumber.Contains(normalizedQuery) ||
+                (ticket.Customer.FirstName + " " + ticket.Customer.LastName).Contains(normalizedQuery) ||
+                ticket.Screening.Movie.Title.Contains(normalizedQuery) ||
+                ticket.Screening.Hall.Name.Contains(normalizedQuery));
+        }
+
+        ViewBag.SelectedStatus = status?.ToString();
+        ViewBag.Search = query;
+
+        var tickets = ticketsQuery.OrderBy(ticket => ticket.Id).ToList();
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", tickets);
+        }
+
+        return View(nameof(Index), tickets);
+    }
+
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
-        var ticket = _dbContext.Tickets
-            .Include(t => t.Customer)
-            .Include(t => t.Seat)
-            .Include(t => t.Screening)
-                .ThenInclude(s => s.Movie)
-            .Include(t => t.Screening)
-                .ThenInclude(s => s.Hall)
-                    .ThenInclude(h => h.Cinema)
-            .FirstOrDefault(t => t.Id == id
-                && t.DeletedAt == null
-                && t.Customer.DeletedAt == null
-                && t.Screening.DeletedAt == null
-                && t.Screening.Hall.DeletedAt == null
-                && t.Screening.Hall.Cinema.DeletedAt == null
-                && (t.Seat == null || t.Seat.DeletedAt == null));
+        var ticket = ActiveTicketsQuery().FirstOrDefault(ticket => ticket.Id == id);
 
         if (ticket is null)
         {
@@ -93,6 +93,7 @@ public class TicketController : Controller
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         var model = new TicketFormViewModel
@@ -101,29 +102,22 @@ public class TicketController : Controller
             Status = TicketStatus.Active
         };
 
-        PrepareTicketForm(model, isCreate: true);
+        PrepareTicketForm(model);
         return View(model);
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(TicketFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            PrepareTicketForm(model, isCreate: true);
+            PrepareTicketForm(model);
             return View(model);
         }
 
-        var ticket = new Ticket
-        {
-            TicketNumber = model.TicketNumber,
-            PurchasedAt = model.PurchasedAt,
-            Price = model.Price,
-            Status = model.Status,
-            ScreeningId = model.ScreeningId!.Value,
-            SeatId = model.SeatId,
-            CustomerId = model.CustomerId!.Value
-        };
+        var ticket = new Ticket();
+        MapTicketForm(model, ticket);
 
         _dbContext.Tickets.Add(ticket);
         _dbContext.SaveChanges();
@@ -133,85 +127,51 @@ public class TicketController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
-        var ticket = _dbContext.Tickets.FirstOrDefault(t => t.Id == id && t.DeletedAt == null);
+        var ticket = ActiveTicketsQuery().FirstOrDefault(ticket => ticket.Id == id);
 
         if (ticket is null)
         {
             return NotFound();
         }
 
-        var model = new TicketFormViewModel
-        {
-            Id = ticket.Id,
-            TicketNumber = ticket.TicketNumber,
-            PurchasedAt = ticket.PurchasedAt,
-            Price = ticket.Price,
-            Status = ticket.Status,
-            ScreeningId = ticket.ScreeningId,
-            SeatId = ticket.SeatId,
-            CustomerId = ticket.CustomerId
-        };
-
-        PrepareTicketForm(model, isCreate: false);
+        var model = ToTicketForm(ticket);
+        PrepareTicketForm(model);
         return View(model);
     }
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
-    public async Task<IActionResult> EditPost(int id)
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult EditPost(int id, TicketFormViewModel model)
     {
-        var ticket = _dbContext.Tickets.FirstOrDefault(t => t.Id == id && t.DeletedAt == null);
+        var ticket = ActiveTicketsQuery().FirstOrDefault(ticket => ticket.Id == id);
 
         if (ticket is null)
         {
             return NotFound();
         }
 
-        var model = new TicketFormViewModel
+        if (!ModelState.IsValid)
         {
-            Id = ticket.Id,
-            TicketNumber = ticket.TicketNumber,
-            PurchasedAt = ticket.PurchasedAt,
-            Price = ticket.Price,
-            Status = ticket.Status,
-            ScreeningId = ticket.ScreeningId,
-            SeatId = ticket.SeatId,
-            CustomerId = ticket.CustomerId
-        };
-
-        var ok = await TryUpdateModelAsync(model, string.Empty,
-            m => m.TicketNumber,
-            m => m.PurchasedAt,
-            m => m.Price,
-            m => m.Status,
-            m => m.ScreeningId,
-            m => m.SeatId,
-            m => m.CustomerId);
-
-        if (ok && ModelState.IsValid)
-        {
-            ticket.TicketNumber = model.TicketNumber;
-            ticket.PurchasedAt = model.PurchasedAt;
-            ticket.Price = model.Price;
-            ticket.Status = model.Status;
-            ticket.ScreeningId = model.ScreeningId!.Value;
-            ticket.SeatId = model.SeatId;
-            ticket.CustomerId = model.CustomerId!.Value;
-
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            model.Id = id;
+            PrepareTicketForm(model);
+            return View(model);
         }
 
-        PrepareTicketForm(model, isCreate: false);
-        return View(model);
+        MapTicketForm(model, ticket);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
-        var ticket = _dbContext.Tickets.FirstOrDefault(t => t.Id == id && t.DeletedAt == null);
+        var ticket = ActiveTicketsQuery().FirstOrDefault(ticket => ticket.Id == id);
 
         if (ticket is null)
         {
@@ -224,14 +184,38 @@ public class TicketController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private void PrepareTicketForm(TicketFormViewModel model, bool isCreate = false)
+    private IQueryable<Ticket> ActiveTicketsQuery()
+    {
+        return _dbContext.Tickets
+            .Include(ticket => ticket.Customer)
+            .Include(ticket => ticket.Seat)
+                .ThenInclude(seat => seat!.Hall)
+                    .ThenInclude(hall => hall.Cinema)
+            .Include(ticket => ticket.Screening)
+                .ThenInclude(screening => screening.Movie)
+            .Include(ticket => ticket.Screening)
+                .ThenInclude(screening => screening.Hall)
+                    .ThenInclude(hall => hall.Cinema)
+            .Where(ticket => ticket.DeletedAt == null
+                && ticket.Customer.DeletedAt == null
+                && ticket.Screening.DeletedAt == null
+                && ticket.Screening.Movie.DeletedAt == null
+                && ticket.Screening.Hall.DeletedAt == null
+                && ticket.Screening.Hall.Cinema.DeletedAt == null
+                && (ticket.Seat == null
+                    || (ticket.Seat.DeletedAt == null
+                        && ticket.Seat.Hall.DeletedAt == null
+                        && ticket.Seat.Hall.Cinema.DeletedAt == null)));
+    }
+
+    private void PrepareTicketForm(TicketFormViewModel model)
     {
         model.CustomerSelector = new AutocompleteViewModel
         {
             InputName = nameof(model.CustomerId),
             Label = "Kupac",
-            Endpoint = Url.Action(nameof(CustomerController.Search), "Customer") ?? "/kupci/pretraga",
-            SearchPlaceholder = "Pretražite kupca po imenu",
+            Endpoint = Url.Action(nameof(CustomerController.Autocomplete), "Customer") ?? "/kupci/autocomplete",
+            SearchPlaceholder = "Pretrazite kupca po imenu",
             RequiredMessage = "Kupac je obavezan.",
             EnableRemoteSearch = true,
             Items = BuildSelectedCustomerItems(model.CustomerId)
@@ -241,8 +225,8 @@ public class TicketController : Controller
         {
             InputName = nameof(model.ScreeningId),
             Label = "Projekcija",
-            Endpoint = Url.Action(nameof(ScreeningController.Search), "Screening") ?? "/projekcije/search",
-            SearchPlaceholder = "Pretražite projekciju po filmu",
+            Endpoint = Url.Action(nameof(ScreeningController.ScreeningAutocomplete), "Screening") ?? "/projekcije/autocomplete",
+            SearchPlaceholder = "Pretrazite projekciju po filmu",
             RequiredMessage = "Projekcija je obavezna.",
             EnableRemoteSearch = true,
             Items = BuildSelectedScreeningItems(model.ScreeningId)
@@ -252,8 +236,8 @@ public class TicketController : Controller
         {
             InputName = nameof(model.SeatId),
             Label = "Sjedalo",
-            Endpoint = Url.Action(nameof(SeatController.Search), "Seat") ?? "/sjedala/pretraga",
-            SearchPlaceholder = "Pretražite sjedalo po oznaci",
+            Endpoint = Url.Action(nameof(SeatController.Autocomplete), "Seat") ?? "/sjedala/autocomplete",
+            SearchPlaceholder = "Pretrazite sjedalo po oznaci",
             RequiredMessage = string.Empty,
             EnableRemoteSearch = true,
             Items = BuildSelectedSeatItems(model.SeatId)
@@ -268,11 +252,11 @@ public class TicketController : Controller
         }
 
         return _dbContext.Customers
-            .Where(c => c.DeletedAt == null && c.Id == selectedCustomerId.Value)
-            .Select(c => new SelectListItem
+            .Where(customer => customer.DeletedAt == null && customer.Id == selectedCustomerId.Value)
+            .Select(customer => new SelectListItem
             {
-                Value = c.Id.ToString(),
-                Text = c.FirstName + " " + c.LastName,
+                Value = customer.Id.ToString(),
+                Text = customer.FirstName + " " + customer.LastName,
                 Selected = true
             })
             .ToList();
@@ -286,14 +270,18 @@ public class TicketController : Controller
         }
 
         return _dbContext.Screenings
-            .Include(s => s.Movie)
-            .Include(s => s.Hall)
-                .ThenInclude(h => h.Cinema)
-            .Where(s => s.DeletedAt == null && s.Id == selectedScreeningId.Value)
-            .Select(s => new SelectListItem
+            .Include(screening => screening.Movie)
+            .Include(screening => screening.Hall)
+                .ThenInclude(hall => hall.Cinema)
+            .Where(screening => screening.DeletedAt == null
+                && screening.Movie.DeletedAt == null
+                && screening.Hall.DeletedAt == null
+                && screening.Hall.Cinema.DeletedAt == null
+                && screening.Id == selectedScreeningId.Value)
+            .Select(screening => new SelectListItem
             {
-                Value = s.Id.ToString(),
-                Text = s.Movie.Title + " - " + s.Hall.Cinema.Name + " / " + s.Hall.Name + " - " + s.StartTime.ToString("dd.MM.yyyy HH:mm"),
+                Value = screening.Id.ToString(),
+                Text = screening.Movie.Title + " - " + screening.Hall.Cinema.Name + " / " + screening.Hall.Name + " - " + screening.StartTime.ToString("dd.MM.yyyy HH:mm"),
                 Selected = true
             })
             .ToList();
@@ -308,8 +296,11 @@ public class TicketController : Controller
 
         return _dbContext.Seats
             .Include(seat => seat.Hall)
-                .ThenInclude(h => h.Cinema)
-            .Where(seat => seat.DeletedAt == null && seat.Id == selectedSeatId.Value)
+                .ThenInclude(hall => hall.Cinema)
+            .Where(seat => seat.DeletedAt == null
+                && seat.Hall.DeletedAt == null
+                && seat.Hall.Cinema.DeletedAt == null
+                && seat.Id == selectedSeatId.Value)
             .Select(seat => new SelectListItem
             {
                 Value = seat.Id.ToString(),
@@ -319,21 +310,29 @@ public class TicketController : Controller
             .ToList();
     }
 
-    private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)
+    private static TicketFormViewModel ToTicketForm(Ticket ticket)
     {
-        var selectItems = new List<SelectListItem>();
-
-        if (!isCreate)
+        return new TicketFormViewModel
         {
-            selectItems.Add(new SelectListItem
-            {
-                Text = "- odaberite -",
-                Value = string.Empty,
-                Selected = !selectedValue.HasValue
-            });
-        }
+            Id = ticket.Id,
+            TicketNumber = ticket.TicketNumber,
+            PurchasedAt = ticket.PurchasedAt,
+            Price = ticket.Price,
+            Status = ticket.Status,
+            ScreeningId = ticket.ScreeningId,
+            SeatId = ticket.SeatId,
+            CustomerId = ticket.CustomerId
+        };
+    }
 
-        selectItems.AddRange(items);
-        return selectItems;
+    private static void MapTicketForm(TicketFormViewModel model, Ticket ticket)
+    {
+        ticket.TicketNumber = model.TicketNumber;
+        ticket.PurchasedAt = model.PurchasedAt;
+        ticket.Price = model.Price;
+        ticket.Status = model.Status;
+        ticket.ScreeningId = model.ScreeningId!.Value;
+        ticket.SeatId = model.SeatId;
+        ticket.CustomerId = model.CustomerId!.Value;
     }
 }

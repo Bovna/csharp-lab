@@ -36,15 +36,9 @@
                                         <span asp-validation-for="Input.Password" class="ui-field__validation"></span>
                                     </div>
 
-                                    <div class="ui-field ui-field--checkbox">
-                                        <label class="ui-field__checkbox-label">
-                                            <input asp-for="Input.RememberMe" class="ui-field__checkbox" />
-                                            <span class="ui-field__checkbox-text">Zapamti me</span>
-                                        </label>
-                                    </div>
                                 </div>
 
-                                <div class="ui-actions ui-actions--end ui-actions--stack-mobile mt-3 pt-3 border-top">
+                                <div class="ui-actions ui-actions--end ui-actions--stack-mobile auth-submit-actions">
                                     <button type="submit" class="ui-btn ui-btn--primary">Prijavi se</button>
                                 </div>
                             </form>
@@ -61,7 +55,7 @@
                                         @foreach (var provider in Model.ExternalLogins)
                                         {
                                             <form method="post" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl">
-                                                <button type="submit" class="ui-btn ui-btn--secondary auth-provider-btn" name="provider" value="@provider.Name">Prijavi se putem @provider.DisplayName</button>
+                                                <button type="submit" class="ui-btn ui-btn--secondary auth-provider-btn" name="provider" value="@provider.Name">Prijava putem Googla</button>
                                             </form>
                                         }
                                     </div>

@@ -234,6 +234,42 @@ namespace Vjezba.DAL.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Vjezba.Model.Entities.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MovieId");
+
+                    b.ToTable("Attachments");
+                });
+
             modelBuilder.Entity("Vjezba.Model.Entities.Cinema", b =>
                 {
                     b.Property<int>("Id")
@@ -13350,6 +13386,17 @@ namespace Vjezba.DAL.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Vjezba.Model.Entities.Attachment", b =>
+                {
+                    b.HasOne("Vjezba.Model.Entities.Movie", "Movie")
+                        .WithMany("Attachments")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
+                });
+
             modelBuilder.Entity("Vjezba.Model.Entities.CustomerFavoriteMovie", b =>
                 {
                     b.HasOne("Vjezba.Model.Entities.Customer", "Customer")
@@ -13456,6 +13503,8 @@ namespace Vjezba.DAL.Migrations
 
             modelBuilder.Entity("Vjezba.Model.Entities.Movie", b =>
                 {
+                    b.Navigation("Attachments");
+
                     b.Navigation("FavoritedBy");
 
                     b.Navigation("Screenings");

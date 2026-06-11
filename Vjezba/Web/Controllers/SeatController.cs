@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Vjezba.Web.ViewModels;
 namespace Vjezba.Web.Controllers;
 
 [Route("sjedala")]
+[Authorize]
 public class SeatController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -18,43 +20,21 @@ public class SeatController : Controller
     }
 
     [Route("")]
-    public IActionResult Index(SeatType? seatType, string? search, bool partial = false)
+    [Route("pretraga")]
+    [AllowAnonymous]
+    public IActionResult Index(SeatType? seatType, bool partial = false)
     {
-        var normalizedSearch = (search ?? string.Empty).Trim();
-        var query = _dbContext.Seats
-            .Where(seat => seat.DeletedAt == null
-                && seat.Hall.DeletedAt == null
-                && seat.Hall.Cinema.DeletedAt == null)
-            .Include(s => s.Hall)
-                .ThenInclude(h => h.Cinema)
-            .AsQueryable();
+        var seatsQuery = ActiveSeatsQuery();
 
         if (seatType.HasValue)
         {
-            query = query.Where(seat => seat.SeatType == seatType.Value);
+            seatsQuery = seatsQuery.Where(seat => seat.SeatType == seatType.Value);
         }
-
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-        {
-            if (int.TryParse(normalizedSearch, out var seatNumber))
-            {
-                query = query.Where(seat => seat.SeatNumber == seatNumber);
-            }
-            else
-            {
-                query = query.Where(seat =>
-                    EF.Functions.Like(seat.RowLabel, $"%{normalizedSearch}%")
-                    || EF.Functions.Like(seat.Hall.Name, $"%{normalizedSearch}%")
-                    || EF.Functions.Like(seat.Hall.Cinema.Name, $"%{normalizedSearch}%"));
-            }
-        }
-
-        var seats = query
-            .OrderBy(seat => seat.Id)
-            .ToList();
 
         ViewBag.SelectedSeatType = seatType?.ToString();
-        ViewBag.Search = search;
+        ViewBag.Search = null;
+
+        var seats = seatsQuery.OrderBy(seat => seat.Id).ToList();
 
         if (partial)
         {
@@ -64,21 +44,57 @@ public class SeatController : Controller
         return View(seats);
     }
 
-    [Route("pretraga")]
-    public IActionResult Search(string? query)
+    [HttpGet("rezultati")]
+    [AllowAnonymous]
+    public IActionResult Search(string? query, SeatType? seatType, bool partial = false)
+    {
+        var normalizedQuery = (query ?? string.Empty).Trim();
+        var seatsQuery = ActiveSeatsQuery();
+
+        if (seatType.HasValue)
+        {
+            seatsQuery = seatsQuery.Where(seat => seat.SeatType == seatType.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            if (int.TryParse(normalizedQuery, out var seatNumber))
+            {
+                seatsQuery = seatsQuery.Where(seat => seat.SeatNumber == seatNumber);
+            }
+            else
+            {
+                seatsQuery = seatsQuery.Where(seat =>
+                    seat.RowLabel.Contains(normalizedQuery) ||
+                    seat.Hall.Name.Contains(normalizedQuery) ||
+                    seat.Hall.Cinema.Name.Contains(normalizedQuery));
+            }
+        }
+
+        ViewBag.SelectedSeatType = seatType?.ToString();
+        ViewBag.Search = query;
+
+        var seats = seatsQuery.OrderBy(seat => seat.Id).ToList();
+
+        if (partial)
+        {
+            return PartialView("_IndexResults", seats);
+        }
+
+        return View(nameof(Index), seats);
+    }
+
+    [HttpGet("autocomplete")]
+    [AllowAnonymous]
+    public IActionResult Autocomplete(string? query)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
-        var seats = _dbContext.Seats
-            .Include(seat => seat.Hall)
-                .ThenInclude(hall => hall.Cinema)
-            .Where(seat => seat.DeletedAt == null
-                && seat.Hall.DeletedAt == null
-                && seat.Hall.Cinema.DeletedAt == null)
+        var seats = ActiveSeatsQuery()
             .Where(seat => string.IsNullOrEmpty(normalizedQuery)
-                || EF.Functions.Like(seat.RowLabel, $"%{normalizedQuery}%")
-                || EF.Functions.Like(seat.Hall.Name, $"%{normalizedQuery}%")
-                || EF.Functions.Like(seat.Hall.Cinema.Name, $"%{normalizedQuery}%"))
+                || seat.RowLabel.Contains(normalizedQuery)
+                || seat.Hall.Name.Contains(normalizedQuery)
+                || seat.Hall.Cinema.Name.Contains(normalizedQuery))
             .OrderBy(seat => seat.Hall.Cinema.Name)
             .ThenBy(seat => seat.Hall.Name)
             .ThenBy(seat => seat.RowLabel)
@@ -95,15 +111,10 @@ public class SeatController : Controller
     }
 
     [Route("detalji/{id}")]
+    [Authorize]
     public IActionResult Details(int id)
     {
-        var seat = _dbContext.Seats
-            .Include(s => s.Hall)
-                .ThenInclude(h => h.Cinema)
-            .FirstOrDefault(s => s.Id == id
-                && s.DeletedAt == null
-                && s.Hall.DeletedAt == null
-                && s.Hall.Cinema.DeletedAt == null);
+        var seat = ActiveSeatsQuery().FirstOrDefault(seat => seat.Id == id);
 
         if (seat is null)
         {
@@ -114,29 +125,26 @@ public class SeatController : Controller
     }
 
     [Route("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create()
     {
         var model = new SeatFormViewModel();
-        PrepareSeatForm(model, isCreate: true);
+        PrepareSeatForm(model);
         return View(model);
     }
 
     [HttpPost("dodaj")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult Create(SeatFormViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            PrepareSeatForm(model, isCreate: true);
+            PrepareSeatForm(model);
             return View(model);
         }
 
-        var seat = new Seat
-        {
-            RowLabel = model.RowLabel,
-            SeatNumber = model.SeatNumber,
-            SeatType = model.SeatType,
-            HallId = model.HallId!.Value
-        };
+        var seat = new Seat();
+        MapSeatForm(model, seat);
 
         _dbContext.Seats.Add(seat);
         _dbContext.SaveChanges();
@@ -146,73 +154,51 @@ public class SeatController : Controller
 
     [Route("uredi/{id}")]
     [ActionName("Edit")]
+    [Authorize(Roles = "Admin,Manager")]
     public IActionResult EditGet(int id)
     {
-        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+        var seat = ActiveSeatsQuery().FirstOrDefault(seat => seat.Id == id);
 
         if (seat is null)
         {
             return NotFound();
         }
 
-        var model = new SeatFormViewModel
-        {
-            Id = seat.Id,
-            RowLabel = seat.RowLabel,
-            SeatNumber = seat.SeatNumber,
-            SeatType = seat.SeatType,
-            HallId = seat.HallId
-        };
-
-        PrepareSeatForm(model, isCreate: false);
+        var model = ToSeatForm(seat);
+        PrepareSeatForm(model);
         return View(model);
     }
 
     [HttpPost("uredi/{id}")]
     [ActionName("Edit")]
-    public async Task<IActionResult> EditPost(int id)
+    [Authorize(Roles = "Admin,Manager")]
+    public IActionResult EditPost(int id, SeatFormViewModel model)
     {
-        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+        var seat = ActiveSeatsQuery().FirstOrDefault(seat => seat.Id == id);
 
         if (seat is null)
         {
             return NotFound();
         }
 
-        var model = new SeatFormViewModel
+        if (!ModelState.IsValid)
         {
-            Id = seat.Id,
-            RowLabel = seat.RowLabel,
-            SeatNumber = seat.SeatNumber,
-            SeatType = seat.SeatType,
-            HallId = seat.HallId
-        };
-
-        var ok = await TryUpdateModelAsync(model, string.Empty,
-            m => m.RowLabel,
-            m => m.SeatNumber,
-            m => m.SeatType,
-            m => m.HallId);
-
-        if (ok && ModelState.IsValid)
-        {
-            seat.RowLabel = model.RowLabel;
-            seat.SeatNumber = model.SeatNumber;
-            seat.SeatType = model.SeatType;
-            seat.HallId = model.HallId!.Value;
-
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
+            model.Id = id;
+            PrepareSeatForm(model);
+            return View(model);
         }
 
-        PrepareSeatForm(model, isCreate: false);
-        return View(model);
+        MapSeatForm(model, seat);
+        _dbContext.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost("obrisi/{id}")]
+    [Authorize(Roles = "Admin")]
     public IActionResult Delete(int id)
     {
-        var seat = _dbContext.Seats.FirstOrDefault(s => s.Id == id && s.DeletedAt == null);
+        var seat = ActiveSeatsQuery().FirstOrDefault(seat => seat.Id == id);
 
         if (seat is null)
         {
@@ -225,14 +211,24 @@ public class SeatController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private void PrepareSeatForm(SeatFormViewModel model, bool isCreate = false)
+    private IQueryable<Seat> ActiveSeatsQuery()
+    {
+        return _dbContext.Seats
+            .Include(seat => seat.Hall)
+                .ThenInclude(hall => hall.Cinema)
+            .Where(seat => seat.DeletedAt == null
+                && seat.Hall.DeletedAt == null
+                && seat.Hall.Cinema.DeletedAt == null);
+    }
+
+    private void PrepareSeatForm(SeatFormViewModel model)
     {
         model.HallSelector = new AutocompleteViewModel
         {
             InputName = nameof(model.HallId),
             Label = "Dvorana",
-            Endpoint = Url.Action(nameof(HallController.Search), "Hall") ?? "/dvorana/pretraga",
-            SearchPlaceholder = "Pretražite dvoranu po kinu ili nazivu",
+            Endpoint = Url.Action(nameof(HallController.Autocomplete), "Hall") ?? "/dvorana/autocomplete",
+            SearchPlaceholder = "Pretrazite dvoranu po kinu ili nazivu",
             RequiredMessage = "Dvorana je obavezna.",
             EnableRemoteSearch = true,
             Items = BuildSelectedHallItems(model.HallId)
@@ -247,33 +243,37 @@ public class SeatController : Controller
         }
 
         return _dbContext.Halls
-            .Include(h => h.Cinema)
-            .Where(h => h.DeletedAt == null && h.Cinema.DeletedAt == null && h.Id == selectedHallId.Value)
-            .Select(h => new SelectListItem
+            .Include(hall => hall.Cinema)
+            .Where(hall => hall.DeletedAt == null
+                && hall.Cinema.DeletedAt == null
+                && hall.Id == selectedHallId.Value)
+            .Select(hall => new SelectListItem
             {
-                Value = h.Id.ToString(),
-                Text = h.Cinema.Name + " - " + h.Name,
+                Value = hall.Id.ToString(),
+                Text = hall.Cinema.Name + " - " + hall.Name,
                 Selected = true
             })
             .ToList();
     }
 
-    private static List<SelectListItem> BuildSelectItems(List<SelectListItem> items, int? selectedValue, bool isCreate = false)
+    private static SeatFormViewModel ToSeatForm(Seat seat)
     {
-        var selectItems = new List<SelectListItem>();
-
-        if (!isCreate)
+        return new SeatFormViewModel
         {
-            selectItems.Add(new SelectListItem
-            {
-                Text = "- odaberite -",
-                Value = string.Empty,
-                Selected = !selectedValue.HasValue
-            });
-        }
+            Id = seat.Id,
+            RowLabel = seat.RowLabel,
+            SeatNumber = seat.SeatNumber,
+            SeatType = seat.SeatType,
+            HallId = seat.HallId
+        };
+    }
 
-        selectItems.AddRange(items);
-        return selectItems;
+    private static void MapSeatForm(SeatFormViewModel model, Seat seat)
+    {
+        seat.RowLabel = model.RowLabel;
+        seat.SeatNumber = model.SeatNumber;
+        seat.SeatType = model.SeatType;
+        seat.HallId = model.HallId!.Value;
     }
 
     private void SoftDeleteSeat(Seat seat)

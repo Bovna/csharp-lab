@@ -2,55 +2,59 @@
 
 @{
     ViewData["Title"] = "Dvorane";
-    var selectedSeatType = ViewBag.SelectedSeatType as string;
+    bool? selectedSupports3D = ViewBag.Supports3D as bool?;
     var search = ViewBag.Search as string;
 }
 
 <div class="container py-4 animate-fade-in-up">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <div>
-            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">
-                Popis dvorana</h1>
-            </div>
-            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu dvoranu</a>
+            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis dvorana</h1>
         </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novu dvoranu</a>
+        }
+    </div>
 
-        <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
-            <div class="cinema-card-header">Pretraživanje</div>
-            <div class="cinema-card-body">
-                <form asp-action="Index" method="get" class="ui-form entity-index-search" data-ajax-search-form
-                      data-ajax-results-target="#hall-index-results">
-                    <div class="row g-4 align-items-end">
-                        <div class="col-12 col-lg-7">
-                            <div class="ui-field mb-0">
-                                <label for="hallSearch" class="ui-field__label">Naziv dvorane ili kina</label>
-                                <input id="hallSearch" name="search" value="@search" class="ui-field__input" type="search"
-                                       placeholder="Pretražite dvorane..." autocomplete="off" />
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-5">
-                            <div class="ui-field mb-0">
-                                <label for="supports3D" class="ui-field__label">3D podrška</label>
-                                <select id="supports3D" name="supports3D" class="ui-field__input"
-                                        onchange="this.form.requestSubmit()">
-                                    <option value=""
-                                            selected="@(string.IsNullOrWhiteSpace((string?)ViewBag.Supports3D) ? "selected" : null)">
-                                        Sve dvorane</option>
-                                        <option value="true"
-                                                selected="@(string.Equals((string?)ViewBag.Supports3D, "true", StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
-                                            Podržava 3D</option>
-                                            <option value="false"
-                                                    selected="@(string.Equals((string?)ViewBag.Supports3D, "false", StringComparison.OrdinalIgnoreCase) ? "selected" : null)">
-                                                Ne podržava 3D</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
+    <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+        <div class="cinema-card-header">Pretrazivanje</div>
+        <div class="cinema-card-body">
+            <form asp-action="Search" method="get" class="ui-form entity-index-search"
+                  data-ajax-search-form data-ajax-results-target="#hall-index-results">
+                <div class="row g-4 align-items-end">
+                    <div class="col-12 col-lg-7">
+                        <div class="ui-field mb-0">
+                            <label for="hallSearch" class="ui-field__label">Naziv dvorane ili kina</label>
+                            <input id="hallSearch" name="query" value="@search" class="ui-field__input" type="search"
+                                   placeholder="Pretrazite dvorane..." autocomplete="off" />
                         </div>
                     </div>
-
-                    <div id="hall-index-results" data-ajax-search-results-container>
-                        @await Html.PartialAsync("_IndexResults", Model)
+                    <div class="col-12 col-lg-5">
+                        <fieldset class="ui-field mb-0">
+                            <legend class="ui-field__label">3D podrska</legend>
+                            <div class="ui-choice-group">
+                                <label class="ui-choice-group__item">
+                                    <input type="radio" name="supports3D" value="" @(selectedSupports3D.HasValue ? null : "checked") />
+                                    <span>Svejedno</span>
+                                </label>
+                                <label class="ui-choice-group__item">
+                                    <input type="radio" name="supports3D" value="true" @(selectedSupports3D == true ? "checked" : null) />
+                                    <span>Da</span>
+                                </label>
+                                <label class="ui-choice-group__item">
+                                    <input type="radio" name="supports3D" value="false" @(selectedSupports3D == false ? "checked" : null) />
+                                    <span>Ne</span>
+                                </label>
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="hall-index-results" data-ajax-search-results-container>
+        @await Html.PartialAsync("_IndexResults", Model)
+    </div>
+</div>

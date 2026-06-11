@@ -3,18 +3,18 @@
     ViewData["Title"] = "Brza kupnja - Filmovi";
 }
 
-<div class="tb-cinema tb-page animate-fade-in-up">
+<div class="tb-cinema tb-page" data-ticket-builder-page data-current-step="2">
     <div class="tb-header">
         <h1>@Model.CinemaName</h1>
         <p>Korak 2/5: odaberi film</p>
     </div>
 
-    <div class="tb-step-line animate-fade-in-up" aria-label="Koraci brze kupnje">
+    <div class="tb-step-line" data-ticket-builder-steps data-current-step="2" aria-label="Koraci brze kupnje">
         <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index">1 Kino</a>
         <span class="tb-step active" aria-current="step">2 Film</span>
         <span class="tb-step is-disabled" aria-disabled="true">3 Projekcija</span>
         <span class="tb-step is-disabled" aria-disabled="true">4 Sjedalo</span>
-        <span class="tb-step is-disabled" aria-disabled="true">5 Plaćanje</span>
+        <span class="tb-step is-disabled" aria-disabled="true">5 Placanje</span>
     </div>
 
     @if (!Model.Movies.Any())
@@ -23,21 +23,17 @@
     }
     else
     {
-        <div class="tb-panel animate-fade-in-up">
-            <div class="tb-grid-cards animate-fade-in-up">
-                @{
-                    int delayMs = 100;
-                }
+        <div class="tb-panel">
+            <div class="tb-grid-cards">
                 @foreach (var movie in Model.Movies)
                 {
-                    <a class="tb-card-link animate-fade-in-up" style="animation-delay: @(delayMs)ms;"
+                    <a class="tb-card-link"
                        asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
                        asp-route-movieId="@movie.Id">
                         <strong>@movie.Title</strong>
                         <span>@movie.Genre | @movie.DurationMinutes min</span>
                         <small>@movie.Language | @movie.AgeRating</small>
                     </a>
-                    delayMs += 50;
                 }
             </div>
         </div>
