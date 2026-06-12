@@ -34,39 +34,52 @@
   }
 
   function renderPanel($panel, state) {
-    $panel.empty();
+    const token = Date.now() + Math.random();
+    $panel.data("render-token", token);
 
-    $("<div/>", {
-      class: "tb-price-panel__title",
-      text: state.title,
-    }).appendTo($panel);
+    const writePanel = () => {
+      if ($panel.data("render-token") !== token) {
+        return;
+      }
 
-    $("<div/>", {
-      class: "tb-price-panel__value",
-      text: state.value,
-    }).appendTo($panel);
+      $panel.empty();
 
-    $("<div/>", {
-      class: "tb-price-panel__meta",
-      text: state.meta,
-    }).appendTo($panel);
-
-    if (state.href) {
-      const $actions = $("<div/>", {
-        class: "tb-price-panel__actions",
+      $("<div/>", {
+        class: "tb-price-panel__title",
+        text: state.title,
       }).appendTo($panel);
 
-      $("<a/>", {
-        class: "ui-btn ui-btn--primary",
-        href: state.href,
-        text: "Nastavi na placanje",
-      }).appendTo($actions);
-    }
+      $("<div/>", {
+        class: "tb-price-panel__value",
+        text: state.value,
+      }).appendTo($panel);
 
-    $panel.removeClass("is-updated");
-    window.setTimeout(() => {
+      $("<div/>", {
+        class: "tb-price-panel__meta",
+        text: state.meta,
+      }).appendTo($panel);
+
+      if (state.href) {
+        const $actions = $("<div/>", {
+          class: "tb-price-panel__actions",
+        }).appendTo($panel);
+
+        $("<a/>", {
+          class: "ui-btn ui-btn--primary",
+          href: state.href,
+          text: "Nastavi na placanje",
+        }).appendTo($actions);
+      }
+
       $panel.addClass("is-updated");
-    }, 10);
+    };
+
+    $panel.removeClass("is-updated").stop(true, true).fadeTo(80, 0.62, () => {
+      writePanel();
+      if ($panel.data("render-token") === token) {
+        $panel.fadeTo(180, 1);
+      }
+    });
   }
 
   function renderDefaultPanel($panel) {
@@ -77,7 +90,7 @@
     });
   }
 
-  function renderSeatPanel($layout, $panel, $seat, includeAction) {
+  function renderSeatPanel($layout, $panel, $seat, includeAction, isHoverPreview) {
     const seatLabel = $seat.data("seat-label") || "";
     const seatType = $seat.data("seat-type") || "Standard";
     const seatId = $seat.data("seat-id");
@@ -85,11 +98,15 @@
     const price = calculatePrice(seatType, is3D).toFixed(2);
 
     renderPanel($panel, {
-      title: includeAction ? "Odabrano sjedalo" : "Pregled sjedala",
+      title: isHoverPreview ? "Pregled cijene" : "Odabrano sjedalo",
       value: `${seatLabel} | ${seatType} | ${price} EUR`,
-      meta: is3D
-        ? "Cijena ukljucuje 3D nadoplatu."
-        : "Standardna projekcija bez 3D nadoplate.",
+      meta: isHoverPreview
+        ? "Mozes odmah nastaviti na placanje ili kliknuti sjedalo za odabir."
+        : includeAction
+        ? is3D
+          ? "Cijena ukljucuje 3D nadoplatu."
+          : "Standardna projekcija bez 3D nadoplate."
+        : "Klikni sjedalo za odabir i nastavak na placanje.",
       href: includeAction ? buildCheckoutUrl($layout, seatId) : null,
     });
   }
@@ -135,14 +152,37 @@
       let index = 0;
       revealSelectors.forEach((selector) => {
         $page.find(selector).each(function () {
-          this.style.setProperty("--tb-delay", `${80 + index * 75}ms`);
+          this.style.setProperty("--tb-delay", `${140 + index * 120}ms`);
           index += 1;
         });
       });
 
       window.setTimeout(() => {
         $page.addClass("is-ready");
-      }, 40);
+      }, 90);
+    });
+  }
+
+  function initClickFeedback() {
+    $(".tb-card-link, .tb-list-item, .tb-seat, .ui-btn").on("click", function (event) {
+      const $target = $(this);
+
+      if ($target.css("position") === "static") {
+        $target.css("position", "relative");
+      }
+
+      const offset = $target.offset() || { left: 0, top: 0 };
+      const x = event.pageX - offset.left;
+      const y = event.pageY - offset.top;
+
+      $("<span/>", {
+        class: "tb-click-ripple",
+      })
+        .css({ left: x, top: y })
+        .appendTo($target)
+        .on("animationend", function () {
+          $(this).remove();
+        });
     });
   }
 
@@ -151,17 +191,22 @@
       return;
     }
 
+    $(".tb-card-link, .tb-list-item").on("mouseenter", function () {
+      this.classList.add("is-hovering");
+    });
+
     $(".tb-card-link, .tb-list-item").on("mousemove", function (event) {
       const rect = this.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width - 0.5;
       const y = (event.clientY - rect.top) / rect.height - 0.5;
 
-      this.style.setProperty("--tb-tilt-x", `${(-y * 3).toFixed(2)}deg`);
-      this.style.setProperty("--tb-tilt-y", `${(x * 4).toFixed(2)}deg`);
+      this.style.setProperty("--tb-tilt-x", `${(-y * 1.2).toFixed(2)}deg`);
+      this.style.setProperty("--tb-tilt-y", `${(x * 1.6).toFixed(2)}deg`);
       this.classList.add("is-tilting");
     });
 
     $(".tb-card-link, .tb-list-item").on("mouseleave blur", function () {
+      this.classList.remove("is-hovering");
       this.classList.remove("is-tilting");
       this.style.removeProperty("--tb-tilt-x");
       this.style.removeProperty("--tb-tilt-y");
@@ -185,14 +230,14 @@
           return;
         }
 
-        renderSeatPanel($layout, $panel, $seat, false);
+        renderSeatPanel($layout, $panel, $seat, true, true);
       });
 
       $seats.on("mouseleave blur", function () {
         const $selected = $seats.filter(".selected").first();
 
         if ($selected.length) {
-          renderSeatPanel($layout, $panel, $selected, true);
+          renderSeatPanel($layout, $panel, $selected, true, false);
         } else {
           renderDefaultPanel($panel);
         }
@@ -216,7 +261,7 @@
 
         $seats.removeClass("selected");
         $seat.addClass("selected");
-        renderSeatPanel($layout, $panel, $seat, true);
+        renderSeatPanel($layout, $panel, $seat, true, false);
       });
     });
   }
@@ -234,8 +279,11 @@
       }
 
       function updateSummary() {
-        const firstName = valueFor("[data-ticket-live-name]").split(/\s+/)[0] || "";
-        const lastName = $.trim(
+        if (!$summary.length) {
+          return;
+        }
+
+        const customerName = $.trim(
           $form
             .find("[data-ticket-live-name]")
             .map(function () {
@@ -246,13 +294,16 @@
         );
         const email = valueFor("[data-ticket-live-email]");
         const phone = valueFor("[data-ticket-live-phone]");
-        const customerName = lastName || firstName;
 
         $summary
           .find("[data-ticket-live-customer]")
           .text(customerName || "Podaci jos nisu uneseni");
-        $summary.find("[data-ticket-live-email-value]").text(email || "-");
-        $summary.find("[data-ticket-live-phone-value]").text(phone || "-");
+        $summary.find("[data-ticket-live-email-value]").stop(true, true).fadeOut(90, function () {
+          $(this).text(email || "-").fadeIn(180);
+        });
+        $summary.find("[data-ticket-live-phone-value]").stop(true, true).fadeOut(90, function () {
+          $(this).text(phone || "-").fadeIn(180);
+        });
       }
 
       function updateProgress() {
@@ -287,6 +338,7 @@
   $(function () {
     initMotion();
     initCardTilt();
+    initClickFeedback();
     initSeats();
     initCheckout();
   });

@@ -63,20 +63,6 @@
 
                 <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
 
-                <div class="tb-account-banner @(hasKnownEmail ? "is-known" : "is-guest")">
-                    <span class="tb-account-banner__eyebrow">Kupac</span>
-                    @if (hasKnownEmail)
-                    {
-                        <strong>Prepoznat je prijavljeni korisnik</strong>
-                        <span>@Model.KnownEmail</span>
-                    }
-                    else
-                    {
-                        <strong>Gost kupnja</strong>
-                        <span>Unesi sve podatke kupca jer korisnik nije prijavljen.</span>
-                    }
-                </div>
-
                 <div class="tb-form-progress" aria-hidden="true">
                     <span data-ticket-form-progress></span>
                 </div>
@@ -170,19 +156,6 @@
                     <button type="submit" class="ui-btn ui-btn--primary" data-ticket-submit>Potvrdi i kupi</button>
                 </div>
             </form>
-
-            <aside class="tb-live-ticket" data-ticket-live-summary aria-live="polite">
-                <span class="tb-live-ticket__eyebrow">Pregled prije kupnje</span>
-                <strong>@Model.SeatLabel | @Model.Price.ToString("0.00") EUR</strong>
-                <dl>
-                    <dt>Kupac</dt>
-                    <dd data-ticket-live-customer>Podaci jos nisu uneseni</dd>
-                    <dt>E-posta</dt>
-                    <dd data-ticket-live-email-value>@(hasKnownEmail ? Model.KnownEmail : "-")</dd>
-                    <dt>Telefon</dt>
-                    <dd data-ticket-live-phone-value>-</dd>
-                </dl>
-            </aside>
         </div>
     </div>
 </div>

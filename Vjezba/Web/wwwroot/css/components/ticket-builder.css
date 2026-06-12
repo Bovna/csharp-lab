@@ -5,6 +5,7 @@
   --tb-surface: rgba(24, 26, 28, 0.96);
   --tb-surface-strong: rgba(16, 17, 19, 0.98);
   --tb-accent-soft: rgba(0, 230, 118, 0.14);
+  --tb-form-gap: 0.75rem;
   position: relative;
   width: 100%;
   max-width: 1240px;
@@ -177,11 +178,11 @@ a.tb-step.is-link:focus-visible {
   color: var(--color-text-main);
   text-decoration: none;
   transition:
-    transform 520ms var(--tb-ease),
-    border-color 520ms var(--tb-ease),
-    box-shadow 520ms var(--tb-ease),
-    background-color 520ms var(--tb-ease),
-    color 520ms var(--tb-ease);
+    transform 1350ms var(--tb-ease),
+    border-color 1150ms var(--tb-ease),
+    box-shadow 1350ms var(--tb-ease),
+    background-color 1150ms var(--tb-ease),
+    color 1150ms var(--tb-ease);
 }
 
 .tb-card-link::after {
@@ -209,7 +210,7 @@ a.tb-step.is-link:focus-visible {
     perspective(720px)
     rotateX(var(--tb-tilt-x, 0deg))
     rotateY(var(--tb-tilt-y, 0deg))
-    translateY(-4px);
+    translateY(-2px);
   box-shadow:
     0 24px 42px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(0, 230, 118, 0.12);
@@ -254,15 +255,16 @@ a.tb-step.is-link:focus-visible {
   justify-content: space-between;
   gap: var(--spacing-3);
   padding: var(--spacing-4);
+  overflow: hidden;
   border-radius: 8px;
   color: var(--color-text-main);
   text-decoration: none;
   transition:
-    transform 520ms var(--tb-ease),
-    border-color 520ms var(--tb-ease),
-    background-color 520ms var(--tb-ease),
-    box-shadow 520ms var(--tb-ease),
-    color 520ms var(--tb-ease);
+    transform 1350ms var(--tb-ease),
+    border-color 1150ms var(--tb-ease),
+    background-color 1150ms var(--tb-ease),
+    box-shadow 1350ms var(--tb-ease),
+    color 1150ms var(--tb-ease);
 }
 
 .tb-list-item::before {
@@ -411,11 +413,11 @@ a.tb-step.is-link:focus-visible {
   font-weight: 700;
   user-select: none;
   transition:
-    transform 360ms var(--tb-ease),
-    border-color 360ms var(--tb-ease),
-    background-color 360ms var(--tb-ease),
-    box-shadow 360ms var(--tb-ease),
-    color 360ms var(--tb-ease);
+    transform 780ms var(--tb-ease),
+    border-color 680ms var(--tb-ease),
+    background-color 680ms var(--tb-ease),
+    box-shadow 780ms var(--tb-ease),
+    color 680ms var(--tb-ease);
 }
 
 .tb-seat::after {
@@ -432,7 +434,7 @@ a.tb-step.is-link:focus-visible {
 .tb-seat:focus-visible:not(.seat-taken) {
   border-color: rgba(255, 255, 255, 0.7);
   outline: none;
-  transform: translateY(-3px) scale(1.06);
+  transform: translateY(-2px) scale(1.035);
   box-shadow: 0 12px 22px rgba(0, 0, 0, 0.24);
 }
 
@@ -524,7 +526,7 @@ a.tb-step.is-link:focus-visible {
 }
 
 .tb-price-panel.is-updated {
-  animation: tbPanelPulse 620ms var(--tb-ease);
+  animation: tbPanelPulse 360ms var(--tb-ease);
 }
 
 .tb-price-panel__title,
@@ -589,7 +591,7 @@ a.tb-step.is-link:focus-visible {
 
 .tb-checkout-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-4);
   align-items: start;
 }
@@ -747,6 +749,23 @@ a.tb-step.is-link:focus-visible {
   will-change: transform, opacity;
 }
 
+[data-ticket-builder-page]:not(.is-ready) .tb-header,
+[data-ticket-builder-page]:not(.is-ready) .tb-step-line,
+[data-ticket-builder-page]:not(.is-ready) .tb-panel,
+[data-ticket-builder-page]:not(.is-ready) .tb-grid-cards > *,
+[data-ticket-builder-page]:not(.is-ready) .tb-list-item,
+[data-ticket-builder-page]:not(.is-ready) .tb-seat-row,
+[data-ticket-builder-page]:not(.is-ready) .tb-seat-layout,
+[data-ticket-builder-page]:not(.is-ready) .tb-price-panel,
+[data-ticket-builder-page]:not(.is-ready) .tb-checkout-panel,
+[data-ticket-builder-page]:not(.is-ready) .tb-account-banner,
+[data-ticket-builder-page]:not(.is-ready) .tb-form-section,
+[data-ticket-builder-page]:not(.is-ready) .tb-live-ticket,
+[data-ticket-builder-page]:not(.is-ready) .tb-success-ticket {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
 .tb-page.is-ready .tb-header,
 .tb-page.is-ready .tb-step-line,
 .tb-page.is-ready .tb-panel,
@@ -760,8 +779,80 @@ a.tb-step.is-link:focus-visible {
 .tb-page.is-ready .tb-form-section,
 .tb-page.is-ready .tb-live-ticket,
 .tb-page.is-ready .tb-success-ticket {
-  animation: tbReveal 760ms var(--tb-ease) both;
+  animation: tbReveal 1150ms var(--tb-ease) both;
   animation-delay: var(--tb-delay, 0ms);
+}
+
+.tb-click-ripple {
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: rgba(122, 255, 191, 0.32);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: tbRipple 720ms var(--tb-ease);
+}
+
+.tb-page-checkout .tb-checkout-panel {
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.tb-page-checkout .tb-checkout-summary {
+  gap: 0.75rem;
+}
+
+.tb-page-checkout .tb-checkout-summary dl {
+  padding: 0.85rem;
+}
+
+.tb-page-checkout .tb-checkout-grid {
+  gap: 0.7rem;
+}
+
+.tb-page-checkout .tb-checkout-form {
+  gap: 0.45rem;
+}
+
+.tb-page-checkout .tb-account-banner,
+.tb-page-checkout .tb-form-section,
+.tb-page-checkout .tb-live-ticket {
+  padding: 1rem;
+}
+
+.tb-page-checkout .tb-form-section {
+  gap: 0.45rem;
+}
+
+.tb-page-checkout .row.g-4 {
+  --bs-gutter-x: 0.85rem;
+  --bs-gutter-y: 0.35rem;
+}
+
+.tb-page-checkout .ui-field {
+  margin-bottom: 0;
+}
+
+.tb-page-checkout .ui-field__label {
+  margin-bottom: 0.28rem;
+  color: #7affbf;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tb-page-checkout .ui-field__label span {
+  color: #a8ffd0 !important;
+}
+
+.tb-page-checkout .ui-field__input {
+  min-height: 2.45rem;
+  padding-block: 0.42rem;
+}
+
+.tb-page-checkout .tb-form-section h2 {
+  color: #9dffd0;
 }
 
 @keyframes tbReveal {
@@ -818,6 +909,17 @@ a.tb-step.is-link:focus-visible {
   }
 }
 
+@keyframes tbRipple {
+  from {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(12);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tb-page.is-ready .tb-header,
   .tb-page.is-ready .tb-step-line,
@@ -846,6 +948,23 @@ a.tb-step.is-link:focus-visible {
   .tb-checkout-panel,
   .tb-form-progress span {
     transition: none;
+  }
+
+  [data-ticket-builder-page]:not(.is-ready) .tb-header,
+  [data-ticket-builder-page]:not(.is-ready) .tb-step-line,
+  [data-ticket-builder-page]:not(.is-ready) .tb-panel,
+  [data-ticket-builder-page]:not(.is-ready) .tb-grid-cards > *,
+  [data-ticket-builder-page]:not(.is-ready) .tb-list-item,
+  [data-ticket-builder-page]:not(.is-ready) .tb-seat-row,
+  [data-ticket-builder-page]:not(.is-ready) .tb-seat-layout,
+  [data-ticket-builder-page]:not(.is-ready) .tb-price-panel,
+  [data-ticket-builder-page]:not(.is-ready) .tb-checkout-panel,
+  [data-ticket-builder-page]:not(.is-ready) .tb-account-banner,
+  [data-ticket-builder-page]:not(.is-ready) .tb-form-section,
+  [data-ticket-builder-page]:not(.is-ready) .tb-live-ticket,
+  [data-ticket-builder-page]:not(.is-ready) .tb-success-ticket {
+    opacity: 1;
+    transform: none;
   }
 }
 
