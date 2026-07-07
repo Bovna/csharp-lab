@@ -45,6 +45,6 @@ public class CustomerFormViewModel
 
     public bool IsLoyaltyMember { get; set; }
 
-    [Range(0, 10000, ErrorMessage = "Bodovi vjernosti moraju biti između {1} i {2}.")]
+    [Range(0, 10000, ErrorMessage = "Broj loyalty bodova ne može biti negativan.")]
     public int LoyaltyPoints { get; set; }
 }

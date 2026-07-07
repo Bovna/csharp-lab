@@ -5,6 +5,22 @@ window.CinemaUI = window.CinemaUI || {};
 
 const validationMessage = "Ovo polje je obavezno.";
 
+if (window.jQuery && window.jQuery.validator) {
+  window.jQuery.extend(window.jQuery.validator.messages, {
+    min: window.jQuery.validator.format(
+      "Unesite vrijednost veću od ili jednaku {0}.",
+    ),
+    max: window.jQuery.validator.format(
+      "Unesite vrijednost manju od ili jednaku {0}.",
+    ),
+    range: window.jQuery.validator.format(
+      "Unesite vrijednost između {0} i {1}.",
+    ),
+    number: "Unesite ispravan broj.",
+    required: validationMessage,
+  });
+}
+
 function getFieldLabel(element) {
   const field = element.closest(".ui-field");
   if (!field) {

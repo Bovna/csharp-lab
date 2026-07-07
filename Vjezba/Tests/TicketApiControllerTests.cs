@@ -16,7 +16,7 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
     public TicketApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -87,6 +87,46 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     [Fact]
+    public async Task PostTicket_ReturnsBadRequest_WhenSeatDoesNotBelongToScreeningHall()
+    {
+        await _factory.ClearDatabaseAsync();
+        var setup = await CreateTicketSetupAsync();
+        var otherHall = await ApiTestData.CreateHallAsync(_factory, name: "Other Hall");
+        var otherSeat = await ApiTestData.CreateSeatAsync(_factory, otherHall.Id);
+        var request = CreateTicketWriteDto(setup.Screening.Id, otherSeat.Id, setup.Customer.Id, "WRONG-SEAT-001");
+
+        var response = await _client.PostAsJsonAsync("/api/ulaznice", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Odabrano sjedalo ne pripada dvorani projekcije.");
+    }
+
+    [Fact]
+    public async Task PostTicket_ReturnsBadRequest_WhenScreeningHasEnded()
+    {
+        await _factory.ClearDatabaseAsync();
+        var cinema = await ApiTestData.CreateCinemaAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory, cinemaId: cinema.Id);
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var screening = await ApiTestData.CreateScreeningAsync(
+            _factory,
+            movie.Id,
+            hall.Id,
+            new DateTime(2026, 1, 1, 18, 0, 0),
+            new DateTime(2026, 1, 1, 20, 0, 0));
+        var seat = await ApiTestData.CreateSeatAsync(_factory, hall.Id);
+        var customer = await ApiTestData.CreateCustomerAsync(_factory);
+        var request = CreateTicketWriteDto(screening.Id, seat.Id, customer.Id, "ENDED-001");
+
+        var response = await _client.PostAsJsonAsync("/api/ulaznice", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Nije moguće kupiti kartu za završenu projekciju.");
+    }
+
+    [Fact]
     public async Task PutTicket_UpdatesExistingTicket()
     {
         await _factory.ClearDatabaseAsync();
@@ -144,7 +184,7 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
     [Fact]
     public async Task TicketApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/ulaznice");
+        var response = await _factory.CreateClient().GetAsync("/api/ulaznice/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -154,7 +194,12 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
         var cinema = await ApiTestData.CreateCinemaAsync(_factory);
         var hall = await ApiTestData.CreateHallAsync(_factory, cinemaId: cinema.Id);
         var movie = await ApiTestData.CreateMovieAsync(_factory);
-        var screening = await ApiTestData.CreateScreeningAsync(_factory, movie.Id, hall.Id);
+        var screening = await ApiTestData.CreateScreeningAsync(
+            _factory,
+            movie.Id,
+            hall.Id,
+            new DateTime(2027, 3, 1, 18, 0, 0),
+            new DateTime(2027, 3, 1, 20, 0, 0));
         var seat = await ApiTestData.CreateSeatAsync(_factory, hall.Id);
         var customer = await ApiTestData.CreateCustomerAsync(_factory);
 

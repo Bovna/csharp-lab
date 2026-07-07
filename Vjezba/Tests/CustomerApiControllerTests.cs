@@ -15,7 +15,7 @@ public sealed class CustomerApiControllerTests : IClassFixture<CustomWebApplicat
     public CustomerApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -82,6 +82,33 @@ public sealed class CustomerApiControllerTests : IClassFixture<CustomWebApplicat
     }
 
     [Fact]
+    public async Task PostCustomer_ReturnsBadRequest_WhenEmailAlreadyExists()
+    {
+        await _factory.ClearDatabaseAsync();
+        await ApiTestData.CreateCustomerAsync(_factory);
+        var request = CreateCustomerWriteDto("Other");
+        request.Email = "test.customer@example.com";
+
+        var response = await _client.PostAsJsonAsync("/api/kupci", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Kupac s tom email adresom već postoji.");
+    }
+
+    [Fact]
+    public async Task PostCustomer_ReturnsBadRequest_WhenLoyaltyPointsAreNegative()
+    {
+        await _factory.ClearDatabaseAsync();
+        var request = CreateCustomerWriteDto("Negative");
+        request.LoyaltyPoints = -1;
+
+        var response = await _client.PostAsJsonAsync("/api/kupci", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task PutCustomer_UpdatesExistingCustomer()
     {
         await _factory.ClearDatabaseAsync();
@@ -135,7 +162,7 @@ public sealed class CustomerApiControllerTests : IClassFixture<CustomWebApplicat
     [Fact]
     public async Task CustomerApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/kupci");
+        var response = await _factory.CreateClient().GetAsync("/api/kupci/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

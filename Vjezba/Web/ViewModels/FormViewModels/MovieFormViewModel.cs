@@ -28,6 +28,7 @@ public class MovieFormViewModel
 
     [Required(ErrorMessage = "Jezik je obavezan.")]
     [StringLength(50, MinimumLength = 2, ErrorMessage = "Jezik mora imati između {2} i {1} znakova.")]
+    [RegularExpression("^[A-Z]{2}$", ErrorMessage = "Jezik mora biti u formatu HR, EN, FR i sl.")]
     public string Language { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Dobna oznaka je obavezna.")]

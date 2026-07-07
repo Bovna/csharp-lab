@@ -7,10 +7,14 @@ public static class IdentityDataSeeder
     private const string AdminRole = "Admin";
     private const string ManagerRole = "Manager";
 
-    public static async Task SeedAsync(IServiceProvider serviceProvider)
+    public static async Task SeedAsync(IServiceProvider serviceProvider, bool seedDemoUsers)
     {
         await SeedRoles(serviceProvider);
-        await SeedDemoUsers(serviceProvider);
+
+        if (seedDemoUsers)
+        {
+            await SeedDemoUsers(serviceProvider);
+        }
     }
 
     private static async Task SeedRoles(IServiceProvider serviceProvider)

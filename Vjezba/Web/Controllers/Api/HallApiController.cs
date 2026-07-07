@@ -20,6 +20,7 @@ public class HallApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<HallDTO>> Get(bool? supports3D)
     {
         var hallsQuery = ActiveHallsQuery();
@@ -52,6 +53,7 @@ public class HallApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<HallDTO>> Search(string query, bool? supports3D)
     {
         var normalizedQuery = query.Trim();
@@ -80,6 +82,7 @@ public class HallApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<HallDTO> Post([FromBody] HallWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -95,7 +98,7 @@ public class HallApiController : ControllerBase
 
         var hall = new Hall
         {
-            Name = dto.Name,
+            Name = dto.Name.Trim(),
             Capacity = dto.Capacity,
             Supports3D = dto.Supports3D,
             CinemaId = dto.CinemaId
@@ -110,6 +113,7 @@ public class HallApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<HallDTO> Put(int id, [FromBody] HallWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -124,13 +128,13 @@ public class HallApiController : ControllerBase
             return NotFound();
         }
 
-        var validationError = ValidateHallWriteDto(dto);
+        var validationError = ValidateHallWriteDto(dto, id);
         if (validationError is not null)
         {
             return BadRequest(validationError);
         }
 
-        hall.Name = dto.Name;
+        hall.Name = dto.Name.Trim();
         hall.Capacity = dto.Capacity;
         hall.Supports3D = dto.Supports3D;
         hall.CinemaId = dto.CinemaId;
@@ -143,6 +147,7 @@ public class HallApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var hall = _dbContext.Halls.FirstOrDefault(hall => hall.Id == id && hall.DeletedAt == null);
@@ -165,11 +170,30 @@ public class HallApiController : ControllerBase
             .Where(hall => hall.DeletedAt == null && hall.Cinema.DeletedAt == null);
     }
 
-    private object? ValidateHallWriteDto(HallWriteDTO dto)
+    private object? ValidateHallWriteDto(HallWriteDTO dto, int? currentHallId = null)
     {
+        dto.Name = (dto.Name ?? string.Empty).Trim();
+
         var cinemaExists = _dbContext.Cinemas.Any(cinema => cinema.Id == dto.CinemaId && cinema.DeletedAt == null);
 
-        return cinemaExists ? null : new { error = "Odabrano kino ne postoji." };
+        if (!cinemaExists)
+        {
+            return new { error = "Odabrano kino ne postoji." };
+        }
+
+        var normalizedName = dto.Name.ToLower();
+        var hallExists = _dbContext.Halls.Any(hall =>
+            hall.DeletedAt == null
+            && hall.CinemaId == dto.CinemaId
+            && hall.Name.ToLower() == normalizedName
+            && (!currentHallId.HasValue || hall.Id != currentHallId.Value));
+
+        if (hallExists)
+        {
+            return new { error = "Dvorana s tim nazivom već postoji u odabranom kinu." };
+        }
+
+        return null;
     }
 
     private void SoftDeleteHall(Hall hall)

@@ -18,22 +18,20 @@
 
         <div class="col-12 col-xl-4 entity-form movie-page-form">
             <div class="cinema-card animate-fade-in-up">
-                <div class="cinema-card-header">Posteri i datoteke</div>
+                <div class="cinema-card-header">Posteri</div>
                 <div class="cinema-card-body">
                     <div class="mb-4">
-                        <h5 class="ui-form__section-title">Objava datoteka</h5>
+                        <h5 class="ui-form__section-title">Objava postera</h5>
 
-                        <form id="attachmentDz"
-                              asp-controller="Movie"
-                              asp-action="UploadAttachment"
-                              asp-route-movieId="@Model.Id"
-                              enctype="multipart/form-data"
-                              class="dropzone movie-dropzone">
+                        <form id="attachmentDz" asp-controller="Movie" asp-action="UploadAttachment"
+                              asp-route-movieId="@Model.Id" enctype="multipart/form-data" class="dropzone movie-dropzone">
                         </form>
+                        <div id="posterUploadValidation" class="movie-dropzone-validation d-none" role="alert">
+                        </div>
                     </div>
 
                     <div>
-                        <h5 class="ui-form__section-title">Objavljene datoteke</h5>
+                        <h5 class="ui-form__section-title">Objavljeni posteri</h5>
                         <div id="attachmentList" class="movie-attachment-list"></div>
                     </div>
                 </div>
@@ -53,40 +51,64 @@
         const deleteAttachmentUrl = '@Url.Action("DeleteAttachment", "Movie")';
 
         function loadAttachments() {
-            $("#attachmentList").load(attachmentListUrl);
+        $("#attachmentList").load(attachmentListUrl);
+        }
+
+        function clearPosterUploadValidation() {
+        $("#posterUploadValidation")
+        .addClass("d-none")
+        .text("");
+        }
+
+        function showPosterUploadValidation(message) {
+        $("#posterUploadValidation")
+        .removeClass("d-none")
+        .text(message || "Poster nije moguce objaviti.");
         }
 
         function deleteAttachment(id) {
-            CinemaUI.showConfirm({
-                title: "Potvrdite brisanje",
-                body: "Jeste li sigurni da želite obrisati ovu datoteku?",
-                onConfirm: function () {
-                    $.ajax({
-                        url: deleteAttachmentUrl,
-                        method: "POST",
-                        data: { id: id },
-                        success: function () {
-                            loadAttachments();
-                        }
-                    });
-                }
-            });
+        CinemaUI.showConfirm({
+        title: "Potvrdite brisanje",
+        body: "Jeste li sigurni da zelite obrisati ovaj poster?",
+        onConfirm: function () {
+        $.ajax({
+        url: deleteAttachmentUrl,
+        method: "POST",
+        data: { id: id },
+        success: function () {
+        loadAttachments();
+        }
+        });
+        }
+        });
         }
 
         const attachmentDropzone = new Dropzone("#attachmentDz", {
-            paramName: "file",
-            addRemoveLinks: true,
-            dictDefaultMessage: "Povucite poster ili datoteku ovdje, ili kliknite za odabir.",
-            dictFallbackMessage: "Vaš preglednik ne podržava drag-and-drop upload.",
-            dictRemoveFile: "Ukloni",
-            success: function () {
-                loadAttachments();
-                this.removeAllFiles(true);
-            }
+        paramName: "file",
+        addRemoveLinks: true,
+        acceptedFiles: ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp",
+        maxFilesize: 5,
+        dictDefaultMessage: "Povucite poster sliku ovdje, ili kliknite za odabir.",
+        dictFallbackMessage: "Vaš preglednik ne podržava drag-and-drop upload.",
+        dictInvalidFileType: "Dopustene su samo JPG, PNG i WEBP slike.",
+        dictFileTooBig: "Poster slika je prevelika. Maksimalna veličina je 5 MB.",
+        dictRemoveFile: "Ukloni",
+        sending: function () {
+        clearPosterUploadValidation();
+        },
+        success: function () {
+        loadAttachments();
+        this.removeAllFiles(true);
+        clearPosterUploadValidation();
+        },
+        error: function (file, message, xhr) {
+        const serverMessage = xhr && xhr.responseText ? xhr.responseText : null;
+        showPosterUploadValidation(serverMessage || message);
+        }
         });
 
         $(function () {
-            loadAttachments();
+        loadAttachments();
         });
     </script>
 }

@@ -11,7 +11,7 @@ public class HallFormViewModel
     public string Name { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Kapacitet je obavezan.")]
-    [Range(1, 500, ErrorMessage = "Kapacitet mora biti izmedu {1} i {2}.")]
+    [Range(1, 500, ErrorMessage = "Kapacitet mora biti veći od ili jednak 1.")]
     public int Capacity { get; set; }
 
     public bool Supports3D { get; set; }

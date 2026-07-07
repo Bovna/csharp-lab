@@ -12,10 +12,16 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"CinemaTestDb-{Guid.NewGuid()}";
 
-    public HttpClient CreateAuthenticatedClient()
+    public HttpClient CreateAuthenticatedClient(params string[] roles)
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, "test-user");
+
+        if (roles.Length > 0)
+        {
+            client.DefaultRequestHeaders.Add(TestAuthHandler.RolesHeader, roles);
+        }
+
         return client;
     }
 

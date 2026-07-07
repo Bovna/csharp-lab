@@ -12,6 +12,18 @@ namespace Vjezba.Web.Controllers;
 [Authorize]
 public class MovieController : BaseController
 {
+    private static readonly string[] AllowedAgeRatings = { "U", "7+", "10+", "12+", "15+", "16+", "18+" };
+    private const string AgeRatingErrorMessage = "Dobna oznaka nije ispravna. Dopuštene vrijednosti su U, 7+, 10+, 12+, 15+, 16+, 18+ ili format PG-13.";
+    private const long MaxPosterFileSizeInBytes = 5 * 1024 * 1024;
+    private static readonly IReadOnlyDictionary<string, string[]> AllowedPosterContentTypesByExtension =
+        new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            [".jpg"] = new[] { "image/jpeg" },
+            [".jpeg"] = new[] { "image/jpeg" },
+            [".png"] = new[] { "image/png" },
+            [".webp"] = new[] { "image/webp" }
+        };
+
     private readonly CinemaDbContext _dbContext;
     private readonly IWebHostEnvironment _webHostEnvironment;
 
@@ -151,6 +163,13 @@ public class MovieController : BaseController
             return View(model);
         }
 
+        ValidateMovieBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
         var movie = new Movie
         {
             Title = model.Title,
@@ -209,12 +228,6 @@ public class MovieController : BaseController
         var ok = await TryUpdateModelAsync(movie, "", m => m.Title, m => m.Description, m => m.DurationMinutes,
             m => m.ReleaseDate, m => m.Genre, m => m.Language, m => m.AgeRating);
 
-        if (ok && ModelState.IsValid)
-        {
-            _dbContext.SaveChanges();
-            return RedirectToAction(nameof(Index));
-        }
-
         var model = new MovieFormViewModel
         {
             Id = movie.Id,
@@ -226,6 +239,16 @@ public class MovieController : BaseController
             Language = movie.Language,
             AgeRating = movie.AgeRating
         };
+
+        ValidateMovieBusinessRules(model);
+
+        if (ok && ModelState.IsValid)
+        {
+            movie.Language = model.Language;
+            movie.AgeRating = model.AgeRating;
+            _dbContext.SaveChanges();
+            return RedirectToAction(nameof(Index));
+        }
 
         return View(model);
     }
@@ -259,14 +282,13 @@ public class MovieController : BaseController
             return NotFound();
         }
 
-        if (file is null || file.Length == 0)
+        if (!TryValidatePosterFile(file, out var originalFileName, out var extension, out var validationError))
         {
-            return BadRequest();
+            return BadRequest(validationError);
         }
 
         var uploadsPath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "wwwroot",
+            GetWebRootPath(),
             "uploads",
             "movies",
             movieId.ToString()
@@ -274,19 +296,19 @@ public class MovieController : BaseController
 
         Directory.CreateDirectory(uploadsPath);
 
-        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+        var fileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
         var filePath = Path.Combine(uploadsPath, fileName);
 
         using (var stream = new FileStream(filePath, FileMode.Create))
         {
-            await file.CopyToAsync(stream);
+            await file!.CopyToAsync(stream);
         }
 
         var attachment = new Attachment
         {
             MovieId = movieId,
-            FileName = file.FileName,
-            FilePath = "/uploads/movies/" + movieId + "/" + fileName,
+            FileName = originalFileName,
+            FilePath = $"/uploads/movies/{movieId}/{fileName}",
             ContentType = file.ContentType,
             FileSize = file.Length,
             CreatedAt = DateTime.UtcNow
@@ -329,8 +351,7 @@ public class MovieController : BaseController
         }
 
         var physicalPath = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "wwwroot",
+            GetWebRootPath(),
             attachment.FilePath.TrimStart('/'));
 
         if (System.IO.File.Exists(physicalPath))
@@ -377,5 +398,76 @@ public class MovieController : BaseController
         {
             favorite.DeletedAt = deletedAt;
         }
+    }
+
+    private void ValidateMovieBusinessRules(MovieFormViewModel model)
+    {
+        model.Language = (model.Language ?? string.Empty).Trim().ToUpperInvariant();
+        model.AgeRating = (model.AgeRating ?? string.Empty).Trim().ToUpperInvariant();
+
+        if (!AllowedAgeRatings.Contains(model.AgeRating) && !System.Text.RegularExpressions.Regex.IsMatch(model.AgeRating, "^PG-[0-9]{1,2}$"))
+        {
+            ModelState.AddModelError(nameof(model.AgeRating), AgeRatingErrorMessage);
+        }
+    }
+
+    private static bool TryValidatePosterFile(
+        IFormFile? file,
+        out string originalFileName,
+        out string extension,
+        out string errorMessage)
+    {
+        originalFileName = string.Empty;
+        extension = string.Empty;
+        errorMessage = string.Empty;
+
+        if (file is null || file.Length == 0)
+        {
+            errorMessage = "Datoteka nije poslana.";
+            return false;
+        }
+
+        if (file.Length > MaxPosterFileSizeInBytes)
+        {
+            errorMessage = "Maksimalna velicina poster slike je 5 MB.";
+            return false;
+        }
+
+        originalFileName = Path.GetFileName(file.FileName);
+
+        if (string.IsNullOrWhiteSpace(originalFileName))
+        {
+            errorMessage = "Naziv datoteke nije ispravan.";
+            return false;
+        }
+
+        if (originalFileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            errorMessage = "Naziv datoteke sadrzi nedopustene znakove.";
+            return false;
+        }
+
+        extension = Path.GetExtension(originalFileName);
+
+        if (!AllowedPosterContentTypesByExtension.TryGetValue(extension, out var allowedContentTypes))
+        {
+            errorMessage = "Dopustene su samo JPG, PNG i WEBP slike.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(file.ContentType) ||
+            !allowedContentTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
+        {
+            errorMessage = "MIME type datoteke ne odgovara dopustenim poster slikama.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private string GetWebRootPath()
+    {
+        return _webHostEnvironment.WebRootPath
+            ?? Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
     }
 }

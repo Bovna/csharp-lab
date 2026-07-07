@@ -70,13 +70,13 @@
 
         <div class="ui-field">
             <label asp-for="Language" class="ui-field__label">Jezik <span style="color: var(--color-danger);">*</span></label>
-            <input asp-for="Language" class="ui-field__input" placeholder="npr. Hrvatski" required />
+            <input asp-for="Language" class="ui-field__input" placeholder="npr. HR" pattern="[A-Z]{2}" oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Jezik je obavezan.' : 'Jezik mora biti u formatu HR, EN, FR i sl.')" oninput="this.setCustomValidity('')" required />
             <span asp-validation-for="Language" class="ui-field__validation"></span>
         </div>
 
         <div class="ui-field">
             <label asp-for="AgeRating" class="ui-field__label">Dobna oznaka <span style="color: var(--color-danger);">*</span></label>
-            <input asp-for="AgeRating" class="ui-field__input" placeholder="npr. PG-13" required />
+            <input asp-for="AgeRating" class="ui-field__input" placeholder="npr. 12+ ili PG-13" required />
             <span asp-validation-for="AgeRating" class="ui-field__validation"></span>
         </div>
     </div>

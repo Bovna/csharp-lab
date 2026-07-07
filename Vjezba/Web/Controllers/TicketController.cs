@@ -116,6 +116,14 @@ public class TicketController : Controller
             return View(model);
         }
 
+        ValidateTicketBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            PrepareTicketForm(model);
+            return View(model);
+        }
+
         var ticket = new Ticket();
         MapTicketForm(model, ticket);
 
@@ -153,6 +161,15 @@ public class TicketController : Controller
         {
             return NotFound();
         }
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            PrepareTicketForm(model);
+            return View(model);
+        }
+
+        ValidateTicketBusinessRules(model);
 
         if (!ModelState.IsValid)
         {
@@ -334,5 +351,51 @@ public class TicketController : Controller
         ticket.ScreeningId = model.ScreeningId!.Value;
         ticket.SeatId = model.SeatId;
         ticket.CustomerId = model.CustomerId!.Value;
+    }
+
+    private void ValidateTicketBusinessRules(TicketFormViewModel model)
+    {
+        if (!model.ScreeningId.HasValue)
+        {
+            return;
+        }
+
+        var screening = _dbContext.Screenings
+            .Include(existing => existing.Movie)
+            .Include(existing => existing.Hall)
+                .ThenInclude(hall => hall.Cinema)
+            .FirstOrDefault(existing => existing.Id == model.ScreeningId.Value
+                && existing.DeletedAt == null
+                && existing.Movie.DeletedAt == null
+                && existing.Hall.DeletedAt == null
+                && existing.Hall.Cinema.DeletedAt == null);
+
+        if (screening is null)
+        {
+            return;
+        }
+
+        if (screening.EndTime <= DateTime.Now)
+        {
+            ModelState.AddModelError(nameof(model.ScreeningId), "Nije moguće kupiti kartu za završenu projekciju.");
+        }
+
+        if (!model.SeatId.HasValue)
+        {
+            return;
+        }
+
+        var seat = _dbContext.Seats
+            .Include(existing => existing.Hall)
+                .ThenInclude(hall => hall.Cinema)
+            .FirstOrDefault(existing => existing.Id == model.SeatId.Value
+                && existing.DeletedAt == null
+                && existing.Hall.DeletedAt == null
+                && existing.Hall.Cinema.DeletedAt == null);
+
+        if (seat is not null && seat.HallId != screening.HallId)
+        {
+            ModelState.AddModelError(nameof(model.SeatId), "Odabrano sjedalo ne pripada dvorani projekcije.");
+        }
     }
 }

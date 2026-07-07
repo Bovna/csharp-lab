@@ -12,10 +12,10 @@
 
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="ui-field"><label asp-for="RowLabel" class="ui-field__label">Oznaka reda <span style="color: var(--color-danger);">*</span></label><input asp-for="RowLabel" class="ui-field__input" required /><span asp-validation-for="RowLabel" class="ui-field__validation"></span></div>
+                <div class="ui-field"><label asp-for="RowLabel" class="ui-field__label">Oznaka reda <span style="color: var(--color-danger);">*</span></label><input asp-for="RowLabel" class="ui-field__input" maxlength="1" pattern="[A-Z]" oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Oznaka reda je obavezna.' : 'Oznaka reda mora biti veliko slovo.')" oninput="this.setCustomValidity('')" required /><span asp-validation-for="RowLabel" class="ui-field__validation"></span></div>
             </div>
             <div class="col-md-4">
-                <div class="ui-field"><label asp-for="SeatNumber" class="ui-field__label">Broj sjedala <span style="color: var(--color-danger);">*</span></label><input asp-for="SeatNumber" class="ui-field__input" type="number" min="1" required /><span asp-validation-for="SeatNumber" class="ui-field__validation"></span></div>
+                <div class="ui-field"><label asp-for="SeatNumber" class="ui-field__label">Broj sjedala <span style="color: var(--color-danger);">*</span></label><input asp-for="SeatNumber" class="ui-field__input" type="number" min="1" data-msg-min="Broj sjedala mora biti veći od ili jednak 1." oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'Broj sjedala mora biti veći od ili jednak 1.' : 'Broj sjedala je obavezan.')" oninput="this.setCustomValidity('')" required /><span asp-validation-for="SeatNumber" class="ui-field__validation"></span></div>
             </div>
             <div class="col-md-4">
                 <div class="ui-field"><label asp-for="SeatType" class="ui-field__label">Tip sjedala <span style="color: var(--color-danger);">*</span></label><select asp-for="SeatType" class="ui-field__input" asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.SeatType>()" required></select><span asp-validation-for="SeatType" class="ui-field__validation"></span></div>
@@ -36,10 +36,10 @@ else
 
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="ui-field"><label asp-for="RowLabel" class="ui-field__label">Oznaka reda <span style="color: var(--color-danger);">*</span></label><input asp-for="RowLabel" class="ui-field__input" required /><span asp-validation-for="RowLabel" class="ui-field__validation"></span></div>
+                <div class="ui-field"><label asp-for="RowLabel" class="ui-field__label">Oznaka reda <span style="color: var(--color-danger);">*</span></label><input asp-for="RowLabel" class="ui-field__input" maxlength="1" pattern="[A-Z]" oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Oznaka reda je obavezna.' : 'Oznaka reda mora biti veliko slovo.')" oninput="this.setCustomValidity('')" required /><span asp-validation-for="RowLabel" class="ui-field__validation"></span></div>
             </div>
             <div class="col-md-4">
-                <div class="ui-field"><label asp-for="SeatNumber" class="ui-field__label">Broj sjedala <span style="color: var(--color-danger);">*</span></label><input asp-for="SeatNumber" class="ui-field__input" type="number" min="1" required /><span asp-validation-for="SeatNumber" class="ui-field__validation"></span></div>
+                <div class="ui-field"><label asp-for="SeatNumber" class="ui-field__label">Broj sjedala <span style="color: var(--color-danger);">*</span></label><input asp-for="SeatNumber" class="ui-field__input" type="number" min="1" data-msg-min="Broj sjedala mora biti veći od ili jednak 1." oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'Broj sjedala mora biti veći od ili jednak 1.' : 'Broj sjedala je obavezan.')" oninput="this.setCustomValidity('')" required /><span asp-validation-for="SeatNumber" class="ui-field__validation"></span></div>
             </div>
             <div class="col-md-4">
                 <div class="ui-field"><label asp-for="SeatType" class="ui-field__label">Tip sjedala <span style="color: var(--color-danger);">*</span></label><select asp-for="SeatType" class="ui-field__input" asp-items="Html.GetEnumSelectList<Vjezba.Model.Entities.SeatType>()" required></select><span asp-validation-for="SeatType" class="ui-field__validation"></span></div>

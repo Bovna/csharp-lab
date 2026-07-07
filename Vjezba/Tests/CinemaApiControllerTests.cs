@@ -15,7 +15,7 @@ public sealed class CinemaApiControllerTests : IClassFixture<CustomWebApplicatio
     public CinemaApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -82,6 +82,35 @@ public sealed class CinemaApiControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     [Fact]
+    public async Task PostCinema_ReturnsBadRequest_WhenEmailAlreadyExists()
+    {
+        await _factory.ClearDatabaseAsync();
+        await ApiTestData.CreateCinemaAsync(_factory);
+        var request = CreateCinemaWriteDto("Other Cinema");
+
+        var response = await _client.PostAsJsonAsync("/api/kina", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Kino s tom email adresom već postoji.");
+    }
+
+    [Fact]
+    public async Task PostCinema_ReturnsBadRequest_WhenNameAlreadyExistsInCity()
+    {
+        await _factory.ClearDatabaseAsync();
+        await ApiTestData.CreateCinemaAsync(_factory, name: "Kino Test", city: "Zagreb");
+        var request = CreateCinemaWriteDto("Kino Test");
+        request.Email = "unique-cinema@example.com";
+
+        var response = await _client.PostAsJsonAsync("/api/kina", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Kino s tim nazivom već postoji u odabranom gradu.");
+    }
+
+    [Fact]
     public async Task PutCinema_UpdatesExistingCinema()
     {
         await _factory.ClearDatabaseAsync();
@@ -135,7 +164,7 @@ public sealed class CinemaApiControllerTests : IClassFixture<CustomWebApplicatio
     [Fact]
     public async Task CinemaApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/kina");
+        var response = await _factory.CreateClient().GetAsync("/api/kina/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

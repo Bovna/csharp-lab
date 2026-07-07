@@ -20,6 +20,7 @@ public class ScreeningApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<ScreeningDTO>> Get(int? dayOfWeek)
     {
         var screeningsQuery = ActiveScreeningsQuery();
@@ -54,6 +55,7 @@ public class ScreeningApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<ScreeningDTO>> Search(string query, int? dayOfWeek)
     {
         var normalizedQuery = query.Trim();
@@ -83,6 +85,7 @@ public class ScreeningApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<ScreeningDTO> Post([FromBody] ScreeningWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -115,6 +118,7 @@ public class ScreeningApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<ScreeningDTO> Put(int id, [FromBody] ScreeningWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -129,7 +133,7 @@ public class ScreeningApiController : ControllerBase
             return NotFound();
         }
 
-        var validationError = ValidateScreeningWriteDto(dto);
+        var validationError = ValidateScreeningWriteDto(dto, id);
         if (validationError is not null)
         {
             return BadRequest(validationError);
@@ -150,6 +154,7 @@ public class ScreeningApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var screening = _dbContext.Screenings.FirstOrDefault(screening => screening.Id == id && screening.DeletedAt == null);
@@ -178,22 +183,45 @@ public class ScreeningApiController : ControllerBase
                 screening.Hall.Cinema.DeletedAt == null);
     }
 
-    private object? ValidateScreeningWriteDto(ScreeningWriteDTO dto)
+    private object? ValidateScreeningWriteDto(ScreeningWriteDTO dto, int? currentScreeningId = null)
     {
+        if (dto.EndTime <= dto.StartTime)
+        {
+            return new { error = "Vrijeme završetka mora biti nakon vremena početka." };
+        }
+
         var movieExists = _dbContext.Movies.Any(movie => movie.Id == dto.MovieId && movie.DeletedAt == null);
         if (!movieExists)
         {
             return new { error = "Odabrani film ne postoji." };
         }
 
-        var hallExists = _dbContext.Halls
-            .Any(hall => hall.Id == dto.HallId
+        var hall = _dbContext.Halls
+            .Include(hall => hall.Cinema)
+            .FirstOrDefault(hall => hall.Id == dto.HallId
                 && hall.DeletedAt == null
                 && hall.Cinema.DeletedAt == null);
 
-        if (!hallExists)
+        if (hall is null)
         {
             return new { error = "Odabrana dvorana ne postoji." };
+        }
+
+        if (dto.Is3D && !hall.Supports3D)
+        {
+            return new { error = "Odabrana dvorana ne podržava 3D projekcije." };
+        }
+
+        var hasOverlappingScreening = _dbContext.Screenings.Any(screening =>
+            screening.DeletedAt == null
+            && screening.HallId == dto.HallId
+            && (!currentScreeningId.HasValue || screening.Id != currentScreeningId.Value)
+            && screening.StartTime < dto.EndTime
+            && dto.StartTime < screening.EndTime);
+
+        if (hasOverlappingScreening)
+        {
+            return new { error = "U odabranoj dvorani već postoji projekcija u tom terminu." };
         }
 
         return null;

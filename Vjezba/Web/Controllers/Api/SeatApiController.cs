@@ -20,6 +20,7 @@ public class SeatApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<SeatDTO>> Get(SeatType? seatType)
     {
         var seatsQuery = ActiveSeatsQuery();
@@ -52,6 +53,7 @@ public class SeatApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<SeatDTO>> Search(string query, SeatType? seatType)
     {
         var normalizedQuery = query.Trim();
@@ -88,6 +90,7 @@ public class SeatApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<SeatDTO> Post([FromBody] SeatWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -103,7 +106,7 @@ public class SeatApiController : ControllerBase
 
         var seat = new Seat
         {
-            RowLabel = dto.RowLabel,
+            RowLabel = dto.RowLabel.Trim().ToUpperInvariant(),
             SeatNumber = dto.SeatNumber,
             SeatType = dto.SeatType,
             HallId = dto.HallId
@@ -118,6 +121,7 @@ public class SeatApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<SeatDTO> Put(int id, [FromBody] SeatWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -132,13 +136,13 @@ public class SeatApiController : ControllerBase
             return NotFound();
         }
 
-        var validationError = ValidateSeatWriteDto(dto);
+        var validationError = ValidateSeatWriteDto(dto, id);
         if (validationError is not null)
         {
             return BadRequest(validationError);
         }
 
-        seat.RowLabel = dto.RowLabel;
+        seat.RowLabel = dto.RowLabel.Trim().ToUpperInvariant();
         seat.SeatNumber = dto.SeatNumber;
         seat.SeatType = dto.SeatType;
         seat.HallId = dto.HallId;
@@ -151,6 +155,7 @@ public class SeatApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var seat = _dbContext.Seats.FirstOrDefault(seat => seat.Id == id && seat.DeletedAt == null);
@@ -176,13 +181,32 @@ public class SeatApiController : ControllerBase
                 && seat.Hall.Cinema.DeletedAt == null);
     }
 
-    private object? ValidateSeatWriteDto(SeatWriteDTO dto)
+    private object? ValidateSeatWriteDto(SeatWriteDTO dto, int? currentSeatId = null)
     {
+        dto.RowLabel = (dto.RowLabel ?? string.Empty).Trim().ToUpperInvariant();
+
         var hallExists = _dbContext.Halls.Any(hall => hall.Id == dto.HallId
             && hall.DeletedAt == null
             && hall.Cinema.DeletedAt == null);
 
-        return hallExists ? null : new { error = "Odabrana dvorana ne postoji." };
+        if (!hallExists)
+        {
+            return new { error = "Odabrana dvorana ne postoji." };
+        }
+
+        var seatExists = _dbContext.Seats.Any(seat =>
+            seat.DeletedAt == null
+            && seat.HallId == dto.HallId
+            && seat.RowLabel.ToLower() == dto.RowLabel.ToLower()
+            && seat.SeatNumber == dto.SeatNumber
+            && (!currentSeatId.HasValue || seat.Id != currentSeatId.Value));
+
+        if (seatExists)
+        {
+            return new { error = "Sjedalo s tom oznakom već postoji u dvorani." };
+        }
+
+        return null;
     }
 
     private void SoftDeleteSeat(Seat seat)

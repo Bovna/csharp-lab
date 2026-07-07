@@ -16,7 +16,7 @@ public sealed class SeatApiControllerTests : IClassFixture<CustomWebApplicationF
     public SeatApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -87,6 +87,21 @@ public sealed class SeatApiControllerTests : IClassFixture<CustomWebApplicationF
     }
 
     [Fact]
+    public async Task PostSeat_ReturnsBadRequest_WhenSeatLabelAlreadyExistsInHall()
+    {
+        await _factory.ClearDatabaseAsync();
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "A", seatNumber: 1);
+        var request = CreateSeatWriteDto(hall.Id, rowLabel: "A", seatNumber: 1);
+
+        var response = await _client.PostAsJsonAsync("/api/sjedala", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Sjedalo s tom oznakom već postoji u dvorani.");
+    }
+
+    [Fact]
     public async Task PutSeat_UpdatesExistingSeat()
     {
         await _factory.ClearDatabaseAsync();
@@ -144,7 +159,7 @@ public sealed class SeatApiControllerTests : IClassFixture<CustomWebApplicationF
     [Fact]
     public async Task SeatApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/sjedala");
+        var response = await _factory.CreateClient().GetAsync("/api/sjedala/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

@@ -151,6 +151,14 @@ public class HallController : Controller
             return View(model);
         }
 
+        ValidateHallBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            PrepareHallForm(model);
+            return View(model);
+        }
+
         var hall = new Hall();
         MapHallForm(model, hall);
 
@@ -188,6 +196,15 @@ public class HallController : Controller
         {
             return NotFound();
         }
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            PrepareHallForm(model);
+            return View(model);
+        }
+
+        ValidateHallBusinessRules(model, id);
 
         if (!ModelState.IsValid)
         {
@@ -272,10 +289,32 @@ public class HallController : Controller
 
     private static void MapHallForm(HallFormViewModel model, Hall hall)
     {
-        hall.Name = model.Name;
+        hall.Name = model.Name.Trim();
         hall.Capacity = model.Capacity;
         hall.Supports3D = model.Supports3D;
         hall.CinemaId = model.CinemaId!.Value;
+    }
+
+    private void ValidateHallBusinessRules(HallFormViewModel model, int? currentHallId = null)
+    {
+        model.Name = (model.Name ?? string.Empty).Trim();
+
+        if (!model.CinemaId.HasValue || string.IsNullOrWhiteSpace(model.Name))
+        {
+            return;
+        }
+
+        var normalizedName = model.Name.ToLower();
+        var hallExists = _dbContext.Halls.Any(hall =>
+            hall.DeletedAt == null
+            && hall.CinemaId == model.CinemaId.Value
+            && hall.Name.ToLower() == normalizedName
+            && (!currentHallId.HasValue || hall.Id != currentHallId.Value));
+
+        if (hallExists)
+        {
+            ModelState.AddModelError(nameof(model.Name), "Dvorana s tim nazivom već postoji u odabranom kinu.");
+        }
     }
 
     private void SoftDeleteHall(Hall hall)

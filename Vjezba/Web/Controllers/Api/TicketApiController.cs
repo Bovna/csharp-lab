@@ -20,6 +20,7 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<TicketDTO>> Get(TicketStatus? status)
     {
         var ticketsQuery = ActiveTicketsQuery();
@@ -52,6 +53,7 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<TicketDTO>> Search(string query, TicketStatus? status)
     {
         var normalizedQuery = query.Trim();
@@ -82,6 +84,7 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<TicketDTO> Post([FromBody] TicketWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -115,6 +118,7 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<TicketDTO> Put(int id, [FromBody] TicketWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -151,6 +155,7 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var ticket = _dbContext.Tickets.FirstOrDefault(ticket => ticket.Id == id && ticket.DeletedAt == null);
@@ -211,6 +216,11 @@ public class TicketApiController : ControllerBase
         if (screening is null)
         {
             return new { error = "Odabrana projekcija ne postoji." };
+        }
+
+        if (screening.EndTime <= DateTime.Now)
+        {
+            return new { error = "Nije moguće kupiti kartu za završenu projekciju." };
         }
 
         if (dto.SeatId.HasValue)

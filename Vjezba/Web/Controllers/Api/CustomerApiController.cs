@@ -20,6 +20,7 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<CustomerDTO>> Get(bool? loyaltyMember)
     {
         var customersQuery = ActiveCustomersQuery();
@@ -52,6 +53,7 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<CustomerDTO>> Search(string query, bool? loyaltyMember)
     {
         var normalizedQuery = query.Trim();
@@ -81,6 +83,7 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<CustomerDTO> Post([FromBody] CustomerWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -88,16 +91,22 @@ public class CustomerApiController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var validationError = ValidateCustomerWriteDto(dto);
+        if (validationError is not null)
+        {
+            return BadRequest(validationError);
+        }
+
         var customer = new Customer
         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            City = dto.City,
-            Street = dto.Street,
-            HouseNumber = dto.HouseNumber,
-            PostalCode = dto.PostalCode,
-            Email = dto.Email,
-            Phone = dto.Phone,
+            FirstName = dto.FirstName.Trim(),
+            LastName = dto.LastName.Trim(),
+            City = dto.City.Trim(),
+            Street = dto.Street.Trim(),
+            HouseNumber = dto.HouseNumber.Trim(),
+            PostalCode = dto.PostalCode.Trim(),
+            Email = dto.Email.Trim(),
+            Phone = dto.Phone.Trim(),
             RegisteredAt = dto.RegisteredAt == default ? DateTime.Now : dto.RegisteredAt,
             IsLoyaltyMember = dto.IsLoyaltyMember,
             LoyaltyPoints = dto.LoyaltyPoints
@@ -110,6 +119,7 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<CustomerDTO> Put(int id, [FromBody] CustomerWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -124,14 +134,20 @@ public class CustomerApiController : ControllerBase
             return NotFound();
         }
 
-        customer.FirstName = dto.FirstName;
-        customer.LastName = dto.LastName;
-        customer.City = dto.City;
-        customer.Street = dto.Street;
-        customer.HouseNumber = dto.HouseNumber;
-        customer.PostalCode = dto.PostalCode;
-        customer.Email = dto.Email;
-        customer.Phone = dto.Phone;
+        var validationError = ValidateCustomerWriteDto(dto, id);
+        if (validationError is not null)
+        {
+            return BadRequest(validationError);
+        }
+
+        customer.FirstName = dto.FirstName.Trim();
+        customer.LastName = dto.LastName.Trim();
+        customer.City = dto.City.Trim();
+        customer.Street = dto.Street.Trim();
+        customer.HouseNumber = dto.HouseNumber.Trim();
+        customer.PostalCode = dto.PostalCode.Trim();
+        customer.Email = dto.Email.Trim();
+        customer.Phone = dto.Phone.Trim();
         customer.RegisteredAt = dto.RegisteredAt;
         customer.IsLoyaltyMember = dto.IsLoyaltyMember;
         customer.LoyaltyPoints = dto.LoyaltyPoints;
@@ -142,6 +158,7 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var customer = _dbContext.Customers.FirstOrDefault(customer => customer.Id == id && customer.DeletedAt == null);
@@ -162,6 +179,29 @@ public class CustomerApiController : ControllerBase
         return _dbContext.Customers
             .Include(customer => customer.Tickets.Where(ticket => ticket.DeletedAt == null))
             .Where(customer => customer.DeletedAt == null);
+    }
+
+    private object? ValidateCustomerWriteDto(CustomerWriteDTO dto, int? currentCustomerId = null)
+    {
+        dto.Email = (dto.Email ?? string.Empty).Trim();
+
+        var normalizedEmail = dto.Email.ToLower();
+        var emailExists = _dbContext.Customers.Any(customer =>
+            customer.DeletedAt == null
+            && customer.Email.ToLower() == normalizedEmail
+            && (!currentCustomerId.HasValue || customer.Id != currentCustomerId.Value));
+
+        if (emailExists)
+        {
+            return new { error = "Kupac s tom email adresom već postoji." };
+        }
+
+        if (dto.LoyaltyPoints < 0)
+        {
+            return new { error = "Broj loyalty bodova ne može biti negativan." };
+        }
+
+        return null;
     }
 
     private void SoftDeleteCustomer(Customer customer)

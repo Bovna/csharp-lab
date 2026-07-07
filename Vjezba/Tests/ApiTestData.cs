@@ -69,14 +69,15 @@ internal static class ApiTestData
     public static async Task<Hall> CreateHallAsync(
         CustomWebApplicationFactory factory,
         string name = "Test Hall",
-        int? cinemaId = null)
+        int? cinemaId = null,
+        bool supports3D = true)
     {
         var cinema = cinemaId.HasValue ? null : await CreateCinemaAsync(factory);
         var hall = new Hall
         {
             Name = name,
             Capacity = 80,
-            Supports3D = true,
+            Supports3D = supports3D,
             CinemaId = cinemaId ?? cinema!.Id
         };
 
@@ -86,14 +87,16 @@ internal static class ApiTestData
     public static async Task<Screening> CreateScreeningAsync(
         CustomWebApplicationFactory factory,
         int? movieId = null,
-        int? hallId = null)
+        int? hallId = null,
+        DateTime? startTime = null,
+        DateTime? endTime = null)
     {
         var movie = movieId.HasValue ? null : await CreateMovieAsync(factory);
         var hall = hallId.HasValue ? null : await CreateHallAsync(factory);
         var screening = new Screening
         {
-            StartTime = new DateTime(2026, 3, 1, 18, 0, 0),
-            EndTime = new DateTime(2026, 3, 1, 20, 0, 0),
+            StartTime = startTime ?? new DateTime(2026, 3, 1, 18, 0, 0),
+            EndTime = endTime ?? new DateTime(2026, 3, 1, 20, 0, 0),
             Is3D = false,
             MovieId = movieId ?? movie!.Id,
             HallId = hallId ?? hall!.Id

@@ -15,7 +15,7 @@ public sealed class HallApiControllerTests : IClassFixture<CustomWebApplicationF
     public HallApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -84,6 +84,21 @@ public sealed class HallApiControllerTests : IClassFixture<CustomWebApplicationF
     }
 
     [Fact]
+    public async Task PostHall_ReturnsBadRequest_WhenNameAlreadyExistsInCinema()
+    {
+        await _factory.ClearDatabaseAsync();
+        var cinema = await ApiTestData.CreateCinemaAsync(_factory);
+        await ApiTestData.CreateHallAsync(_factory, name: "Dvorana A", cinemaId: cinema.Id);
+        var request = CreateHallWriteDto("Dvorana A", cinema.Id);
+
+        var response = await _client.PostAsJsonAsync("/api/dvorane", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Dvorana s tim nazivom već postoji u odabranom kinu.");
+    }
+
+    [Fact]
     public async Task PutHall_UpdatesExistingHall()
     {
         await _factory.ClearDatabaseAsync();
@@ -139,7 +154,7 @@ public sealed class HallApiControllerTests : IClassFixture<CustomWebApplicationF
     [Fact]
     public async Task HallApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/dvorane");
+        var response = await _factory.CreateClient().GetAsync("/api/dvorane/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

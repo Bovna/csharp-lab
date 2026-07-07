@@ -11,6 +11,7 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
 {
     public const string AuthenticationScheme = "Test";
     public const string UserIdHeader = "X-Test-UserId";
+    public const string RolesHeader = "X-Test-Roles";
 
     public TestAuthHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -28,11 +29,27 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, "Integration Test User")
         };
+
+        if (Request.Headers.TryGetValue(RolesHeader, out var roles))
+        {
+            foreach (var roleHeader in roles)
+            {
+                if (string.IsNullOrWhiteSpace(roleHeader))
+                {
+                    continue;
+                }
+
+                foreach (var role in roleHeader.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
+        }
 
         var identity = new ClaimsIdentity(claims, AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
@@ -44,6 +61,12 @@ public sealed class TestAuthHandler : AuthenticationHandler<AuthenticationScheme
     protected override Task HandleChallengeAsync(AuthenticationProperties properties)
     {
         Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    }
+
+    protected override Task HandleForbiddenAsync(AuthenticationProperties properties)
+    {
+        Response.StatusCode = StatusCodes.Status403Forbidden;
         return Task.CompletedTask;
     }
 }

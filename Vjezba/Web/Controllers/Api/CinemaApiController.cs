@@ -19,6 +19,7 @@ public class CinemaApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<CinemaDTO>> Get(string? city)
     {
         var normalizedCity = (city ?? string.Empty).Trim();
@@ -53,6 +54,7 @@ public class CinemaApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<CinemaDTO>> Search(string query, string? city)
     {
         var normalizedQuery = query.Trim();
@@ -83,6 +85,7 @@ public class CinemaApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<CinemaDTO> Post([FromBody] CinemaWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -90,15 +93,21 @@ public class CinemaApiController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var validationError = ValidateCinemaWriteDto(dto);
+        if (validationError is not null)
+        {
+            return BadRequest(validationError);
+        }
+
         var cinema = new Cinema
         {
-            Name = dto.Name,
-            City = dto.City,
-            Street = dto.Street,
-            HouseNumber = dto.HouseNumber,
-            PostalCode = dto.PostalCode,
-            Email = dto.Email,
-            Phone = dto.Phone
+            Name = dto.Name.Trim(),
+            City = dto.City.Trim(),
+            Street = dto.Street.Trim(),
+            HouseNumber = dto.HouseNumber.Trim(),
+            PostalCode = dto.PostalCode.Trim(),
+            Email = dto.Email.Trim(),
+            Phone = dto.Phone.Trim()
         };
 
         _dbContext.Cinemas.Add(cinema);
@@ -108,6 +117,7 @@ public class CinemaApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<CinemaDTO> Put(int id, [FromBody] CinemaWriteDTO dto)
     {
         if (!ModelState.IsValid)
@@ -122,13 +132,19 @@ public class CinemaApiController : ControllerBase
             return NotFound();
         }
 
-        cinema.Name = dto.Name;
-        cinema.City = dto.City;
-        cinema.Street = dto.Street;
-        cinema.HouseNumber = dto.HouseNumber;
-        cinema.PostalCode = dto.PostalCode;
-        cinema.Email = dto.Email;
-        cinema.Phone = dto.Phone;
+        var validationError = ValidateCinemaWriteDto(dto, id);
+        if (validationError is not null)
+        {
+            return BadRequest(validationError);
+        }
+
+        cinema.Name = dto.Name.Trim();
+        cinema.City = dto.City.Trim();
+        cinema.Street = dto.Street.Trim();
+        cinema.HouseNumber = dto.HouseNumber.Trim();
+        cinema.PostalCode = dto.PostalCode.Trim();
+        cinema.Email = dto.Email.Trim();
+        cinema.Phone = dto.Phone.Trim();
 
         _dbContext.SaveChanges();
 
@@ -136,6 +152,7 @@ public class CinemaApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var cinema = _dbContext.Cinemas.FirstOrDefault(cinema => cinema.Id == id && cinema.DeletedAt == null);
@@ -154,6 +171,39 @@ public class CinemaApiController : ControllerBase
     private IQueryable<Cinema> ActiveCinemasQuery()
     {
         return _dbContext.Cinemas.Where(cinema => cinema.DeletedAt == null);
+    }
+
+    private object? ValidateCinemaWriteDto(CinemaWriteDTO dto, int? currentCinemaId = null)
+    {
+        dto.Name = (dto.Name ?? string.Empty).Trim();
+        dto.City = (dto.City ?? string.Empty).Trim();
+        dto.Email = (dto.Email ?? string.Empty).Trim();
+
+        var normalizedEmail = dto.Email.ToLower();
+        var emailExists = _dbContext.Cinemas.Any(cinema =>
+            cinema.DeletedAt == null
+            && cinema.Email.ToLower() == normalizedEmail
+            && (!currentCinemaId.HasValue || cinema.Id != currentCinemaId.Value));
+
+        if (emailExists)
+        {
+            return new { error = "Kino s tom email adresom već postoji." };
+        }
+
+        var normalizedName = dto.Name.ToLower();
+        var normalizedCity = dto.City.ToLower();
+        var cinemaExists = _dbContext.Cinemas.Any(cinema =>
+            cinema.DeletedAt == null
+            && cinema.Name.ToLower() == normalizedName
+            && cinema.City.ToLower() == normalizedCity
+            && (!currentCinemaId.HasValue || cinema.Id != currentCinemaId.Value));
+
+        if (cinemaExists)
+        {
+            return new { error = "Kino s tim nazivom već postoji u odabranom gradu." };
+        }
+
+        return null;
     }
 
     private void SoftDeleteCinema(Cinema cinema)

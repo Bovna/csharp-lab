@@ -189,6 +189,14 @@ public class ScreeningController : BaseController
             return View(model);
         }
 
+        ValidateScreeningBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            PrepareScreeningForm(model);
+            return View(model);
+        }
+
         var screening = new Screening
         {
             StartTime = model.StartTime,
@@ -241,6 +249,15 @@ public class ScreeningController : BaseController
         {
             return NotFound();
         }
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            PrepareScreeningForm(model);
+            return View(model);
+        }
+
+        ValidateScreeningBusinessRules(model, id);
 
         if (!ModelState.IsValid)
         {
@@ -327,6 +344,47 @@ public class ScreeningController : BaseController
             EnableRemoteSearch = true,
             Items = BuildSelectedHallItems(model.HallId)
         };
+    }
+
+    private void ValidateScreeningBusinessRules(ScreeningFormViewModel model, int? currentScreeningId = null)
+    {
+        if (model.EndTime <= model.StartTime)
+        {
+            ModelState.AddModelError(nameof(model.EndTime), "Vrijeme završetka mora biti nakon vremena početka.");
+        }
+
+        if (!model.HallId.HasValue)
+        {
+            return;
+        }
+
+        var hall = _dbContext.Halls
+            .Include(hall => hall.Cinema)
+            .FirstOrDefault(hall => hall.Id == model.HallId.Value
+                && hall.DeletedAt == null
+                && hall.Cinema.DeletedAt == null);
+
+        if (model.Is3D && hall is not null && !hall.Supports3D)
+        {
+            ModelState.AddModelError(nameof(model.HallId), "Odabrana dvorana ne podržava 3D projekcije.");
+        }
+
+        if (model.EndTime <= model.StartTime)
+        {
+            return;
+        }
+
+        var hasOverlappingScreening = _dbContext.Screenings.Any(screening =>
+            screening.DeletedAt == null
+            && screening.HallId == model.HallId.Value
+            && (!currentScreeningId.HasValue || screening.Id != currentScreeningId.Value)
+            && screening.StartTime < model.EndTime
+            && model.StartTime < screening.EndTime);
+
+        if (hasOverlappingScreening)
+        {
+            ModelState.AddModelError(nameof(model.HallId), "U odabranoj dvorani već postoji projekcija u tom terminu.");
+        }
     }
 
     private List<SelectListItem> BuildSelectedMovieItems(int? selectedMovieId)

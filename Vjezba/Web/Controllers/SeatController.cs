@@ -143,6 +143,14 @@ public class SeatController : Controller
             return View(model);
         }
 
+        ValidateSeatBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            PrepareSeatForm(model);
+            return View(model);
+        }
+
         var seat = new Seat();
         MapSeatForm(model, seat);
 
@@ -180,6 +188,15 @@ public class SeatController : Controller
         {
             return NotFound();
         }
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            PrepareSeatForm(model);
+            return View(model);
+        }
+
+        ValidateSeatBusinessRules(model, id);
 
         if (!ModelState.IsValid)
         {
@@ -270,10 +287,32 @@ public class SeatController : Controller
 
     private static void MapSeatForm(SeatFormViewModel model, Seat seat)
     {
-        seat.RowLabel = model.RowLabel;
+        seat.RowLabel = model.RowLabel.Trim().ToUpperInvariant();
         seat.SeatNumber = model.SeatNumber;
         seat.SeatType = model.SeatType;
         seat.HallId = model.HallId!.Value;
+    }
+
+    private void ValidateSeatBusinessRules(SeatFormViewModel model, int? currentSeatId = null)
+    {
+        model.RowLabel = (model.RowLabel ?? string.Empty).Trim().ToUpperInvariant();
+
+        if (!model.HallId.HasValue || string.IsNullOrWhiteSpace(model.RowLabel))
+        {
+            return;
+        }
+
+        var seatExists = _dbContext.Seats.Any(seat =>
+            seat.DeletedAt == null
+            && seat.HallId == model.HallId.Value
+            && seat.RowLabel.ToLower() == model.RowLabel.ToLower()
+            && seat.SeatNumber == model.SeatNumber
+            && (!currentSeatId.HasValue || seat.Id != currentSeatId.Value));
+
+        if (seatExists)
+        {
+            ModelState.AddModelError(nameof(model.RowLabel), "Sjedalo s tom oznakom već postoji u dvorani.");
+        }
     }
 
     private void SoftDeleteSeat(Seat seat)

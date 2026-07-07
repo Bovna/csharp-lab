@@ -21,7 +21,7 @@
             <div class="col-md-3">
                 <div class="ui-field">
                     <label asp-for="Capacity" class="ui-field__label">Kapacitet <span style="color: var(--color-danger);">*</span></label>
-                    <input asp-for="Capacity" class="ui-field__input" type="number" min="1" placeholder="npr. 120" required />
+                    <input asp-for="Capacity" class="ui-field__input" type="number" min="1" placeholder="npr. 120" data-msg-min="Kapacitet mora biti veći od ili jednak 1." oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'Kapacitet mora biti veći od ili jednak 1.' : 'Kapacitet je obavezan.')" oninput="this.setCustomValidity('')" required />
                     <span asp-validation-for="Capacity" class="ui-field__validation"></span>
                 </div>
             </div>
@@ -61,7 +61,7 @@ else
             <div class="col-md-3">
                 <div class="ui-field">
                     <label asp-for="Capacity" class="ui-field__label">Kapacitet <span style="color: var(--color-danger);">*</span></label>
-                    <input asp-for="Capacity" class="ui-field__input" type="number" min="1" placeholder="npr. 120" required />
+                    <input asp-for="Capacity" class="ui-field__input" type="number" min="1" placeholder="npr. 120" data-msg-min="Kapacitet mora biti veći od ili jednak 1." oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'Kapacitet mora biti veći od ili jednak 1.' : 'Kapacitet je obavezan.')" oninput="this.setCustomValidity('')" required />
                     <span asp-validation-for="Capacity" class="ui-field__validation"></span>
                 </div>
             </div>

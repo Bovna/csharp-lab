@@ -2272,11 +2272,25 @@ a:hover {
   color: var(--color-text-muted);
 }
 
+.movie-dropzone.dropzone .dz-preview .dz-error-message {
+  display: none !important;
+}
+
 .movie-dropzone.dropzone .dz-preview .dz-details,
 .movie-dropzone.dropzone .dz-preview .dz-error-message,
 .movie-dropzone.dropzone .dz-preview .dz-success-mark,
 .movie-dropzone.dropzone .dz-preview .dz-error-mark {
   color: #111827;
+}
+
+.movie-dropzone-validation {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(127, 29, 29, 0.22);
+  font-size: 0.9rem;
 }
 
 .movie-attachment-list {

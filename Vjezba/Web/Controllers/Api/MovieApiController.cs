@@ -11,6 +11,8 @@ namespace Vjezba.Web.Controllers.Api;
 [Route("api/film")]
 public class MovieApiController : ControllerBase
 {
+    private static readonly string[] AllowedAgeRatings = { "U", "7+", "10+", "12+", "15+", "16+", "18+" };
+    private const string AgeRatingErrorMessage = "Dobna oznaka nije ispravna. Dopuštene vrijednosti su U, 7+, 10+, 12+, 15+, 16+, 18+ ili format PG-13.";
     private readonly CinemaDbContext _dbContext;
 
     public MovieApiController(CinemaDbContext dbContext)
@@ -19,6 +21,7 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<MovieDTO>> Get(string? language)
     {
         var normalizedLanguage = (language ?? string.Empty).Trim();
@@ -55,6 +58,7 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
+    [AllowAnonymous]
     public ActionResult<IEnumerable<MovieDTO>> Search(string query, string? language)
     {
         var normalizedQuery = query.Trim();
@@ -86,11 +90,18 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<MovieDTO> Post([FromBody] MovieWriteDTO dto)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
+        }
+
+        var validationError = ValidateMovieWriteDto(dto);
+        if (validationError is not null)
+        {
+            return BadRequest(validationError);
         }
 
         var movie = new Movie
@@ -100,8 +111,8 @@ public class MovieApiController : ControllerBase
             DurationMinutes = dto.DurationMinutes,
             ReleaseDate = dto.ReleaseDate,
             Genre = dto.Genre,
-            Language = dto.Language,
-            AgeRating = dto.AgeRating
+            Language = dto.Language.Trim().ToUpperInvariant(),
+            AgeRating = dto.AgeRating.Trim().ToUpperInvariant()
         };
 
         _dbContext.Movies.Add(movie);
@@ -111,6 +122,7 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Manager")]
     public ActionResult<MovieDTO> Put(int id, [FromBody] MovieWriteDTO dto)
     {
 
@@ -126,13 +138,19 @@ public class MovieApiController : ControllerBase
             return NotFound();
         }
 
+        var validationError = ValidateMovieWriteDto(dto);
+        if (validationError is not null)
+        {
+            return BadRequest(validationError);
+        }
+
         existing.Title = dto.Title;
         existing.Description = dto.Description;
         existing.DurationMinutes = dto.DurationMinutes;
         existing.ReleaseDate = dto.ReleaseDate;
         existing.Genre = dto.Genre;
-        existing.Language = dto.Language;
-        existing.AgeRating = dto.AgeRating;
+        existing.Language = dto.Language.Trim().ToUpperInvariant();
+        existing.AgeRating = dto.AgeRating.Trim().ToUpperInvariant();
 
         _dbContext.SaveChanges();
 
@@ -140,6 +158,7 @@ public class MovieApiController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public ActionResult Delete(int id)
     {
         var movie = _dbContext.Movies.FirstOrDefault(m => m.Id == id && m.DeletedAt == null);
@@ -188,6 +207,16 @@ public class MovieApiController : ControllerBase
         {
             f.DeletedAt = deletedAt;
         }
+    }
+
+    private static object? ValidateMovieWriteDto(MovieWriteDTO dto)
+    {
+        dto.Language = (dto.Language ?? string.Empty).Trim().ToUpperInvariant();
+        dto.AgeRating = (dto.AgeRating ?? string.Empty).Trim().ToUpperInvariant();
+
+        return AllowedAgeRatings.Contains(dto.AgeRating) || System.Text.RegularExpressions.Regex.IsMatch(dto.AgeRating, "^PG-[0-9]{1,2}$")
+            ? null
+            : new { error = AgeRatingErrorMessage };
     }
 
     private static MovieDTO ToDTO(Movie movie)

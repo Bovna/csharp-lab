@@ -34,5 +34,5 @@
 
     <div id="@listId" class="autocomplete-field__list" role="listbox" data-autocomplete-list hidden></div>
 </div>
-<span class="ui-field__validation" data-valmsg-for="@Model.InputName" data-valmsg-replace="true"></span>
+@Html.ValidationMessage(Model.InputName, null, new { @class = "ui-field__validation" })
 </div>

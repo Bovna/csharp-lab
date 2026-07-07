@@ -151,6 +151,13 @@ public class CustomerController : Controller
             return View(model);
         }
 
+        ValidateCustomerBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
         if (model.RegisteredAt == default)
         {
             model.RegisteredAt = DateTime.Now;
@@ -191,6 +198,14 @@ public class CustomerController : Controller
         {
             return NotFound();
         }
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            return View(model);
+        }
+
+        ValidateCustomerBusinessRules(model, id);
 
         if (!ModelState.IsValid)
         {
@@ -247,17 +262,41 @@ public class CustomerController : Controller
 
     private static void MapCustomerForm(CustomerFormViewModel model, Customer customer)
     {
-        customer.FirstName = model.FirstName;
-        customer.LastName = model.LastName;
-        customer.City = model.City;
-        customer.Street = model.Street;
-        customer.HouseNumber = model.HouseNumber;
-        customer.PostalCode = model.PostalCode;
-        customer.Email = model.Email;
-        customer.Phone = model.Phone;
+        customer.FirstName = model.FirstName.Trim();
+        customer.LastName = model.LastName.Trim();
+        customer.City = model.City.Trim();
+        customer.Street = model.Street.Trim();
+        customer.HouseNumber = model.HouseNumber.Trim();
+        customer.PostalCode = model.PostalCode.Trim();
+        customer.Email = model.Email.Trim();
+        customer.Phone = model.Phone.Trim();
         customer.RegisteredAt = model.RegisteredAt;
         customer.IsLoyaltyMember = model.IsLoyaltyMember;
         customer.LoyaltyPoints = model.LoyaltyPoints;
+    }
+
+    private void ValidateCustomerBusinessRules(CustomerFormViewModel model, int? currentCustomerId = null)
+    {
+        model.Email = (model.Email ?? string.Empty).Trim();
+
+        if (!string.IsNullOrWhiteSpace(model.Email))
+        {
+            var normalizedEmail = model.Email.ToLower();
+            var emailExists = _dbContext.Customers.Any(customer =>
+                customer.DeletedAt == null
+                && customer.Email.ToLower() == normalizedEmail
+                && (!currentCustomerId.HasValue || customer.Id != currentCustomerId.Value));
+
+            if (emailExists)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Kupac s tom email adresom već postoji.");
+            }
+        }
+
+        if (model.LoyaltyPoints < 0)
+        {
+            ModelState.AddModelError(nameof(model.LoyaltyPoints), "Broj loyalty bodova ne može biti negativan.");
+        }
     }
 
     private void SoftDeleteCustomer(Customer customer)

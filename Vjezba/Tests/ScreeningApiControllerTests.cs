@@ -15,7 +15,7 @@ public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplica
     public ScreeningApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -84,6 +84,55 @@ public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplica
     }
 
     [Fact]
+    public async Task PostScreening_ReturnsBadRequest_WhenEndTimeIsNotAfterStartTime()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var request = CreateScreeningWriteDto(movie.Id, hall.Id);
+        request.EndTime = request.StartTime;
+
+        var response = await _client.PostAsJsonAsync("/api/projekcije", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ReadErrorMessageAsync(response);
+        error.Should().Be("Vrijeme završetka mora biti nakon vremena početka.");
+    }
+
+    [Fact]
+    public async Task PostScreening_ReturnsBadRequest_When3DScreeningUsesHallWithout3DSupport()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory, supports3D: false);
+        var request = CreateScreeningWriteDto(movie.Id, hall.Id, is3D: true);
+
+        var response = await _client.PostAsJsonAsync("/api/projekcije", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ReadErrorMessageAsync(response);
+        error.Should().Be("Odabrana dvorana ne podržava 3D projekcije.");
+    }
+
+    [Fact]
+    public async Task PostScreening_ReturnsBadRequest_WhenHallHasOverlappingScreening()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        await ApiTestData.CreateScreeningAsync(_factory, movie.Id, hall.Id);
+        var request = CreateScreeningWriteDto(movie.Id, hall.Id);
+        request.StartTime = new DateTime(2026, 3, 1, 19, 0, 0);
+        request.EndTime = new DateTime(2026, 3, 1, 21, 0, 0);
+
+        var response = await _client.PostAsJsonAsync("/api/projekcije", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ReadErrorMessageAsync(response);
+        error.Should().Be("U odabranoj dvorani već postoji projekcija u tom terminu.");
+    }
+
+    [Fact]
     public async Task PutScreening_UpdatesExistingScreening()
     {
         await _factory.ClearDatabaseAsync();
@@ -143,7 +192,7 @@ public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplica
     [Fact]
     public async Task ScreeningApiEndpoint_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/projekcije");
+        var response = await _factory.CreateClient().GetAsync("/api/projekcije/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -158,5 +207,11 @@ public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplica
             MovieId = movieId,
             HallId = hallId
         };
+    }
+
+    private static async Task<string> ReadErrorMessageAsync(HttpResponseMessage response)
+    {
+        var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        return error?["error"] ?? string.Empty;
     }
 }

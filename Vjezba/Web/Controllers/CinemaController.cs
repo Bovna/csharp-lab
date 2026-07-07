@@ -133,6 +133,13 @@ public class CinemaController : Controller
             return View(model);
         }
 
+        ValidateCinemaBusinessRules(model);
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
         var cinema = new Cinema();
         MapCinemaForm(model, cinema);
 
@@ -168,6 +175,14 @@ public class CinemaController : Controller
         {
             return NotFound();
         }
+
+        if (!ModelState.IsValid)
+        {
+            model.Id = id;
+            return View(model);
+        }
+
+        ValidateCinemaBusinessRules(model, id);
 
         if (!ModelState.IsValid)
         {
@@ -232,13 +247,50 @@ public class CinemaController : Controller
 
     private static void MapCinemaForm(CinemaFormViewModel model, Cinema cinema)
     {
-        cinema.Name = model.Name;
-        cinema.City = model.City;
-        cinema.Street = model.Street;
-        cinema.HouseNumber = model.HouseNumber;
-        cinema.PostalCode = model.PostalCode;
-        cinema.Email = model.Email;
-        cinema.Phone = model.Phone;
+        cinema.Name = model.Name.Trim();
+        cinema.City = model.City.Trim();
+        cinema.Street = model.Street.Trim();
+        cinema.HouseNumber = model.HouseNumber.Trim();
+        cinema.PostalCode = model.PostalCode.Trim();
+        cinema.Email = model.Email.Trim();
+        cinema.Phone = model.Phone.Trim();
+    }
+
+    private void ValidateCinemaBusinessRules(CinemaFormViewModel model, int? currentCinemaId = null)
+    {
+        model.Name = (model.Name ?? string.Empty).Trim();
+        model.City = (model.City ?? string.Empty).Trim();
+        model.Email = (model.Email ?? string.Empty).Trim();
+
+        if (!string.IsNullOrWhiteSpace(model.Email))
+        {
+            var normalizedEmail = model.Email.ToLower();
+            var emailExists = _dbContext.Cinemas.Any(cinema =>
+                cinema.DeletedAt == null
+                && cinema.Email.ToLower() == normalizedEmail
+                && (!currentCinemaId.HasValue || cinema.Id != currentCinemaId.Value));
+
+            if (emailExists)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Kino s tom email adresom već postoji.");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Name) && !string.IsNullOrWhiteSpace(model.City))
+        {
+            var normalizedName = model.Name.ToLower();
+            var normalizedCity = model.City.ToLower();
+            var cinemaExists = _dbContext.Cinemas.Any(cinema =>
+                cinema.DeletedAt == null
+                && cinema.Name.ToLower() == normalizedName
+                && cinema.City.ToLower() == normalizedCity
+                && (!currentCinemaId.HasValue || cinema.Id != currentCinemaId.Value));
+
+            if (cinemaExists)
+            {
+                ModelState.AddModelError(nameof(model.Name), "Kino s tim nazivom već postoji u odabranom gradu.");
+            }
+        }
     }
 
     private void SoftDeleteCinema(Cinema cinema)

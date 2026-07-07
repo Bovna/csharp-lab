@@ -16,7 +16,7 @@ public sealed class MovieApiControllerTests : IClassFixture<CustomWebApplication
     public MovieApiControllerTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateAuthenticatedClient();
+        _client = factory.CreateAuthenticatedClient("Admin");
     }
 
     [Fact]
@@ -110,6 +110,41 @@ public sealed class MovieApiControllerTests : IClassFixture<CustomWebApplication
     }
 
     [Fact]
+    public async Task PostMovie_ReturnsBadRequest_WhenAgeRatingIsNotAllowed()
+    {
+        await _factory.ClearDatabaseAsync();
+        var request = CreateMovieWriteDto(title: "Invalid Age", ageRating: "R");
+
+        var response = await _client.PostAsJsonAsync("/api/film", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Dobna oznaka nije ispravna. Dopuštene vrijednosti su U, 7+, 10+, 12+, 15+, 16+, 18+ ili format PG-13.");
+    }
+
+    [Fact]
+    public async Task PostMovie_CreatesMovie_WhenAgeRatingUsesPgFormat()
+    {
+        await _factory.ClearDatabaseAsync();
+        var request = CreateMovieWriteDto(title: "PG Movie", ageRating: "PG-13");
+
+        var response = await _client.PostAsJsonAsync("/api/film", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task PostMovie_ReturnsBadRequest_WhenLanguageIsNotTwoUppercaseLetters()
+    {
+        await _factory.ClearDatabaseAsync();
+        var request = CreateMovieWriteDto(title: "Invalid Language", language: "HRV");
+
+        var response = await _client.PostAsJsonAsync("/api/film", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task PutMovie_UpdatesExistingMovie()
     {
         await _factory.ClearDatabaseAsync();
@@ -184,7 +219,7 @@ public sealed class MovieApiControllerTests : IClassFixture<CustomWebApplication
     {
         var anonymousClient = _factory.CreateClient();
 
-        var response = await anonymousClient.GetAsync("/api/film");
+        var response = await anonymousClient.GetAsync("/api/film/9999");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

@@ -47,7 +47,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="ui-field"><label asp-for="LoyaltyPoints" class="ui-field__label">Bodovi vjernosti <span style="color: var(--color-danger);">*</span></label><input asp-for="LoyaltyPoints" class="ui-field__input" type="number" min="0" required /><span asp-validation-for="LoyaltyPoints" class="ui-field__validation"></span></div>
+                <div class="ui-field"><label asp-for="LoyaltyPoints" class="ui-field__label">Bodovi vjernosti <span style="color: var(--color-danger);">*</span></label><input asp-for="LoyaltyPoints" class="ui-field__input" type="number" min="0" data-msg-min="Broj loyalty bodova ne može biti negativan." oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'Broj loyalty bodova ne može biti negativan.' : 'Bodovi vjernosti su obavezni.')" oninput="this.setCustomValidity('')" required /><span asp-validation-for="LoyaltyPoints" class="ui-field__validation"></span></div>
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <div class="ui-field">
@@ -101,7 +101,7 @@ else
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="ui-field"><label asp-for="LoyaltyPoints" class="ui-field__label">Bodovi vjernosti <span style="color: var(--color-danger);">*</span></label><input asp-for="LoyaltyPoints" class="ui-field__input" type="number" min="0" required /><span asp-validation-for="LoyaltyPoints" class="ui-field__validation"></span></div>
+                <div class="ui-field"><label asp-for="LoyaltyPoints" class="ui-field__label">Bodovi vjernosti <span style="color: var(--color-danger);">*</span></label><input asp-for="LoyaltyPoints" class="ui-field__input" type="number" min="0" data-msg-min="Broj loyalty bodova ne može biti negativan." oninvalid="this.setCustomValidity(this.validity.rangeUnderflow ? 'Broj loyalty bodova ne može biti negativan.' : 'Bodovi vjernosti su obavezni.')" oninput="this.setCustomValidity('')" required /><span asp-validation-for="LoyaltyPoints" class="ui-field__validation"></span></div>
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <div class="ui-field">
