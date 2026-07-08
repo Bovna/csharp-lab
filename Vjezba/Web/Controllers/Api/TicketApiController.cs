@@ -8,7 +8,7 @@ using Vjezba.Web.DTOs;
 namespace Vjezba.Web.Controllers.Api;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin,Manager")]
 [Route("api/ulaznice")]
 public class TicketApiController : ControllerBase
 {
@@ -20,7 +20,6 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     public ActionResult<IEnumerable<TicketDTO>> Get(TicketStatus? status)
     {
         var ticketsQuery = ActiveTicketsQuery();
@@ -53,7 +52,6 @@ public class TicketApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
-    [AllowAnonymous]
     public ActionResult<IEnumerable<TicketDTO>> Search(string query, TicketStatus? status)
     {
         var normalizedQuery = query.Trim();

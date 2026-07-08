@@ -9,7 +9,7 @@ namespace Vjezba.Web.Controllers;
 
 [AutoValidateAntiforgeryToken]
 [Route("kupci")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager")]
 public class CustomerController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -21,7 +21,6 @@ public class CustomerController : Controller
 
     [Route("")]
     [Route("pretraga")]
-    [AllowAnonymous]
     public IActionResult Index(bool? loyaltyMember, bool partial = false)
     {
         var customersQuery = ActiveCustomersQuery();
@@ -45,7 +44,6 @@ public class CustomerController : Controller
     }
 
     [HttpGet("rezultati")]
-    [AllowAnonymous]
     public IActionResult Search(string? query, bool? loyaltyMember, bool partial = false)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
@@ -78,7 +76,6 @@ public class CustomerController : Controller
     }
 
     [HttpGet("autocomplete")]
-    [AllowAnonymous]
     public IActionResult Autocomplete(string? query)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();

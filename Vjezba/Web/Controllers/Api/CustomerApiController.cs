@@ -8,7 +8,7 @@ using Vjezba.Web.DTOs;
 namespace Vjezba.Web.Controllers.Api;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin,Manager")]
 [Route("api/kupci")]
 public class CustomerApiController : ControllerBase
 {
@@ -20,7 +20,6 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     public ActionResult<IEnumerable<CustomerDTO>> Get(bool? loyaltyMember)
     {
         var customersQuery = ActiveCustomersQuery();
@@ -53,7 +52,6 @@ public class CustomerApiController : ControllerBase
     }
 
     [HttpGet("pretraga/{query}")]
-    [AllowAnonymous]
     public ActionResult<IEnumerable<CustomerDTO>> Search(string query, bool? loyaltyMember)
     {
         var normalizedQuery = query.Trim();

@@ -16,12 +16,27 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
     public static IEnumerable<object[]> PublicListEndpoints()
     {
         yield return new object[] { "/api/kina" };
-        yield return new object[] { "/api/kupci" };
         yield return new object[] { "/api/dvorane" };
         yield return new object[] { "/api/film" };
         yield return new object[] { "/api/projekcije" };
         yield return new object[] { "/api/sjedala" };
+    }
+
+    public static IEnumerable<object[]> SensitiveReadEndpoints()
+    {
+        yield return new object[] { "/api/kupci" };
+        yield return new object[] { "/api/kupci/pretraga/marko" };
         yield return new object[] { "/api/ulaznice" };
+        yield return new object[] { "/api/ulaznice/pretraga/zg" };
+    }
+
+    public static IEnumerable<object[]> SensitiveMvcReadEndpoints()
+    {
+        yield return new object[] { "/kupci" };
+        yield return new object[] { "/kupci/rezultati?query=marko" };
+        yield return new object[] { "/kupci/autocomplete?query=marko" };
+        yield return new object[] { "/ulaznice" };
+        yield return new object[] { "/ulaznice/rezultati?query=zg" };
     }
 
     public static IEnumerable<object[]> AuthenticatedDetailEndpoints()
@@ -73,6 +88,28 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
         var response = await _factory.CreateClient().GetAsync(endpoint);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [MemberData(nameof(SensitiveReadEndpoints))]
+    [MemberData(nameof(SensitiveMvcReadEndpoints))]
+    public async Task SensitiveReadEndpoints_ReturnUnauthorized_WhenUserIsNotAuthenticated(string endpoint)
+    {
+        var response = await _factory.CreateClient().GetAsync(endpoint);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Theory]
+    [MemberData(nameof(SensitiveReadEndpoints))]
+    [MemberData(nameof(SensitiveMvcReadEndpoints))]
+    public async Task SensitiveReadEndpoints_ReturnForbidden_WhenUserHasNoRole(string endpoint)
+    {
+        var client = _factory.CreateAuthenticatedClient();
+
+        var response = await client.GetAsync(endpoint);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Theory]

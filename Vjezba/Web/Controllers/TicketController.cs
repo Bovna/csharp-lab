@@ -10,7 +10,7 @@ namespace Vjezba.Web.Controllers;
 
 [AutoValidateAntiforgeryToken]
 [Route("ulaznice")]
-[Authorize]
+[Authorize(Roles = "Admin,Manager")]
 public class TicketController : Controller
 {
     private readonly CinemaDbContext _dbContext;
@@ -22,7 +22,6 @@ public class TicketController : Controller
 
     [Route("")]
     [Route("pretraga")]
-    [AllowAnonymous]
     public IActionResult Index(TicketStatus? status, bool partial = false)
     {
         var ticketsQuery = ActiveTicketsQuery();
@@ -46,7 +45,6 @@ public class TicketController : Controller
     }
 
     [HttpGet("rezultati")]
-    [AllowAnonymous]
     public IActionResult Search(string? query, TicketStatus? status, bool partial = false)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
