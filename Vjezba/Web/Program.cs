@@ -2,13 +2,19 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.FileProviders;
 using Vjezba.DAL;
+using Vjezba.Web.HealthChecks;
 using Vjezba.Web.Identity;
+using Vjezba.Web.Options;
+using Vjezba.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<UploadStorageOptions>(builder.Configuration.GetSection("UploadStorage"));
+builder.Services.AddSingleton<IUploadStorage, UploadStorage>();
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(
@@ -20,22 +26,34 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<CinemaDbContext>();
 
-builder.Services
-    .AddAuthentication()
-    .AddGoogle(options =>
+var authenticationBuilder = builder.Services.AddAuthentication();
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = ***REMOVED***"Authentication:Google:ClientSecret"];
+
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authenticationBuilder.AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? string.Empty;
-        options.ClientSecret = ***REMOVED***"Authentication:Google:ClientSecret"] ?? string.Empty;
+        options.ClientId = googleClientId;
+        options.ClientSecret = ***REMOVED***;
     });
+}
 
 builder.Services.AddRazorPages();
+builder.Services
+    .AddHealthChecks()
+    .AddCheck<CinemaDbContextHealthCheck>("database")
+    .AddCheck<UploadStorageHealthCheck>("upload_storage");
 
 var app = builder.Build();
+var uploadStorage = app.Services.GetRequiredService<IUploadStorage>();
+uploadStorage.EnsureRootExists();
 
 using (var scope = app.Services.CreateScope())
 {
     await IdentityDataSeeder.SeedAsync(
         scope.ServiceProvider,
+        app.Configuration,
         seedDemoUsers: app.Environment.IsDevelopment());
 }
 
@@ -49,6 +67,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadStorage.RootPath),
+    RequestPath = uploadStorage.RequestPath
+});
 
 app.UseRouting();
 
@@ -72,6 +95,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapRazorPages();
+app.MapHealthChecks("/health");
 
 app.Run();
 

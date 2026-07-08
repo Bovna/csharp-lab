@@ -7,6 +7,7 @@ using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[AutoValidateAntiforgeryToken]
 [Route("kupci")]
 [Authorize]
 public class CustomerController : Controller

@@ -8,6 +8,7 @@ using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[AutoValidateAntiforgeryToken]
 [Route("sjedala")]
 [Authorize]
 public class SeatController : Controller

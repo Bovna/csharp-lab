@@ -11,6 +11,7 @@ namespace Vjezba.Tests;
 public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"CinemaTestDb-{Guid.NewGuid()}";
+    private readonly string _uploadRootPath = Path.Combine(Path.GetTempPath(), $"VjezbaTestUploads-{Guid.NewGuid():N}");
 
     public HttpClient CreateAuthenticatedClient(params string[] roles)
     {
@@ -93,7 +94,8 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:DefaultConnection"] = "TestConnection",
                 ["Authentication:Google:ClientId"] = "test-client-id",
-                ["Authentication:Google:ClientSecret"] = "test-client-secret"
+                ["Authentication:Google:ClientSecret"] = "test-client-secret",
+                ["UploadStorage:RootPath"] = _uploadRootPath
             };
 
             config.AddInMemoryCollection(testSettings);

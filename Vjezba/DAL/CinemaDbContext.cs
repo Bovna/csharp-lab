@@ -29,6 +29,10 @@ public class CinemaDbContext : IdentityDbContext<AppUser>
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Ticket>()
+            .Property(ticket => ticket.Price)
+            .HasPrecision(18, 2);
+
         modelBuilder.Entity<Cinema>().HasData(
             new Cinema
             {
@@ -133,35 +137,35 @@ public class CinemaDbContext : IdentityDbContext<AppUser>
             new Movie { Id = 16, Title = "Juzni Vjetar", Description = "Drama o povratku kuci nakon dugog putovanja.", DurationMinutes = 114, ReleaseDate = new DateTime(2026, 3, 2), Genre = MovieGenre.Drama, Language = "HR", AgeRating = "12+" });
 
         modelBuilder.Entity<Screening>().HasData(
-            new Screening { Id = 1001, StartTime = new DateTime(2026, 4, 18, 18, 0, 0), EndTime = new DateTime(2026, 4, 18, 20, 35, 0), Is3D = true, MovieId = 1, HallId = 101 },
-            new Screening { Id = 1004, StartTime = new DateTime(2026, 4, 18, 22, 30, 0), EndTime = new DateTime(2026, 4, 19, 1, 5, 0), Is3D = true, MovieId = 1, HallId = 101 },
-            new Screening { Id = 1002, StartTime = new DateTime(2026, 4, 18, 21, 0, 0), EndTime = new DateTime(2026, 4, 18, 22, 50, 0), Is3D = false, MovieId = 2, HallId = 102 },
-            new Screening { Id = 1005, StartTime = new DateTime(2026, 4, 19, 19, 20, 0), EndTime = new DateTime(2026, 4, 19, 21, 10, 0), Is3D = false, MovieId = 2, HallId = 102 },
-            new Screening { Id = 1003, StartTime = new DateTime(2026, 4, 19, 16, 30, 0), EndTime = new DateTime(2026, 4, 19, 18, 35, 0), Is3D = false, MovieId = 5, HallId = 103 },
+            new Screening { Id = 1001, StartTime = new DateTime(2026, 9, 10, 18, 0, 0), EndTime = new DateTime(2026, 9, 10, 20, 35, 0), Is3D = true, MovieId = 1, HallId = 101 },
+            new Screening { Id = 1004, StartTime = new DateTime(2026, 9, 10, 22, 30, 0), EndTime = new DateTime(2026, 9, 11, 1, 5, 0), Is3D = true, MovieId = 1, HallId = 101 },
+            new Screening { Id = 1002, StartTime = new DateTime(2026, 9, 10, 21, 0, 0), EndTime = new DateTime(2026, 9, 10, 22, 50, 0), Is3D = false, MovieId = 2, HallId = 102 },
+            new Screening { Id = 1005, StartTime = new DateTime(2026, 9, 11, 19, 20, 0), EndTime = new DateTime(2026, 9, 11, 21, 10, 0), Is3D = false, MovieId = 2, HallId = 102 },
+            new Screening { Id = 1003, StartTime = new DateTime(2026, 9, 11, 16, 30, 0), EndTime = new DateTime(2026, 9, 11, 18, 35, 0), Is3D = false, MovieId = 5, HallId = 103 },
 
-            new Screening { Id = 2001, StartTime = new DateTime(2026, 4, 19, 17, 30, 0), EndTime = new DateTime(2026, 4, 19, 19, 0, 0), Is3D = true, MovieId = 3, HallId = 201 },
-            new Screening { Id = 2004, StartTime = new DateTime(2026, 4, 20, 11, 0, 0), EndTime = new DateTime(2026, 4, 20, 12, 30, 0), Is3D = true, MovieId = 3, HallId = 201 },
-            new Screening { Id = 2002, StartTime = new DateTime(2026, 4, 19, 20, 0, 0), EndTime = new DateTime(2026, 4, 19, 21, 40, 0), Is3D = false, MovieId = 6, HallId = 202 },
-            new Screening { Id = 2003, StartTime = new DateTime(2026, 4, 20, 19, 10, 0), EndTime = new DateTime(2026, 4, 20, 20, 55, 0), Is3D = false, MovieId = 7, HallId = 205 },
+            new Screening { Id = 2001, StartTime = new DateTime(2026, 9, 11, 17, 30, 0), EndTime = new DateTime(2026, 9, 11, 19, 0, 0), Is3D = true, MovieId = 3, HallId = 201 },
+            new Screening { Id = 2004, StartTime = new DateTime(2026, 9, 12, 11, 0, 0), EndTime = new DateTime(2026, 9, 12, 12, 30, 0), Is3D = true, MovieId = 3, HallId = 201 },
+            new Screening { Id = 2002, StartTime = new DateTime(2026, 9, 11, 20, 0, 0), EndTime = new DateTime(2026, 9, 11, 21, 40, 0), Is3D = false, MovieId = 6, HallId = 202 },
+            new Screening { Id = 2003, StartTime = new DateTime(2026, 9, 12, 19, 10, 0), EndTime = new DateTime(2026, 9, 12, 20, 55, 0), Is3D = false, MovieId = 7, HallId = 205 },
 
-            new Screening { Id = 3001, StartTime = new DateTime(2026, 4, 20, 20, 0, 0), EndTime = new DateTime(2026, 4, 20, 22, 10, 0), Is3D = true, MovieId = 4, HallId = 301 },
-            new Screening { Id = 3004, StartTime = new DateTime(2026, 4, 21, 23, 15, 0), EndTime = new DateTime(2026, 4, 22, 1, 25, 0), Is3D = true, MovieId = 4, HallId = 301 },
-            new Screening { Id = 3002, StartTime = new DateTime(2026, 4, 20, 21, 15, 0), EndTime = new DateTime(2026, 4, 20, 22, 45, 0), Is3D = false, MovieId = 10, HallId = 302 },
-            new Screening { Id = 3003, StartTime = new DateTime(2026, 4, 21, 18, 50, 0), EndTime = new DateTime(2026, 4, 21, 20, 55, 0), Is3D = true, MovieId = 8, HallId = 306 },
+            new Screening { Id = 3001, StartTime = new DateTime(2026, 9, 12, 20, 0, 0), EndTime = new DateTime(2026, 9, 12, 22, 10, 0), Is3D = true, MovieId = 4, HallId = 301 },
+            new Screening { Id = 3004, StartTime = new DateTime(2026, 9, 13, 23, 15, 0), EndTime = new DateTime(2026, 9, 14, 1, 25, 0), Is3D = true, MovieId = 4, HallId = 301 },
+            new Screening { Id = 3002, StartTime = new DateTime(2026, 9, 12, 21, 15, 0), EndTime = new DateTime(2026, 9, 12, 22, 45, 0), Is3D = false, MovieId = 10, HallId = 302 },
+            new Screening { Id = 3003, StartTime = new DateTime(2026, 9, 13, 18, 50, 0), EndTime = new DateTime(2026, 9, 13, 20, 55, 0), Is3D = true, MovieId = 8, HallId = 306 },
 
-            new Screening { Id = 4001, StartTime = new DateTime(2026, 4, 21, 18, 30, 0), EndTime = new DateTime(2026, 4, 21, 20, 22, 0), Is3D = true, MovieId = 11, HallId = 401 },
-            new Screening { Id = 4004, StartTime = new DateTime(2026, 4, 22, 16, 15, 0), EndTime = new DateTime(2026, 4, 22, 18, 7, 0), Is3D = true, MovieId = 11, HallId = 401 },
-            new Screening { Id = 4002, StartTime = new DateTime(2026, 4, 21, 21, 0, 0), EndTime = new DateTime(2026, 4, 21, 22, 58, 0), Is3D = false, MovieId = 12, HallId = 402 },
-            new Screening { Id = 4005, StartTime = new DateTime(2026, 4, 23, 20, 40, 0), EndTime = new DateTime(2026, 4, 23, 22, 38, 0), Is3D = false, MovieId = 12, HallId = 402 },
-            new Screening { Id = 4003, StartTime = new DateTime(2026, 4, 22, 19, 30, 0), EndTime = new DateTime(2026, 4, 22, 21, 10, 0), Is3D = false, MovieId = 9, HallId = 403 },
+            new Screening { Id = 4001, StartTime = new DateTime(2026, 9, 13, 18, 30, 0), EndTime = new DateTime(2026, 9, 13, 20, 22, 0), Is3D = true, MovieId = 11, HallId = 401 },
+            new Screening { Id = 4004, StartTime = new DateTime(2026, 9, 14, 16, 15, 0), EndTime = new DateTime(2026, 9, 14, 18, 7, 0), Is3D = true, MovieId = 11, HallId = 401 },
+            new Screening { Id = 4002, StartTime = new DateTime(2026, 9, 13, 21, 0, 0), EndTime = new DateTime(2026, 9, 13, 22, 58, 0), Is3D = false, MovieId = 12, HallId = 402 },
+            new Screening { Id = 4005, StartTime = new DateTime(2026, 9, 15, 20, 40, 0), EndTime = new DateTime(2026, 9, 15, 22, 38, 0), Is3D = false, MovieId = 12, HallId = 402 },
+            new Screening { Id = 4003, StartTime = new DateTime(2026, 9, 14, 19, 30, 0), EndTime = new DateTime(2026, 9, 14, 21, 10, 0), Is3D = false, MovieId = 9, HallId = 403 },
 
-            new Screening { Id = 5001, StartTime = new DateTime(2026, 4, 22, 20, 10, 0), EndTime = new DateTime(2026, 4, 22, 22, 13, 0), Is3D = true, MovieId = 13, HallId = 501 },
-            new Screening { Id = 5006, StartTime = new DateTime(2026, 4, 23, 22, 25, 0), EndTime = new DateTime(2026, 4, 24, 0, 28, 0), Is3D = true, MovieId = 13, HallId = 501 },
-            new Screening { Id = 5002, StartTime = new DateTime(2026, 4, 23, 19, 15, 0), EndTime = new DateTime(2026, 4, 23, 21, 3, 0), Is3D = false, MovieId = 14, HallId = 502 },
-            new Screening { Id = 5007, StartTime = new DateTime(2026, 4, 24, 14, 0, 0), EndTime = new DateTime(2026, 4, 24, 15, 48, 0), Is3D = false, MovieId = 14, HallId = 502 },
-            new Screening { Id = 5003, StartTime = new DateTime(2026, 4, 24, 17, 45, 0), EndTime = new DateTime(2026, 4, 24, 19, 21, 0), Is3D = true, MovieId = 15, HallId = 503 },
-            new Screening { Id = 5004, StartTime = new DateTime(2026, 4, 24, 20, 15, 0), EndTime = new DateTime(2026, 4, 24, 22, 9, 0), Is3D = false, MovieId = 16, HallId = 504 },
-            new Screening { Id = 5005, StartTime = new DateTime(2026, 4, 25, 18, 0, 0), EndTime = new DateTime(2026, 4, 25, 20, 5, 0), Is3D = false, MovieId = 5, HallId = 505 });
+            new Screening { Id = 5001, StartTime = new DateTime(2026, 9, 14, 20, 10, 0), EndTime = new DateTime(2026, 9, 14, 22, 13, 0), Is3D = true, MovieId = 13, HallId = 501 },
+            new Screening { Id = 5006, StartTime = new DateTime(2026, 9, 15, 22, 25, 0), EndTime = new DateTime(2026, 9, 16, 0, 28, 0), Is3D = true, MovieId = 13, HallId = 501 },
+            new Screening { Id = 5002, StartTime = new DateTime(2026, 9, 15, 19, 15, 0), EndTime = new DateTime(2026, 9, 15, 21, 3, 0), Is3D = false, MovieId = 14, HallId = 502 },
+            new Screening { Id = 5007, StartTime = new DateTime(2026, 9, 16, 14, 0, 0), EndTime = new DateTime(2026, 9, 16, 15, 48, 0), Is3D = false, MovieId = 14, HallId = 502 },
+            new Screening { Id = 5003, StartTime = new DateTime(2026, 9, 16, 17, 45, 0), EndTime = new DateTime(2026, 9, 16, 19, 21, 0), Is3D = true, MovieId = 15, HallId = 503 },
+            new Screening { Id = 5004, StartTime = new DateTime(2026, 9, 16, 20, 15, 0), EndTime = new DateTime(2026, 9, 16, 22, 9, 0), Is3D = false, MovieId = 16, HallId = 504 },
+            new Screening { Id = 5005, StartTime = new DateTime(2026, 9, 17, 18, 0, 0), EndTime = new DateTime(2026, 9, 17, 20, 5, 0), Is3D = false, MovieId = 5, HallId = 505 });
 
         modelBuilder.Entity<Customer>().HasData(
             new Customer { Id = 1, FirstName = "Marko", LastName = "Ivic", City = "Zagreb", Street = "Savska", HouseNumber = "15", PostalCode = "10000", Email = "marko.ivic@email.hr", Phone = "+385 98 100 200", RegisteredAt = new DateTime(2025, 5, 3), IsLoyaltyMember = true, LoyaltyPoints = 180 },

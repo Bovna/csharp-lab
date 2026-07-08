@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Vjezba.DAL;
+using Vjezba.Web.Services;
 
 namespace Vjezba.Tests;
 
@@ -87,12 +88,29 @@ public sealed class MovieAttachmentUploadTests : IClassFixture<CustomWebApplicat
         string contentType,
         byte[] content)
     {
+        var token = await GetAntiForgeryTokenAsync(movieId);
         using var multipart = new MultipartFormDataContent();
         using var fileContent = new ByteArrayContent(content);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        multipart.Add(new StringContent(token), "__RequestVerificationToken");
         multipart.Add(fileContent, "file", fileName);
 
         return await _client.PostAsync($"/filmovi/uredi/{movieId}/datoteke/objavi", multipart);
+    }
+
+    private async Task<string> GetAntiForgeryTokenAsync(int movieId)
+    {
+        var response = await _client.GetAsync($"/filmovi/uredi/{movieId}");
+        response.EnsureSuccessStatusCode();
+
+        var html = await response.Content.ReadAsStringAsync();
+        var match = Regex.Match(
+            html,
+            "<input[^>]+name=\"__RequestVerificationToken\"[^>]+value=\"([^\"]+)\"",
+            RegexOptions.IgnoreCase);
+
+        match.Success.Should().BeTrue("the movie edit form should render an antiforgery token");
+        return match.Groups[1].Value;
     }
 
     private async Task AssertNoAttachmentWasSavedAsync()
@@ -106,12 +124,8 @@ public sealed class MovieAttachmentUploadTests : IClassFixture<CustomWebApplicat
     private void DeleteUploadedFile(string filePath)
     {
         using var scope = _factory.Services.CreateScope();
-        var webHostEnvironment = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
-        var webRootPath = webHostEnvironment.WebRootPath
-            ?? Path.Combine(webHostEnvironment.ContentRootPath, "wwwroot");
-        var physicalPath = Path.Combine(
-            webRootPath,
-            filePath.TrimStart('/'));
+        var uploadStorage = scope.ServiceProvider.GetRequiredService<IUploadStorage>();
+        var physicalPath = uploadStorage.GetPhysicalPath(filePath);
 
         if (File.Exists(physicalPath))
         {

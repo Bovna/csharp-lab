@@ -24,7 +24,8 @@
                         <h5 class="ui-form__section-title">Objava postera</h5>
 
                         <form id="attachmentDz" asp-controller="Movie" asp-action="UploadAttachment"
-                              asp-route-movieId="@Model.Id" enctype="multipart/form-data" class="dropzone movie-dropzone">
+                              asp-route-movieId="@Model.Id" method="post" enctype="multipart/form-data" class="dropzone movie-dropzone">
+                            @Html.AntiForgeryToken()
                         </form>
                         <div id="posterUploadValidation" class="movie-dropzone-validation d-none" role="alert">
                         </div>
@@ -49,6 +50,7 @@
 
         const attachmentListUrl = '@Url.Action("GetAttachments", "Movie", new { movieId = Model.Id })';
         const deleteAttachmentUrl = '@Url.Action("DeleteAttachment", "Movie")';
+        const antiForgeryToken = document.querySelector("#attachmentDz input[name='__RequestVerificationToken']")?.value || "";
 
         function loadAttachments() {
         $("#attachmentList").load(attachmentListUrl);
@@ -74,7 +76,7 @@
         $.ajax({
         url: deleteAttachmentUrl,
         method: "POST",
-        data: { id: id },
+        data: { id: id, __RequestVerificationToken: antiForgeryToken },
         success: function () {
         loadAttachments();
         }
@@ -93,7 +95,10 @@
         dictInvalidFileType: "Dopustene su samo JPG, PNG i WEBP slike.",
         dictFileTooBig: "Poster slika je prevelika. Maksimalna veličina je 5 MB.",
         dictRemoveFile: "Ukloni",
-        sending: function () {
+        sending: function (file, xhr, formData) {
+        if (antiForgeryToken) {
+        formData.append("__RequestVerificationToken", antiForgeryToken);
+        }
         clearPosterUploadValidation();
         },
         success: function () {

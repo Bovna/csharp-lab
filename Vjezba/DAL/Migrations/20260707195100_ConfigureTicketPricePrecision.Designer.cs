@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Vjezba.DAL;
 
@@ -11,9 +12,11 @@ using Vjezba.DAL;
 namespace Vjezba.DAL.Migrations
 {
     [DbContext(typeof(CinemaDbContext))]
-    partial class CinemaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260707195100_ConfigureTicketPricePrecision")]
+    partial class ConfigureTicketPricePrecision
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1092,227 +1095,227 @@ namespace Vjezba.DAL.Migrations
                         new
                         {
                             Id = 1001,
-                            EndTime = new DateTime(2026, 9, 10, 20, 35, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 18, 20, 35, 0, 0, DateTimeKind.Unspecified),
                             HallId = 101,
                             Is3D = true,
                             MovieId = 1,
-                            StartTime = new DateTime(2026, 9, 10, 18, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 18, 18, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 1004,
-                            EndTime = new DateTime(2026, 9, 11, 1, 5, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 19, 1, 5, 0, 0, DateTimeKind.Unspecified),
                             HallId = 101,
                             Is3D = true,
                             MovieId = 1,
-                            StartTime = new DateTime(2026, 9, 10, 22, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 18, 22, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 1002,
-                            EndTime = new DateTime(2026, 9, 10, 22, 50, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 18, 22, 50, 0, 0, DateTimeKind.Unspecified),
                             HallId = 102,
                             Is3D = false,
                             MovieId = 2,
-                            StartTime = new DateTime(2026, 9, 10, 21, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 18, 21, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 1005,
-                            EndTime = new DateTime(2026, 9, 11, 21, 10, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 19, 21, 10, 0, 0, DateTimeKind.Unspecified),
                             HallId = 102,
                             Is3D = false,
                             MovieId = 2,
-                            StartTime = new DateTime(2026, 9, 11, 19, 20, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 19, 19, 20, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 1003,
-                            EndTime = new DateTime(2026, 9, 11, 18, 35, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 19, 18, 35, 0, 0, DateTimeKind.Unspecified),
                             HallId = 103,
                             Is3D = false,
                             MovieId = 5,
-                            StartTime = new DateTime(2026, 9, 11, 16, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 19, 16, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 2001,
-                            EndTime = new DateTime(2026, 9, 11, 19, 0, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 19, 19, 0, 0, 0, DateTimeKind.Unspecified),
                             HallId = 201,
                             Is3D = true,
                             MovieId = 3,
-                            StartTime = new DateTime(2026, 9, 11, 17, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 19, 17, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 2004,
-                            EndTime = new DateTime(2026, 9, 12, 12, 30, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 20, 12, 30, 0, 0, DateTimeKind.Unspecified),
                             HallId = 201,
                             Is3D = true,
                             MovieId = 3,
-                            StartTime = new DateTime(2026, 9, 12, 11, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 20, 11, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 2002,
-                            EndTime = new DateTime(2026, 9, 11, 21, 40, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 19, 21, 40, 0, 0, DateTimeKind.Unspecified),
                             HallId = 202,
                             Is3D = false,
                             MovieId = 6,
-                            StartTime = new DateTime(2026, 9, 11, 20, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 19, 20, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 2003,
-                            EndTime = new DateTime(2026, 9, 12, 20, 55, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 20, 20, 55, 0, 0, DateTimeKind.Unspecified),
                             HallId = 205,
                             Is3D = false,
                             MovieId = 7,
-                            StartTime = new DateTime(2026, 9, 12, 19, 10, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 20, 19, 10, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 3001,
-                            EndTime = new DateTime(2026, 9, 12, 22, 10, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 20, 22, 10, 0, 0, DateTimeKind.Unspecified),
                             HallId = 301,
                             Is3D = true,
                             MovieId = 4,
-                            StartTime = new DateTime(2026, 9, 12, 20, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 20, 20, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 3004,
-                            EndTime = new DateTime(2026, 9, 14, 1, 25, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 22, 1, 25, 0, 0, DateTimeKind.Unspecified),
                             HallId = 301,
                             Is3D = true,
                             MovieId = 4,
-                            StartTime = new DateTime(2026, 9, 13, 23, 15, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 21, 23, 15, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 3002,
-                            EndTime = new DateTime(2026, 9, 12, 22, 45, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 20, 22, 45, 0, 0, DateTimeKind.Unspecified),
                             HallId = 302,
                             Is3D = false,
                             MovieId = 10,
-                            StartTime = new DateTime(2026, 9, 12, 21, 15, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 20, 21, 15, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 3003,
-                            EndTime = new DateTime(2026, 9, 13, 20, 55, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 21, 20, 55, 0, 0, DateTimeKind.Unspecified),
                             HallId = 306,
                             Is3D = true,
                             MovieId = 8,
-                            StartTime = new DateTime(2026, 9, 13, 18, 50, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 21, 18, 50, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 4001,
-                            EndTime = new DateTime(2026, 9, 13, 20, 22, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 21, 20, 22, 0, 0, DateTimeKind.Unspecified),
                             HallId = 401,
                             Is3D = true,
                             MovieId = 11,
-                            StartTime = new DateTime(2026, 9, 13, 18, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 21, 18, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 4004,
-                            EndTime = new DateTime(2026, 9, 14, 18, 7, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 22, 18, 7, 0, 0, DateTimeKind.Unspecified),
                             HallId = 401,
                             Is3D = true,
                             MovieId = 11,
-                            StartTime = new DateTime(2026, 9, 14, 16, 15, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 22, 16, 15, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 4002,
-                            EndTime = new DateTime(2026, 9, 13, 22, 58, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 21, 22, 58, 0, 0, DateTimeKind.Unspecified),
                             HallId = 402,
                             Is3D = false,
                             MovieId = 12,
-                            StartTime = new DateTime(2026, 9, 13, 21, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 21, 21, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 4005,
-                            EndTime = new DateTime(2026, 9, 15, 22, 38, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 23, 22, 38, 0, 0, DateTimeKind.Unspecified),
                             HallId = 402,
                             Is3D = false,
                             MovieId = 12,
-                            StartTime = new DateTime(2026, 9, 15, 20, 40, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 23, 20, 40, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 4003,
-                            EndTime = new DateTime(2026, 9, 14, 21, 10, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 22, 21, 10, 0, 0, DateTimeKind.Unspecified),
                             HallId = 403,
                             Is3D = false,
                             MovieId = 9,
-                            StartTime = new DateTime(2026, 9, 14, 19, 30, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 22, 19, 30, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5001,
-                            EndTime = new DateTime(2026, 9, 14, 22, 13, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 22, 22, 13, 0, 0, DateTimeKind.Unspecified),
                             HallId = 501,
                             Is3D = true,
                             MovieId = 13,
-                            StartTime = new DateTime(2026, 9, 14, 20, 10, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 22, 20, 10, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5006,
-                            EndTime = new DateTime(2026, 9, 16, 0, 28, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 24, 0, 28, 0, 0, DateTimeKind.Unspecified),
                             HallId = 501,
                             Is3D = true,
                             MovieId = 13,
-                            StartTime = new DateTime(2026, 9, 15, 22, 25, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 23, 22, 25, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5002,
-                            EndTime = new DateTime(2026, 9, 15, 21, 3, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 23, 21, 3, 0, 0, DateTimeKind.Unspecified),
                             HallId = 502,
                             Is3D = false,
                             MovieId = 14,
-                            StartTime = new DateTime(2026, 9, 15, 19, 15, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 23, 19, 15, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5007,
-                            EndTime = new DateTime(2026, 9, 16, 15, 48, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 24, 15, 48, 0, 0, DateTimeKind.Unspecified),
                             HallId = 502,
                             Is3D = false,
                             MovieId = 14,
-                            StartTime = new DateTime(2026, 9, 16, 14, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 24, 14, 0, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5003,
-                            EndTime = new DateTime(2026, 9, 16, 19, 21, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 24, 19, 21, 0, 0, DateTimeKind.Unspecified),
                             HallId = 503,
                             Is3D = true,
                             MovieId = 15,
-                            StartTime = new DateTime(2026, 9, 16, 17, 45, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 24, 17, 45, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5004,
-                            EndTime = new DateTime(2026, 9, 16, 22, 9, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 24, 22, 9, 0, 0, DateTimeKind.Unspecified),
                             HallId = 504,
                             Is3D = false,
                             MovieId = 16,
-                            StartTime = new DateTime(2026, 9, 16, 20, 15, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 24, 20, 15, 0, 0, DateTimeKind.Unspecified)
                         },
                         new
                         {
                             Id = 5005,
-                            EndTime = new DateTime(2026, 9, 17, 20, 5, 0, 0, DateTimeKind.Unspecified),
+                            EndTime = new DateTime(2026, 4, 25, 20, 5, 0, 0, DateTimeKind.Unspecified),
                             HallId = 505,
                             Is3D = false,
                             MovieId = 5,
-                            StartTime = new DateTime(2026, 9, 17, 18, 0, 0, 0, DateTimeKind.Unspecified)
+                            StartTime = new DateTime(2026, 4, 25, 18, 0, 0, 0, DateTimeKind.Unspecified)
                         });
                 });
 

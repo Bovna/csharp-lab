@@ -9,6 +9,7 @@ using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[AutoValidateAntiforgeryToken]
 [Route("projekcije")]
 [Authorize]
 public class ScreeningController : BaseController

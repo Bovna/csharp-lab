@@ -8,6 +8,7 @@ using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[AutoValidateAntiforgeryToken]
 [Route("ulaznice")]
 [Authorize]
 public class TicketController : Controller

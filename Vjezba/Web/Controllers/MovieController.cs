@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Vjezba.DAL;
 using Vjezba.Model.Entities;
+using Vjezba.Web.Services;
 using Vjezba.Web.ViewModels;
 
 namespace Vjezba.Web.Controllers;
 
+[AutoValidateAntiforgeryToken]
 [Route("filmovi")]
 [Authorize]
 public class MovieController : BaseController
@@ -25,16 +27,16 @@ public class MovieController : BaseController
         };
 
     private readonly CinemaDbContext _dbContext;
-    private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IUploadStorage _uploadStorage;
 
     public MovieController(
         CinemaDbContext dbContext,
         UserManager<AppUser> userManager,
-        IWebHostEnvironment webHostEnvironment)
+        IUploadStorage uploadStorage)
         : base(userManager)
     {
         _dbContext = dbContext;
-        _webHostEnvironment = webHostEnvironment;
+        _uploadStorage = uploadStorage;
     }
 
     [Route("pretraga")]
@@ -287,12 +289,7 @@ public class MovieController : BaseController
             return BadRequest(validationError);
         }
 
-        var uploadsPath = Path.Combine(
-            GetWebRootPath(),
-            "uploads",
-            "movies",
-            movieId.ToString()
-        );
+        var uploadsPath = _uploadStorage.GetMovieDirectory(movieId);
 
         Directory.CreateDirectory(uploadsPath);
 
@@ -308,7 +305,7 @@ public class MovieController : BaseController
         {
             MovieId = movieId,
             FileName = originalFileName,
-            FilePath = $"/uploads/movies/{movieId}/{fileName}",
+            FilePath = _uploadStorage.GetMoviePublicPath(movieId, fileName),
             ContentType = file.ContentType,
             FileSize = file.Length,
             CreatedAt = DateTime.UtcNow
@@ -350,9 +347,7 @@ public class MovieController : BaseController
             return NotFound();
         }
 
-        var physicalPath = Path.Combine(
-            GetWebRootPath(),
-            attachment.FilePath.TrimStart('/'));
+        var physicalPath = _uploadStorage.GetPhysicalPath(attachment.FilePath);
 
         if (System.IO.File.Exists(physicalPath))
         {
@@ -465,9 +460,4 @@ public class MovieController : BaseController
         return true;
     }
 
-    private string GetWebRootPath()
-    {
-        return _webHostEnvironment.WebRootPath
-            ?? Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
-    }
 }
