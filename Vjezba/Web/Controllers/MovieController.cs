@@ -28,15 +28,18 @@ public class MovieController : BaseController
 
     private readonly CinemaDbContext _dbContext;
     private readonly IUploadStorage _uploadStorage;
+    private readonly ILogger<MovieController> _logger;
 
     public MovieController(
         CinemaDbContext dbContext,
         UserManager<AppUser> userManager,
-        IUploadStorage uploadStorage)
+        IUploadStorage uploadStorage,
+        ILogger<MovieController> logger)
         : base(userManager)
     {
         _dbContext = dbContext;
         _uploadStorage = uploadStorage;
+        _logger = logger;
     }
 
     [Route("pretraga")]
@@ -186,6 +189,15 @@ public class MovieController : BaseController
         _dbContext.Movies.Add(movie);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Movie created by MVC. MovieId={MovieId}, Genre={Genre}, Language={Language}, AgeRating={AgeRating}, DurationMinutes={DurationMinutes}, UserId={UserId}",
+            movie.Id,
+            movie.Genre,
+            movie.Language,
+            movie.AgeRating,
+            movie.DurationMinutes,
+            UserId ?? "unknown");
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -249,6 +261,16 @@ public class MovieController : BaseController
             movie.Language = model.Language;
             movie.AgeRating = model.AgeRating;
             _dbContext.SaveChanges();
+
+            _logger.LogInformation(
+                "Movie updated by MVC. MovieId={MovieId}, Genre={Genre}, Language={Language}, AgeRating={AgeRating}, DurationMinutes={DurationMinutes}, UserId={UserId}",
+                movie.Id,
+                movie.Genre,
+                movie.Language,
+                movie.AgeRating,
+                movie.DurationMinutes,
+                UserId ?? "unknown");
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -267,8 +289,16 @@ public class MovieController : BaseController
 
         movie.DeletedAt = DateTime.UtcNow;
 
-        SoftDeleteMovie(movie);
+        var deleteSummary = SoftDeleteMovie(movie);
         _dbContext.SaveChanges();
+
+        _logger.LogInformation(
+            "Movie soft deleted by MVC. MovieId={MovieId}, DeletedScreeningCount={DeletedScreeningCount}, DeletedTicketCount={DeletedTicketCount}, DeletedFavoriteCount={DeletedFavoriteCount}, UserId={UserId}",
+            movie.Id,
+            deleteSummary.DeletedScreeningCount,
+            deleteSummary.DeletedTicketCount,
+            deleteSummary.DeletedFavoriteCount,
+            UserId ?? "unknown");
 
         return RedirectToAction(nameof(Index));
     }
@@ -281,11 +311,24 @@ public class MovieController : BaseController
 
         if (!movieExists)
         {
+            _logger.LogWarning(
+                "Attachment upload requested for missing movie. MovieId={MovieId}, UserId={UserId}",
+                movieId,
+                UserId ?? "unknown");
+
             return NotFound();
         }
 
         if (!TryValidatePosterFile(file, out var originalFileName, out var extension, out var validationError))
         {
+            _logger.LogWarning(
+                "Attachment upload rejected. MovieId={MovieId}, ContentType={ContentType}, FileSize={FileSize}, Reason={Reason}, UserId={UserId}",
+                movieId,
+                file?.ContentType ?? string.Empty,
+                file?.Length ?? 0,
+                validationError,
+                UserId ?? "unknown");
+
             return BadRequest(validationError);
         }
 
@@ -313,6 +356,14 @@ public class MovieController : BaseController
 
         _dbContext.Attachments.Add(attachment);
         await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Attachment uploaded. AttachmentId={AttachmentId}, MovieId={MovieId}, ContentType={ContentType}, FileSize={FileSize}, UserId={UserId}",
+            attachment.Id,
+            attachment.MovieId,
+            attachment.ContentType,
+            attachment.FileSize,
+            UserId ?? "unknown");
 
         return Json(new { success = true });
     }
@@ -344,6 +395,11 @@ public class MovieController : BaseController
 
         if (attachment is null)
         {
+            _logger.LogWarning(
+                "Attachment delete requested for missing attachment. AttachmentId={AttachmentId}, UserId={UserId}",
+                id,
+                UserId ?? "unknown");
+
             return NotFound();
         }
 
@@ -351,16 +407,46 @@ public class MovieController : BaseController
 
         if (System.IO.File.Exists(physicalPath))
         {
-            System.IO.File.Delete(physicalPath);
+            try
+            {
+                System.IO.File.Delete(physicalPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Attachment file delete failed. AttachmentId={AttachmentId}, MovieId={MovieId}, UserId={UserId}",
+                    attachment.Id,
+                    attachment.MovieId,
+                    UserId ?? "unknown");
+
+                throw;
+            }
+        }
+        else
+        {
+            _logger.LogWarning(
+                "Attachment file was missing during delete. AttachmentId={AttachmentId}, MovieId={MovieId}, UserId={UserId}",
+                attachment.Id,
+                attachment.MovieId,
+                UserId ?? "unknown");
         }
 
         _dbContext.Attachments.Remove(attachment);
         await _dbContext.SaveChangesAsync();
 
+        _logger.LogInformation(
+            "Attachment deleted. AttachmentId={AttachmentId}, MovieId={MovieId}, ContentType={ContentType}, FileSize={FileSize}, UserId={UserId}",
+            attachment.Id,
+            attachment.MovieId,
+            attachment.ContentType,
+            attachment.FileSize,
+            UserId ?? "unknown");
+
         return Json(new { success = true });
     }
 
-    private void SoftDeleteMovie(Movie movie)
+    private (int DeletedScreeningCount, int DeletedTicketCount, int DeletedFavoriteCount) SoftDeleteMovie(Movie movie)
     {
         var deletedAt = movie.DeletedAt ?? DateTime.UtcNow;
         movie.DeletedAt = deletedAt;
@@ -393,6 +479,8 @@ public class MovieController : BaseController
         {
             favorite.DeletedAt = deletedAt;
         }
+
+        return (screenings.Count, tickets.Count, favorites.Count);
     }
 
     private void ValidateMovieBusinessRules(MovieFormViewModel model)

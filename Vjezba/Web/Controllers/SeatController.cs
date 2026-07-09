@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -14,10 +15,12 @@ namespace Vjezba.Web.Controllers;
 public class SeatController : Controller
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<SeatController> _logger;
 
-    public SeatController(CinemaDbContext dbContext)
+    public SeatController(CinemaDbContext dbContext, ILogger<SeatController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("")]
@@ -158,6 +161,15 @@ public class SeatController : Controller
         _dbContext.Seats.Add(seat);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Seat created by MVC. SeatId={SeatId}, HallId={HallId}, RowLabel={RowLabel}, SeatNumber={SeatNumber}, SeatType={SeatType}, UserId={UserId}",
+            seat.Id,
+            seat.HallId,
+            seat.RowLabel,
+            seat.SeatNumber,
+            seat.SeatType,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -209,6 +221,15 @@ public class SeatController : Controller
         MapSeatForm(model, seat);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Seat updated by MVC. SeatId={SeatId}, HallId={HallId}, RowLabel={RowLabel}, SeatNumber={SeatNumber}, SeatType={SeatType}, UserId={UserId}",
+            seat.Id,
+            seat.HallId,
+            seat.RowLabel,
+            seat.SeatNumber,
+            seat.SeatType,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -223,10 +244,22 @@ public class SeatController : Controller
             return NotFound();
         }
 
-        SoftDeleteSeat(seat);
+        var deletedTicketCount = SoftDeleteSeat(seat);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Seat soft deleted by MVC. SeatId={SeatId}, HallId={HallId}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            seat.Id,
+            seat.HallId,
+            deletedTicketCount,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Seat> ActiveSeatsQuery()
@@ -316,7 +349,7 @@ public class SeatController : Controller
         }
     }
 
-    private void SoftDeleteSeat(Seat seat)
+    private int SoftDeleteSeat(Seat seat)
     {
         var deletedAt = DateTime.UtcNow;
         seat.DeletedAt = deletedAt;
@@ -329,5 +362,7 @@ public class SeatController : Controller
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return tickets.Count;
     }
 }

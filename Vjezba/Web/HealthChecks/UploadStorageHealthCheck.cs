@@ -6,10 +6,14 @@ namespace Vjezba.Web.HealthChecks;
 public sealed class UploadStorageHealthCheck : IHealthCheck
 {
     private readonly IUploadStorage _uploadStorage;
+    private readonly ILogger<UploadStorageHealthCheck> _logger;
 
-    public UploadStorageHealthCheck(IUploadStorage uploadStorage)
+    public UploadStorageHealthCheck(
+        IUploadStorage uploadStorage,
+        ILogger<UploadStorageHealthCheck> logger)
     {
         _uploadStorage = uploadStorage;
+        _logger = logger;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -28,6 +32,7 @@ public sealed class UploadStorageHealthCheck : IHealthCheck
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Upload storage health check failed with exception.");
             return HealthCheckResult.Unhealthy("Upload storage is not writable.", ex);
         }
     }

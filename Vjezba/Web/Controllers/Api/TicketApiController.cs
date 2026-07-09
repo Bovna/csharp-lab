@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers.Api;
 public class TicketApiController : ControllerBase
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<TicketApiController> _logger;
 
-    public TicketApiController(CinemaDbContext dbContext)
+    public TicketApiController(CinemaDbContext dbContext, ILogger<TicketApiController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -110,6 +113,16 @@ public class TicketApiController : ControllerBase
         _dbContext.Tickets.Add(ticket);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Ticket created by API. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
+            ticket.Id,
+            ticket.TicketNumber,
+            ticket.ScreeningId,
+            ticket.SeatId,
+            ticket.CustomerId,
+            ticket.Status,
+            GetCurrentUserId());
+
         var createdTicket = ActiveTicketsQuery().FirstOrDefault(existing => existing.Id == ticket.Id);
 
         return CreatedAtAction(nameof(Get), new { id = ticket.Id }, ToDTO(createdTicket ?? ticket));
@@ -147,6 +160,16 @@ public class TicketApiController : ControllerBase
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Ticket updated by API. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
+            ticket.Id,
+            ticket.TicketNumber,
+            ticket.ScreeningId,
+            ticket.SeatId,
+            ticket.CustomerId,
+            ticket.Status,
+            GetCurrentUserId());
+
         var updatedTicket = ActiveTicketsQuery().FirstOrDefault(existing => existing.Id == id);
 
         return Ok(ToDTO(updatedTicket ?? ticket));
@@ -166,7 +189,18 @@ public class TicketApiController : ControllerBase
         ticket.DeletedAt = DateTime.UtcNow;
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Ticket soft deleted by API. TicketId={TicketId}, TicketNumber={TicketNumber}, UserId={UserId}",
+            ticket.Id,
+            ticket.TicketNumber,
+            GetCurrentUserId());
+
         return NoContent();
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Ticket> ActiveTicketsQuery()

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers.Api;
 public class ScreeningApiController : ControllerBase
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<ScreeningApiController> _logger;
 
-    public ScreeningApiController(CinemaDbContext dbContext)
+    public ScreeningApiController(CinemaDbContext dbContext, ILogger<ScreeningApiController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -111,6 +114,16 @@ public class ScreeningApiController : ControllerBase
         _dbContext.Screenings.Add(screening);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Screening created by API. ScreeningId={ScreeningId}, MovieId={MovieId}, HallId={HallId}, StartTime={StartTime}, EndTime={EndTime}, Is3D={Is3D}, UserId={UserId}",
+            screening.Id,
+            screening.MovieId,
+            screening.HallId,
+            screening.StartTime,
+            screening.EndTime,
+            screening.Is3D,
+            GetCurrentUserId());
+
         var createdScreening = ActiveScreeningsQuery()
             .FirstOrDefault(existing => existing.Id == screening.Id);
 
@@ -147,6 +160,16 @@ public class ScreeningApiController : ControllerBase
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Screening updated by API. ScreeningId={ScreeningId}, MovieId={MovieId}, HallId={HallId}, StartTime={StartTime}, EndTime={EndTime}, Is3D={Is3D}, UserId={UserId}",
+            existingScreening.Id,
+            existingScreening.MovieId,
+            existingScreening.HallId,
+            existingScreening.StartTime,
+            existingScreening.EndTime,
+            existingScreening.Is3D,
+            GetCurrentUserId());
+
         var updatedScreening = ActiveScreeningsQuery()
             .FirstOrDefault(screening => screening.Id == id);
 
@@ -164,10 +187,23 @@ public class ScreeningApiController : ControllerBase
             return NotFound();
         }
 
-        SoftDeleteScreening(screening);
+        var deleteSummary = SoftDeleteScreening(screening);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Screening soft deleted by API. ScreeningId={ScreeningId}, MovieId={MovieId}, HallId={HallId}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            screening.Id,
+            screening.MovieId,
+            screening.HallId,
+            deleteSummary,
+            GetCurrentUserId());
+
         return NoContent();
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Screening> ActiveScreeningsQuery()
@@ -227,7 +263,7 @@ public class ScreeningApiController : ControllerBase
         return null;
     }
 
-    private void SoftDeleteScreening(Screening screening)
+    private int SoftDeleteScreening(Screening screening)
     {
         var deletedAt = screening.DeletedAt ?? DateTime.UtcNow;
         screening.DeletedAt = deletedAt;
@@ -240,6 +276,8 @@ public class ScreeningApiController : ControllerBase
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return tickets.Count;
     }
 
     private static ScreeningDTO ToDTO(Screening screening)

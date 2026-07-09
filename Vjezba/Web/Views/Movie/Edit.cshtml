@@ -24,8 +24,8 @@
                         <h5 class="ui-form__section-title">Objava postera</h5>
 
                         <form id="attachmentDz" asp-controller="Movie" asp-action="UploadAttachment"
-                              asp-route-movieId="@Model.Id" method="post" enctype="multipart/form-data" class="dropzone movie-dropzone">
-                            @Html.AntiForgeryToken()
+                              asp-route-movieId="@Model.Id" method="post" enctype="multipart/form-data"
+                              class="dropzone movie-dropzone">
                         </form>
                         <div id="posterUploadValidation" class="movie-dropzone-validation d-none" role="alert">
                         </div>
@@ -95,10 +95,7 @@
         dictInvalidFileType: "Dopustene su samo JPG, PNG i WEBP slike.",
         dictFileTooBig: "Poster slika je prevelika. Maksimalna veličina je 5 MB.",
         dictRemoveFile: "Ukloni",
-        sending: function (file, xhr, formData) {
-        if (antiForgeryToken) {
-        formData.append("__RequestVerificationToken", antiForgeryToken);
-        }
+        sending: function () {
         clearPosterUploadValidation();
         },
         success: function () {

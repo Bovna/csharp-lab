@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -14,10 +15,12 @@ namespace Vjezba.Web.Controllers;
 public class HallController : Controller
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<HallController> _logger;
 
-    public HallController(CinemaDbContext dbContext)
+    public HallController(CinemaDbContext dbContext, ILogger<HallController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("")]
@@ -166,6 +169,14 @@ public class HallController : Controller
         _dbContext.Halls.Add(hall);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Hall created by MVC. HallId={HallId}, CinemaId={CinemaId}, Capacity={Capacity}, Supports3D={Supports3D}, UserId={UserId}",
+            hall.Id,
+            hall.CinemaId,
+            hall.Capacity,
+            hall.Supports3D,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -217,6 +228,14 @@ public class HallController : Controller
         MapHallForm(model, hall);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Hall updated by MVC. HallId={HallId}, CinemaId={CinemaId}, Capacity={Capacity}, Supports3D={Supports3D}, UserId={UserId}",
+            hall.Id,
+            hall.CinemaId,
+            hall.Capacity,
+            hall.Supports3D,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -231,10 +250,24 @@ public class HallController : Controller
             return NotFound();
         }
 
-        SoftDeleteHall(hall);
+        var deleteSummary = SoftDeleteHall(hall);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Hall soft deleted by MVC. HallId={HallId}, CinemaId={CinemaId}, DeletedSeatCount={DeletedSeatCount}, DeletedScreeningCount={DeletedScreeningCount}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            hall.Id,
+            hall.CinemaId,
+            deleteSummary.DeletedSeatCount,
+            deleteSummary.DeletedScreeningCount,
+            deleteSummary.DeletedTicketCount,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Hall> ActiveHallsQuery()
@@ -318,7 +351,7 @@ public class HallController : Controller
         }
     }
 
-    private void SoftDeleteHall(Hall hall)
+    private (int DeletedSeatCount, int DeletedScreeningCount, int DeletedTicketCount) SoftDeleteHall(Hall hall)
     {
         var deletedAt = DateTime.UtcNow;
         hall.DeletedAt = deletedAt;
@@ -354,5 +387,7 @@ public class HallController : Controller
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return (seats.Count, screenings.Count, tickets.Count);
     }
 }

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers.Api;
 public class CustomerApiController : ControllerBase
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<CustomerApiController> _logger;
 
-    public CustomerApiController(CinemaDbContext dbContext)
+    public CustomerApiController(CinemaDbContext dbContext, ILogger<CustomerApiController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -113,6 +116,12 @@ public class CustomerApiController : ControllerBase
         _dbContext.Customers.Add(customer);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Customer created by API. CustomerId={CustomerId}, IsLoyaltyMember={IsLoyaltyMember}, UserId={UserId}",
+            customer.Id,
+            customer.IsLoyaltyMember,
+            GetCurrentUserId());
+
         return CreatedAtAction(nameof(Get), new { id = customer.Id }, ToDTO(customer));
     }
 
@@ -152,6 +161,12 @@ public class CustomerApiController : ControllerBase
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Customer updated by API. CustomerId={CustomerId}, IsLoyaltyMember={IsLoyaltyMember}, UserId={UserId}",
+            customer.Id,
+            customer.IsLoyaltyMember,
+            GetCurrentUserId());
+
         return Ok(ToDTO(customer));
     }
 
@@ -166,10 +181,22 @@ public class CustomerApiController : ControllerBase
             return NotFound();
         }
 
-        SoftDeleteCustomer(customer);
+        var deleteSummary = SoftDeleteCustomer(customer);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Customer soft deleted by API. CustomerId={CustomerId}, DeletedTicketCount={DeletedTicketCount}, DeletedFavoriteCount={DeletedFavoriteCount}, UserId={UserId}",
+            customer.Id,
+            deleteSummary.DeletedTicketCount,
+            deleteSummary.DeletedFavoriteCount,
+            GetCurrentUserId());
+
         return NoContent();
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Customer> ActiveCustomersQuery()
@@ -202,7 +229,7 @@ public class CustomerApiController : ControllerBase
         return null;
     }
 
-    private void SoftDeleteCustomer(Customer customer)
+    private (int DeletedTicketCount, int DeletedFavoriteCount) SoftDeleteCustomer(Customer customer)
     {
         var deletedAt = DateTime.UtcNow;
         customer.DeletedAt = deletedAt;
@@ -224,6 +251,8 @@ public class CustomerApiController : ControllerBase
         {
             favorite.DeletedAt = deletedAt;
         }
+
+        return (tickets.Count, favorites.Count);
     }
 
     private static CustomerDTO ToDTO(Customer customer)

@@ -13,6 +13,7 @@
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+        var canViewSensitiveNavigation = User.IsInRole("Admin") || User.IsInRole("Manager");
 
         var uiControllerLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -68,8 +69,11 @@
                     <li><a class="nav-link @(currentController == "Cinema" ? "active" : "")" asp-controller="Cinema" asp-action="Index">Kina</a></li>
                     <li><a class="nav-link @(currentController == "Hall" ? "active" : "")" asp-controller="Hall" asp-action="Index">Dvorane</a></li>
                     <li><a class="nav-link @(currentController == "Seat" ? "active" : "")" asp-controller="Seat" asp-action="Index">Sjedala</a></li>
-                    <li><a class="nav-link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">Kupci</a></li>
-                    <li><a class="nav-link @(currentController == "Ticket" ? "active" : "")" asp-controller="Ticket" asp-action="Index">Ulaznice</a></li>
+                    @if (canViewSensitiveNavigation)
+                    {
+                        <li><a class="nav-link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">Kupci</a></li>
+                        <li><a class="nav-link @(currentController == "Ticket" ? "active" : "")" asp-controller="Ticket" asp-action="Index">Ulaznice</a></li>
+                    }
                     <li><a class="nav-link @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Brza kupnja</a></li>
                 </ul>
             </nav>

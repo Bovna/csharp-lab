@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Reflection;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -46,15 +47,53 @@ builder.Services
     .AddCheck<UploadStorageHealthCheck>("upload_storage");
 
 var app = builder.Build();
+var applicationVersion =
+    typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+    ?? typeof(Program).Assembly.GetName().Version?.ToString()
+    ?? "unknown";
 var uploadStorage = app.Services.GetRequiredService<IUploadStorage>();
-uploadStorage.EnsureRootExists();
+try
+{
+    uploadStorage.EnsureRootExists();
+    app.Logger.LogInformation(
+        "Upload storage is ready. RequestPath={RequestPath}",
+        uploadStorage.RequestPath);
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(
+        ex,
+        "Upload storage initialization failed. RequestPath={RequestPath}",
+        uploadStorage.RequestPath);
+
+    throw;
+}
 
 using (var scope = app.Services.CreateScope())
 {
-    await IdentityDataSeeder.SeedAsync(
-        scope.ServiceProvider,
-        app.Configuration,
-        seedDemoUsers: app.Environment.IsDevelopment());
+    var seedDemoUsers = app.Environment.IsDevelopment();
+    try
+    {
+        await IdentityDataSeeder.SeedAsync(
+            scope.ServiceProvider,
+            app.Configuration,
+            seedDemoUsers: seedDemoUsers);
+
+        app.Logger.LogInformation(
+            "Identity data seeded. SeedDemoUsers={SeedDemoUsers}, Environment={EnvironmentName}",
+            seedDemoUsers,
+            app.Environment.EnvironmentName);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(
+            ex,
+            "Identity data seed failed. SeedDemoUsers={SeedDemoUsers}, Environment={EnvironmentName}",
+            seedDemoUsers,
+            app.Environment.EnvironmentName);
+
+        throw;
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -64,6 +103,35 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(
+            ex,
+            "Unhandled request exception. Method={Method}, Path={Path}, TraceIdentifier={TraceIdentifier}",
+            context.Request.Method,
+            context.Request.Path.Value,
+            context.TraceIdentifier);
+
+        throw;
+    }
+
+    if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError)
+    {
+        app.Logger.LogError(
+            "Request completed with server error. Method={Method}, Path={Path}, StatusCode={StatusCode}, TraceIdentifier={TraceIdentifier}",
+            context.Request.Method,
+            context.Request.Path.Value,
+            context.Response.StatusCode,
+            context.TraceIdentifier);
+    }
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -96,6 +164,11 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 app.MapHealthChecks("/health");
+
+app.Logger.LogInformation(
+    "Application configured. Environment={EnvironmentName}, Version={Version}",
+    app.Environment.EnvironmentName,
+    applicationVersion);
 
 app.Run();
 

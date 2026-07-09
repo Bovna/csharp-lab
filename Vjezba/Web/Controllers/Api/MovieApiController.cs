@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vjezba.DAL;
@@ -14,10 +15,12 @@ public class MovieApiController : ControllerBase
     private static readonly string[] AllowedAgeRatings = { "U", "7+", "10+", "12+", "15+", "16+", "18+" };
     private const string AgeRatingErrorMessage = "Dobna oznaka nije ispravna. Dopuštene vrijednosti su U, 7+, 10+, 12+, 15+, 16+, 18+ ili format PG-13.";
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<MovieApiController> _logger;
 
-    public MovieApiController(CinemaDbContext dbContext)
+    public MovieApiController(CinemaDbContext dbContext, ILogger<MovieApiController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -118,6 +121,15 @@ public class MovieApiController : ControllerBase
         _dbContext.Movies.Add(movie);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Movie created by API. MovieId={MovieId}, Genre={Genre}, Language={Language}, AgeRating={AgeRating}, DurationMinutes={DurationMinutes}, UserId={UserId}",
+            movie.Id,
+            movie.Genre,
+            movie.Language,
+            movie.AgeRating,
+            movie.DurationMinutes,
+            GetCurrentUserId());
+
         return CreatedAtAction(nameof(Get), new { id = movie.Id }, ToDTO(movie));
     }
 
@@ -154,6 +166,15 @@ public class MovieApiController : ControllerBase
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Movie updated by API. MovieId={MovieId}, Genre={Genre}, Language={Language}, AgeRating={AgeRating}, DurationMinutes={DurationMinutes}, UserId={UserId}",
+            existing.Id,
+            existing.Genre,
+            existing.Language,
+            existing.AgeRating,
+            existing.DurationMinutes,
+            GetCurrentUserId());
+
         return Ok(ToDTO(existing));
     }
 
@@ -168,13 +189,21 @@ public class MovieApiController : ControllerBase
             return NotFound();
         }
 
-        SoftDeleteMovies(movie);
+        var deleteSummary = SoftDeleteMovies(movie);
         _dbContext.SaveChanges();
+
+        _logger.LogInformation(
+            "Movie soft deleted by API. MovieId={MovieId}, DeletedScreeningCount={DeletedScreeningCount}, DeletedTicketCount={DeletedTicketCount}, DeletedFavoriteCount={DeletedFavoriteCount}, UserId={UserId}",
+            movie.Id,
+            deleteSummary.DeletedScreeningCount,
+            deleteSummary.DeletedTicketCount,
+            deleteSummary.DeletedFavoriteCount,
+            GetCurrentUserId());
 
         return NoContent();
     }
 
-    private void SoftDeleteMovies(Movie movie)
+    private (int DeletedScreeningCount, int DeletedTicketCount, int DeletedFavoriteCount) SoftDeleteMovies(Movie movie)
     {
         var deletedAt = DateTime.UtcNow;
         movie.DeletedAt = deletedAt;
@@ -207,6 +236,13 @@ public class MovieApiController : ControllerBase
         {
             f.DeletedAt = deletedAt;
         }
+
+        return (screenings.Count, tickets.Count, favorites.Count);
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private static object? ValidateMovieWriteDto(MovieWriteDTO dto)

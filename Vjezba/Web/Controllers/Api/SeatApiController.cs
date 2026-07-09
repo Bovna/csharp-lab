@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers.Api;
 public class SeatApiController : ControllerBase
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<SeatApiController> _logger;
 
-    public SeatApiController(CinemaDbContext dbContext)
+    public SeatApiController(CinemaDbContext dbContext, ILogger<SeatApiController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -115,6 +118,15 @@ public class SeatApiController : ControllerBase
         _dbContext.Seats.Add(seat);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Seat created by API. SeatId={SeatId}, HallId={HallId}, RowLabel={RowLabel}, SeatNumber={SeatNumber}, SeatType={SeatType}, UserId={UserId}",
+            seat.Id,
+            seat.HallId,
+            seat.RowLabel,
+            seat.SeatNumber,
+            seat.SeatType,
+            GetCurrentUserId());
+
         var createdSeat = ActiveSeatsQuery().FirstOrDefault(existing => existing.Id == seat.Id);
 
         return CreatedAtAction(nameof(Get), new { id = seat.Id }, ToDTO(createdSeat ?? seat));
@@ -149,6 +161,15 @@ public class SeatApiController : ControllerBase
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Seat updated by API. SeatId={SeatId}, HallId={HallId}, RowLabel={RowLabel}, SeatNumber={SeatNumber}, SeatType={SeatType}, UserId={UserId}",
+            seat.Id,
+            seat.HallId,
+            seat.RowLabel,
+            seat.SeatNumber,
+            seat.SeatType,
+            GetCurrentUserId());
+
         var updatedSeat = ActiveSeatsQuery().FirstOrDefault(existing => existing.Id == id);
 
         return Ok(ToDTO(updatedSeat ?? seat));
@@ -165,10 +186,22 @@ public class SeatApiController : ControllerBase
             return NotFound();
         }
 
-        SoftDeleteSeat(seat);
+        var deletedTicketCount = SoftDeleteSeat(seat);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Seat soft deleted by API. SeatId={SeatId}, HallId={HallId}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            seat.Id,
+            seat.HallId,
+            deletedTicketCount,
+            GetCurrentUserId());
+
         return NoContent();
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Seat> ActiveSeatsQuery()
@@ -209,7 +242,7 @@ public class SeatApiController : ControllerBase
         return null;
     }
 
-    private void SoftDeleteSeat(Seat seat)
+    private int SoftDeleteSeat(Seat seat)
     {
         var deletedAt = DateTime.UtcNow;
         seat.DeletedAt = deletedAt;
@@ -222,6 +255,8 @@ public class SeatApiController : ControllerBase
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return tickets.Count;
     }
 
     private static SeatDTO ToDTO(Seat seat)

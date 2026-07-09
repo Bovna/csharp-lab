@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers;
 public class CustomerController : Controller
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<CustomerController> _logger;
 
-    public CustomerController(CinemaDbContext dbContext)
+    public CustomerController(CinemaDbContext dbContext, ILogger<CustomerController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("")]
@@ -167,6 +170,12 @@ public class CustomerController : Controller
         _dbContext.Customers.Add(customer);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Customer created by MVC. CustomerId={CustomerId}, IsLoyaltyMember={IsLoyaltyMember}, UserId={UserId}",
+            customer.Id,
+            customer.IsLoyaltyMember,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -214,6 +223,12 @@ public class CustomerController : Controller
         MapCustomerForm(model, customer);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Customer updated by MVC. CustomerId={CustomerId}, IsLoyaltyMember={IsLoyaltyMember}, UserId={UserId}",
+            customer.Id,
+            customer.IsLoyaltyMember,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -228,10 +243,22 @@ public class CustomerController : Controller
             return NotFound();
         }
 
-        SoftDeleteCustomer(customer);
+        var deleteSummary = SoftDeleteCustomer(customer);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Customer soft deleted by MVC. CustomerId={CustomerId}, DeletedTicketCount={DeletedTicketCount}, DeletedFavoriteCount={DeletedFavoriteCount}, UserId={UserId}",
+            customer.Id,
+            deleteSummary.DeletedTicketCount,
+            deleteSummary.DeletedFavoriteCount,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Customer> ActiveCustomersQuery()
@@ -297,7 +324,7 @@ public class CustomerController : Controller
         }
     }
 
-    private void SoftDeleteCustomer(Customer customer)
+    private (int DeletedTicketCount, int DeletedFavoriteCount) SoftDeleteCustomer(Customer customer)
     {
         var deletedAt = DateTime.UtcNow;
         customer.DeletedAt = deletedAt;
@@ -319,5 +346,7 @@ public class CustomerController : Controller
         {
             favorite.DeletedAt = deletedAt;
         }
+
+        return (tickets.Count, favorites.Count);
     }
 }

@@ -13,14 +13,16 @@ namespace Vjezba.Web.Controllers;
 public class TicketBuilderController : Controller
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<TicketBuilderController> _logger;
     private const decimal StandardSeatPrice = 7.50m;
     private const decimal VipSeatPrice = 11.00m;
     private const decimal CoupleSeatPrice = 13.50m;
     private const decimal ThreeDSurcharge = 2.00m;
 
-    public TicketBuilderController(CinemaDbContext dbContext)
+    public TicketBuilderController(CinemaDbContext dbContext, ILogger<TicketBuilderController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("")]
@@ -187,6 +189,13 @@ public class TicketBuilderController : Controller
 
         if (IsSeatTaken(screeningId, seatId))
         {
+            _logger.LogWarning(
+                "Checkout blocked because seat is already taken. ScreeningId={ScreeningId}, SeatId={SeatId}, CinemaId={CinemaId}, MovieId={MovieId}",
+                screeningId,
+                seatId,
+                cinemaId,
+                movieId);
+
             TempData["PurchaseError"] = "Odabrano sjedalo je u meduvremenu zauzeto. Odaberite drugo sjedalo.";
             return RedirectToAction(nameof(Seats), new { cinemaId, movieId, screeningId });
         }
@@ -201,6 +210,13 @@ public class TicketBuilderController : Controller
     {
         if (!TryGetPurchaseContext(input.CinemaId, input.MovieId, input.ScreeningId, input.SeatId, out var cinema, out var movie, out var screening, out var seat))
         {
+            _logger.LogWarning(
+                "Ticket purchase context was invalid. CinemaId={CinemaId}, MovieId={MovieId}, ScreeningId={ScreeningId}, SeatId={SeatId}",
+                input.CinemaId,
+                input.MovieId,
+                input.ScreeningId,
+                input.SeatId);
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -215,6 +231,13 @@ public class TicketBuilderController : Controller
 
         if (IsSeatTaken(input.ScreeningId, input.SeatId))
         {
+            _logger.LogWarning(
+                "Ticket purchase blocked because seat is already taken. ScreeningId={ScreeningId}, SeatId={SeatId}, CinemaId={CinemaId}, MovieId={MovieId}",
+                input.ScreeningId,
+                input.SeatId,
+                input.CinemaId,
+                input.MovieId);
+
             ModelState.AddModelError(string.Empty, "Odabrano sjedalo je vec zauzeto. Odaberite drugo sjedalo.");
             return View("Checkout", BuildCheckoutViewModel(cinema!, movie!, screening!, seat!, input));
         }
@@ -250,6 +273,16 @@ public class TicketBuilderController : Controller
         EnsureCustomersIdentity();
         EnsureTicketsIdentity();
         _dbContext.SaveChanges();
+
+        _logger.LogInformation(
+            "Ticket purchased. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CinemaId={CinemaId}, MovieId={MovieId}, Price={Price}",
+            ticket.Id,
+            ticket.TicketNumber,
+            ticket.ScreeningId,
+            ticket.SeatId,
+            input.CinemaId,
+            input.MovieId,
+            ticket.Price);
 
         return RedirectToAction(nameof(Success), new { id = ticket.Id });
     }

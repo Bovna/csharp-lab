@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers.Api;
 public class HallApiController : ControllerBase
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<HallApiController> _logger;
 
-    public HallApiController(CinemaDbContext dbContext)
+    public HallApiController(CinemaDbContext dbContext, ILogger<HallApiController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -107,6 +110,14 @@ public class HallApiController : ControllerBase
         _dbContext.Halls.Add(hall);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Hall created by API. HallId={HallId}, CinemaId={CinemaId}, Capacity={Capacity}, Supports3D={Supports3D}, UserId={UserId}",
+            hall.Id,
+            hall.CinemaId,
+            hall.Capacity,
+            hall.Supports3D,
+            GetCurrentUserId());
+
         var createdHall = ActiveHallsQuery().FirstOrDefault(existing => existing.Id == hall.Id);
 
         return CreatedAtAction(nameof(Get), new { id = hall.Id }, ToDTO(createdHall ?? hall));
@@ -141,6 +152,14 @@ public class HallApiController : ControllerBase
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Hall updated by API. HallId={HallId}, CinemaId={CinemaId}, Capacity={Capacity}, Supports3D={Supports3D}, UserId={UserId}",
+            hall.Id,
+            hall.CinemaId,
+            hall.Capacity,
+            hall.Supports3D,
+            GetCurrentUserId());
+
         var updatedHall = ActiveHallsQuery().FirstOrDefault(existing => existing.Id == id);
 
         return Ok(ToDTO(updatedHall ?? hall));
@@ -157,10 +176,24 @@ public class HallApiController : ControllerBase
             return NotFound();
         }
 
-        SoftDeleteHall(hall);
+        var deleteSummary = SoftDeleteHall(hall);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Hall soft deleted by API. HallId={HallId}, CinemaId={CinemaId}, DeletedSeatCount={DeletedSeatCount}, DeletedScreeningCount={DeletedScreeningCount}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            hall.Id,
+            hall.CinemaId,
+            deleteSummary.DeletedSeatCount,
+            deleteSummary.DeletedScreeningCount,
+            deleteSummary.DeletedTicketCount,
+            GetCurrentUserId());
+
         return NoContent();
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Hall> ActiveHallsQuery()
@@ -196,7 +229,7 @@ public class HallApiController : ControllerBase
         return null;
     }
 
-    private void SoftDeleteHall(Hall hall)
+    private (int DeletedSeatCount, int DeletedScreeningCount, int DeletedTicketCount) SoftDeleteHall(Hall hall)
     {
         var deletedAt = DateTime.UtcNow;
         hall.DeletedAt = deletedAt;
@@ -232,6 +265,8 @@ public class HallApiController : ControllerBase
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return (seats.Count, screenings.Count, tickets.Count);
     }
 
     private static HallDTO ToDTO(Hall hall)

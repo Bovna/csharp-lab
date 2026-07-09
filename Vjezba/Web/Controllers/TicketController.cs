@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -14,10 +15,12 @@ namespace Vjezba.Web.Controllers;
 public class TicketController : Controller
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<TicketController> _logger;
 
-    public TicketController(CinemaDbContext dbContext)
+    public TicketController(CinemaDbContext dbContext, ILogger<TicketController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("")]
@@ -129,6 +132,16 @@ public class TicketController : Controller
         _dbContext.Tickets.Add(ticket);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Ticket created by MVC. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
+            ticket.Id,
+            ticket.TicketNumber,
+            ticket.ScreeningId,
+            ticket.SeatId,
+            ticket.CustomerId,
+            ticket.Status,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -180,6 +193,16 @@ public class TicketController : Controller
         MapTicketForm(model, ticket);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Ticket updated by MVC. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
+            ticket.Id,
+            ticket.TicketNumber,
+            ticket.ScreeningId,
+            ticket.SeatId,
+            ticket.CustomerId,
+            ticket.Status,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -197,7 +220,18 @@ public class TicketController : Controller
         ticket.DeletedAt = DateTime.UtcNow;
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Ticket soft deleted by MVC. TicketId={TicketId}, TicketNumber={TicketNumber}, UserId={UserId}",
+            ticket.Id,
+            ticket.TicketNumber,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Ticket> ActiveTicketsQuery()

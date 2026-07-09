@@ -15,11 +15,16 @@ namespace Vjezba.Web.Controllers;
 public class ScreeningController : BaseController
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<ScreeningController> _logger;
 
-    public ScreeningController(CinemaDbContext dbContext, UserManager<AppUser> userManager)
+    public ScreeningController(
+        CinemaDbContext dbContext,
+        UserManager<AppUser> userManager,
+        ILogger<ScreeningController> logger)
         : base(userManager)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("pretraga")]
@@ -210,6 +215,16 @@ public class ScreeningController : BaseController
         _dbContext.Screenings.Add(screening);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Screening created by MVC. ScreeningId={ScreeningId}, MovieId={MovieId}, HallId={HallId}, StartTime={StartTime}, EndTime={EndTime}, Is3D={Is3D}, UserId={UserId}",
+            screening.Id,
+            screening.MovieId,
+            screening.HallId,
+            screening.StartTime,
+            screening.EndTime,
+            screening.Is3D,
+            UserId ?? "unknown");
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -275,6 +290,16 @@ public class ScreeningController : BaseController
 
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Screening updated by MVC. ScreeningId={ScreeningId}, MovieId={MovieId}, HallId={HallId}, StartTime={StartTime}, EndTime={EndTime}, Is3D={Is3D}, UserId={UserId}",
+            screening.Id,
+            screening.MovieId,
+            screening.HallId,
+            screening.StartTime,
+            screening.EndTime,
+            screening.Is3D,
+            UserId ?? "unknown");
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -289,8 +314,16 @@ public class ScreeningController : BaseController
             return NotFound();
         }
 
-        SoftDeleteScreening(screening);
+        var deletedTicketCount = SoftDeleteScreening(screening);
         _dbContext.SaveChanges();
+
+        _logger.LogInformation(
+            "Screening soft deleted by MVC. ScreeningId={ScreeningId}, MovieId={MovieId}, HallId={HallId}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            screening.Id,
+            screening.MovieId,
+            screening.HallId,
+            deletedTicketCount,
+            UserId ?? "unknown");
 
         return RedirectToAction(nameof(Index));
     }
@@ -307,7 +340,7 @@ public class ScreeningController : BaseController
                 .ThenInclude(hall => hall.Cinema);
     }
 
-    private void SoftDeleteScreening(Screening screening)
+    private int SoftDeleteScreening(Screening screening)
     {
         var deletedAt = screening.DeletedAt ?? DateTime.UtcNow;
         screening.DeletedAt = deletedAt;
@@ -320,6 +353,8 @@ public class ScreeningController : BaseController
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return tickets.Count;
     }
 
     private void PrepareScreeningForm(ScreeningFormViewModel model)

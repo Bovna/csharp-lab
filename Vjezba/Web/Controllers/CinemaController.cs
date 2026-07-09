@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ namespace Vjezba.Web.Controllers;
 public class CinemaController : Controller
 {
     private readonly CinemaDbContext _dbContext;
+    private readonly ILogger<CinemaController> _logger;
 
-    public CinemaController(CinemaDbContext dbContext)
+    public CinemaController(CinemaDbContext dbContext, ILogger<CinemaController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Route("")]
@@ -147,6 +150,12 @@ public class CinemaController : Controller
         _dbContext.Cinemas.Add(cinema);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Cinema created by MVC. CinemaId={CinemaId}, City={City}, UserId={UserId}",
+            cinema.Id,
+            cinema.City,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -194,6 +203,12 @@ public class CinemaController : Controller
         MapCinemaForm(model, cinema);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Cinema updated by MVC. CinemaId={CinemaId}, City={City}, UserId={UserId}",
+            cinema.Id,
+            cinema.City,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -208,10 +223,24 @@ public class CinemaController : Controller
             return NotFound();
         }
 
-        SoftDeleteCinema(cinema);
+        var deleteSummary = SoftDeleteCinema(cinema);
         _dbContext.SaveChanges();
 
+        _logger.LogInformation(
+            "Cinema soft deleted by MVC. CinemaId={CinemaId}, DeletedHallCount={DeletedHallCount}, DeletedSeatCount={DeletedSeatCount}, DeletedScreeningCount={DeletedScreeningCount}, DeletedTicketCount={DeletedTicketCount}, UserId={UserId}",
+            cinema.Id,
+            deleteSummary.DeletedHallCount,
+            deleteSummary.DeletedSeatCount,
+            deleteSummary.DeletedScreeningCount,
+            deleteSummary.DeletedTicketCount,
+            GetCurrentUserId());
+
         return RedirectToAction(nameof(Index));
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
     }
 
     private IQueryable<Cinema> ActiveCinemasQuery()
@@ -294,7 +323,7 @@ public class CinemaController : Controller
         }
     }
 
-    private void SoftDeleteCinema(Cinema cinema)
+    private (int DeletedHallCount, int DeletedSeatCount, int DeletedScreeningCount, int DeletedTicketCount) SoftDeleteCinema(Cinema cinema)
     {
         var deletedAt = DateTime.UtcNow;
         cinema.DeletedAt = deletedAt;
@@ -341,5 +370,7 @@ public class CinemaController : Controller
         {
             ticket.DeletedAt = deletedAt;
         }
+
+        return (halls.Count, seats.Count, screenings.Count, tickets.Count);
     }
 }
