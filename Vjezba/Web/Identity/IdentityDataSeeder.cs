@@ -33,7 +33,13 @@ public static class IdentityDataSeeder
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                var createResult = await roleManager.CreateAsync(new IdentityRole(role));
+
+                if (!createResult.Succeeded && !await roleManager.RoleExistsAsync(role))
+                {
+                    throw new InvalidOperationException(
+                        $"Could not create role '{role}': {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                }
             }
         }
     }
@@ -118,8 +124,13 @@ public static class IdentityDataSeeder
             var createResult = await userManager.CreateAsync(user, password);
             if (!createResult.Succeeded)
             {
-                throw new InvalidOperationException(
-                    $"Could not create {userSource} user '{email}': {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                user = await userManager.FindByEmailAsync(email);
+
+                if (user is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Could not create {userSource} user '{email}': {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                }
             }
         }
 
@@ -137,6 +148,11 @@ public static class IdentityDataSeeder
             var roleResult = await userManager.AddToRoleAsync(user, role);
             if (!roleResult.Succeeded)
             {
+                if (await userManager.IsInRoleAsync(user, role))
+                {
+                    return;
+                }
+
                 throw new InvalidOperationException(
                     $"Could not add {userSource} user '{user.Email}' to role '{role}': {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
             }

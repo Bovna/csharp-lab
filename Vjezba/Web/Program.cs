@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Vjezba.DAL;
-using Vjezba.Web.HealthChecks;
 using Vjezba.Web.Identity;
 using Vjezba.Web.Options;
 using Vjezba.Web.Services;
@@ -20,7 +19,11 @@ builder.Services.AddSingleton<IUploadStorage, UploadStorage>();
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("CinemaDbContext"),
-        sql => sql.MigrationsAssembly("Vjezba.DAL")));
+        sql =>
+        {
+            sql.MigrationsAssembly("Vjezba.DAL");
+            sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+        }));
 
 builder.Services
     .AddDefaultIdentity<AppUser>(options => { options.SignIn.RequireConfirmedAccount = false; })
@@ -43,8 +46,23 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
 builder.Services.AddRazorPages();
 builder.Services
     .AddHealthChecks()
-    .AddCheck<CinemaDbContextHealthCheck>("database")
-    .AddCheck<UploadStorageHealthCheck>("upload_storage");
+    .AddDbContextCheck<CinemaDbContext>(
+        "database",
+        customTestQuery: async (dbContext, cancellationToken) =>
+        {
+            if (!await dbContext.Database.CanConnectAsync(cancellationToken))
+            {
+                return false;
+            }
+
+            if (!dbContext.Database.IsRelational())
+            {
+                return true;
+            }
+
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            return !pendingMigrations.Any();
+        });
 
 var app = builder.Build();
 var applicationVersion =
@@ -52,9 +70,11 @@ var applicationVersion =
     ?? typeof(Program).Assembly.GetName().Version?.ToString()
     ?? "unknown";
 var uploadStorage = app.Services.GetRequiredService<IUploadStorage>();
+
 try
 {
     uploadStorage.EnsureRootExists();
+
     app.Logger.LogInformation(
         "Upload storage is ready. RequestPath={RequestPath}",
         uploadStorage.RequestPath);
@@ -74,6 +94,24 @@ using (var scope = app.Services.CreateScope())
     var seedDemoUsers = app.Environment.IsDevelopment();
     try
     {
+        var dbContext = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+
+        if (!await dbContext.Database.CanConnectAsync())
+        {
+            throw new InvalidOperationException("Database is not reachable during startup.");
+        }
+
+        if (dbContext.Database.IsRelational())
+        {
+            var pendingMigrations = (await dbContext.Database.GetPendingMigrationsAsync()).ToList();
+
+            if (pendingMigrations.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Database has pending migrations during startup: {string.Join(", ", pendingMigrations)}.");
+            }
+        }
+
         await IdentityDataSeeder.SeedAsync(
             scope.ServiceProvider,
             app.Configuration,

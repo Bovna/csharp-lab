@@ -67,7 +67,10 @@ GET /health
 ```
 
 Ocekivani odgovor je `Healthy`. Health endpoint provjerava dostupnost baze i
-moze li aplikacija pisati u upload storage.
+provjerava da nema pending migracija.
+
+Aplikacija se nece pokrenuti ako baza nije dostupna, migracije nisu
+primijenjene, identity seed ne uspije ili upload storage nije spreman.
 
 Nakon prvog uspjesnog deploya preporuceno je maknuti `SeedUsers__*__Password`
 varijable iz trajne konfiguracije okruzenja. Seeder ce postojecem korisniku
