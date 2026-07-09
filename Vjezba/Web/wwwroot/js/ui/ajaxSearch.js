@@ -1,5 +1,5 @@
 (function () {
-  function buildUrl(form) {
+  function buildUrl(form, partial) {
     const url = new URL(form.action, window.location.origin);
     const data = new FormData(form);
 
@@ -9,11 +9,23 @@
       }
     });
 
-    url.searchParams.set("partial", "true");
-    return url.toString();
+    if (partial) {
+      url.searchParams.set("partial", "true");
+    }
+
+    return url;
   }
 
-  async function refreshResults(form) {
+  function syncBrowserUrl(form) {
+    if (form.dataset.ajaxSyncUrl !== "true") {
+      return;
+    }
+
+    const url = buildUrl(form, false);
+    window.history.replaceState({}, "", url.toString());
+  }
+
+  async function refreshResults(form, state) {
     const targetSelector = form.dataset.ajaxResultsTarget;
     const target = targetSelector
       ? document.querySelector(targetSelector)
@@ -23,35 +35,57 @@
       return;
     }
 
-    const response = await fetch(buildUrl(form), {
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-      },
-    });
-
-    if (!response.ok) {
-      return;
+    if (state.abortController) {
+      state.abortController.abort();
     }
 
-    target.innerHTML = await response.text();
+    state.abortController = new AbortController();
+    state.requestId += 1;
+
+    const requestId = state.requestId;
+    const url = buildUrl(form, true);
+
+    try {
+      const response = await fetch(url.toString(), {
+        signal: state.abortController.signal,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+
+      if (!response.ok || requestId !== state.requestId) {
+        return;
+      }
+
+      target.innerHTML = await response.text();
+      syncBrowserUrl(form);
+    } catch (error) {
+      if (error && error.name === "AbortError") {
+        return;
+      }
+    }
   }
 
   function bindForm(form) {
-    let debounceTimer = null;
+    const state = {
+      abortController: null,
+      debounceTimer: null,
+      requestId: 0,
+    };
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      refreshResults(form);
+      refreshResults(form, state);
     });
 
     form.querySelectorAll("input, select").forEach((control) => {
       if (control.tagName === "INPUT" && control.type !== "radio" && control.type !== "checkbox") {
         control.addEventListener("input", () => {
-          window.clearTimeout(debounceTimer);
-          debounceTimer = window.setTimeout(() => refreshResults(form), 220);
+          window.clearTimeout(state.debounceTimer);
+          state.debounceTimer = window.setTimeout(() => refreshResults(form, state), 220);
         });
       } else {
-        control.addEventListener("change", () => refreshResults(form));
+        control.addEventListener("change", () => refreshResults(form, state));
       }
     });
   }

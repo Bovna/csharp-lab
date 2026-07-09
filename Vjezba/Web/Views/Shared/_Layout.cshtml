@@ -25,13 +25,15 @@
             ["Screening"] = "Projekcije",
             ["Seat"] = "Sjedala",
             ["Ticket"] = "Ulaznice",
-            ["TicketBuilder"] = "Brza kupnja"
+            ["TicketBuilder"] = "Brza kupnja",
+            ["GlobalSearch"] = "Pretraga"
         };
 
         var uiActionLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["Index"] = "Pregled",
-            ["Details"] = "Detalji"
+            ["Details"] = "Detalji",
+            ["Results"] = "Pretraga"
         };
 
         var ticketBuilderActionLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -77,6 +79,26 @@
                     <li><a class="nav-link @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Brza kupnja</a></li>
                 </ul>
             </nav>
+            <form class="site-header__search global-search" role="search" method="get"
+                  action="@Url.Action("Results", "GlobalSearch")" data-global-search
+                  data-endpoint="@Url.Action("Index", "GlobalSearch")" data-min-length="2">
+                <label class="visually-hidden" for="globalSearchInput">Globalna pretraga</label>
+                <div class="global-search__combobox" role="combobox" aria-expanded="false"
+                     aria-haspopup="listbox" aria-owns="globalSearchResults" data-global-search-combobox>
+                    <input id="globalSearchInput" class="global-search__input" name="query" type="search"
+                           placeholder="Pretraga filmova, kina, projekcija..." autocomplete="off"
+                           aria-autocomplete="list" aria-controls="globalSearchResults" aria-expanded="false"
+                           data-global-search-input />
+                    <button class="global-search__submit" type="submit" aria-label="Prikaži rezultate pretrage">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
+                        </svg>
+                    </button>
+                    <div id="globalSearchResults" class="global-search__panel" role="listbox"
+                         data-global-search-results hidden></div>
+                </div>
+                <div class="visually-hidden" aria-live="polite" data-global-search-status></div>
+            </form>
             <div class="site-header__auth ms-auto">
                 <partial name="_LoginPartial" />
             </div>
@@ -94,6 +116,11 @@
                     @if (!string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase))
                     {
                         if (string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <li class="breadcrumb-item active" aria-current="page">@currentControllerLabel</li>
+                        }
+                        else if (string.Equals(currentController, "GlobalSearch", StringComparison.OrdinalIgnoreCase)
+                            && string.Equals(currentAction, "Results", StringComparison.OrdinalIgnoreCase))
                         {
                             <li class="breadcrumb-item active" aria-current="page">@currentControllerLabel</li>
                         }
@@ -147,6 +174,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/ui/autocomplete.js" asp-append-version="true"></script>
+    <script src="~/js/ui/globalSearch.js" asp-append-version="true"></script>
     <script src="~/js/ui/ajaxSearch.js" asp-append-version="true"></script>
     <script src="~/js/ui/datepicker.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
