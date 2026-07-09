@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: production-deploy
+  group: cinema-bv-deploy
   cancel-in-progress: true
 
 env:
@@ -22,7 +22,6 @@ env:
   SOLUTION_PATH: Vjezba/Vjezba.sln
   WEB_PROJECT_PATH: Vjezba/Web/Vjezba.Web.csproj
   AZURE_WEBAPP_NAME: cinema-bv
-  AZURE_WEBAPP_SLOT: production
   ARTIFACT_NAME: dotnet-app
 
 jobs:
@@ -78,7 +77,6 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     needs: build
-    environment: production
     permissions:
       contents: read
 
@@ -94,7 +92,6 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          slot-name: ${{ env.AZURE_WEBAPP_SLOT }}
           package: app
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_818DC83B21024F5C8EAFD8B94881BFBD }}
 
