@@ -78,4 +78,4 @@ Health endpointi:
 
 ## Demo podaci i vizuali
 
-Podaci, nazivi filmova, kina i vizuali u projektu su izmišljeni. Za demonstraciju se ne koriste stvarni OIB, JMBAG, privatni telefon ni privatna e-pošta. Statički demo posteri trebaju biti u commitanoj mapi izvan `wwwroot/uploads`; uploadani sadržaj ostaje runtime podatak.
+Podaci, nazivi filmova, kina i vizuali u projektu su izmišljeni. Za demonstraciju se ne koriste stvarni OIB, JMBAG, privatni telefon ni privatna e-pošta.
