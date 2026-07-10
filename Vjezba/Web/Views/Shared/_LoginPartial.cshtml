@@ -2,27 +2,37 @@
 @inject SignInManager<AppUser> SignInManager
 
 <nav class="site-auth" aria-label="Korisnički izbornik">
-    <ul class="site-auth__links">
     @if (SignInManager.IsSignedIn(User))
     {
         var email = User.Identity?.Name ?? string.Empty;
         var userName = email.Split('@')[0];
         var role = User.IsInRole("Admin") ? "Admin" : User.IsInRole("Manager") ? "Manager" : null;
-        <li class="site-auth__item site-auth__item--meta">
-            <span class="site-auth__label">Prijavljeni ste kao</span>
-            <strong class="site-auth__name">@userName@if (role is not null) { <span>(@role)</span> }</strong>
-        </li>
-        <li class="site-auth__item">
-            <form class="site-auth__form" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="ui-btn ui-btn--primary site-auth__button">Odjava</button>
-            </form>
-        </li>
+        <details class="site-account">
+            <summary class="site-account__trigger" aria-label="Korisnički izbornik za @userName">
+                <span class="site-account__name">@userName</span>
+                @if (role is not null)
+                {
+                    <span class="site-account__role">@role</span>
+                }
+                <span class="site-account__chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="site-account__menu">
+                <span class="site-account__label">Prijavljeni ste kao</span>
+                <strong class="site-account__email">@email</strong>
+                @if (role is not null)
+                {
+                    <span class="site-account__menu-role">@role</span>
+                }
+                <div class="site-account__actions">
+                    <form class="site-auth__form" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button type="submit" class="ui-btn ui-btn--primary site-auth__button">Odjava</button>
+                    </form>
+                </div>
+            </div>
+        </details>
     }
     else
     {
-        <li class="site-auth__item">
-            <a class="ui-btn ui-btn--primary site-auth__button" asp-area="Identity" asp-page="/Account/Login">Prijava</a>
-        </li>
+        <a class="ui-btn ui-btn--primary site-auth__button" asp-area="Identity" asp-page="/Account/Login">Prijava</a>
     }
-    </ul>
 </nav>

@@ -270,6 +270,70 @@ function initNavigationMotion() {
   }
 }
 
+function initResponsiveNavigation() {
+  const navigation = document.querySelector("[data-responsive-navigation]");
+  const toggle = document.querySelector("[data-nav-toggle]");
+
+  if (!navigation || !toggle || navigation.dataset.responsiveReady === "1") {
+    return;
+  }
+
+  navigation.dataset.responsiveReady = "1";
+  const toggleLabel = toggle.querySelector("[data-nav-toggle-label]");
+  const desktopQuery = window.matchMedia("(min-width: 1200px)");
+
+  const setOpen = (isOpen, restoreFocus = false) => {
+    navigation.classList.toggle("is-open", isOpen);
+    toggle.classList.toggle("is-open", isOpen);
+    toggle.setAttribute("aria-expanded", String(isOpen));
+
+    if (toggleLabel) {
+      toggleLabel.textContent = isOpen ? "Zatvori navigaciju" : "Otvori navigaciju";
+    }
+
+    if (restoreFocus) {
+      toggle.focus();
+    }
+  };
+
+  toggle.addEventListener("click", () => {
+    setOpen(!navigation.classList.contains("is-open"));
+  });
+
+  navigation.addEventListener("click", (event) => {
+    if (!desktopQuery.matches && event.target.closest("a")) {
+      setOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && navigation.classList.contains("is-open")) {
+      setOpen(false, true);
+    }
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!desktopQuery.matches && navigation.classList.contains("is-open")
+      && !navigation.contains(event.target) && !toggle.contains(event.target)) {
+      setOpen(false);
+    }
+  });
+
+  const handleViewportChange = (event) => {
+    if (event.matches) {
+      setOpen(false);
+    }
+  };
+
+  if (desktopQuery.addEventListener) {
+    desktopQuery.addEventListener("change", handleViewportChange);
+  } else {
+    desktopQuery.addListener(handleViewportChange);
+  }
+
+  document.documentElement.classList.add("has-responsive-navigation");
+}
+
 function initTicketBuilderMotion() {
   const pages = Array.from(document.querySelectorAll(".tb-page"));
   if (!pages.length) {
@@ -321,11 +385,13 @@ function initTicketBuilderMotion() {
 if (window.jQuery) {
   window.jQuery(() => {
     initNavigationMotion();
+    initResponsiveNavigation();
     initTicketBuilderMotion();
   });
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     initNavigationMotion();
+    initResponsiveNavigation();
     initTicketBuilderMotion();
   });
 }

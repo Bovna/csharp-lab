@@ -68,7 +68,11 @@
                 <img class="nav-brand__logo" src="~/images/brand/logo.svg" asp-append-version="true"
                      alt="" width="160" height="40" />
             </a>
-            <nav class="site-nav" aria-label="Glavna navigacija">
+            <button class="site-nav__toggle" type="button" data-nav-toggle aria-controls="primaryNavigation" aria-expanded="false">
+                <span class="visually-hidden" data-nav-toggle-label>Otvori navigaciju</span>
+                <span class="site-nav__toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+            </button>
+            <nav id="primaryNavigation" class="site-nav" data-responsive-navigation aria-label="Glavna navigacija">
                 <ul class="nav-menu">
                     <li><a class="nav-link @(currentController == "Movie" && !isManagementQuery ? "active" : "")" asp-controller="Movie" asp-action="Index">Na programu</a></li>
                     <li><a class="nav-link @(currentController == "Screening" && !isManagementQuery ? "active" : "")" asp-controller="Screening" asp-action="Index">Raspored</a></li>

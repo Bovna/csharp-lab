@@ -52,10 +52,6 @@
 
         <div class="ui-actions ui-actions--end tb-checkout-actions">
             <a class="ui-btn ui-btn--secondary" asp-controller="TicketBuilder" asp-action="Index">Nova kupnja</a>
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <a class="ui-btn ui-btn--primary" asp-controller="Ticket" asp-action="Details" asp-route-id="@Model.TicketId">Detalji ulaznice</a>
-            }
         </div>
     </div>
 </div>
