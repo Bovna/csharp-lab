@@ -1,5 +1,9 @@
 using System.Net;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Vjezba.DAL;
+using Vjezba.Model.Entities;
 
 namespace Vjezba.Tests;
 
@@ -38,5 +42,21 @@ public sealed class TicketBuilderSecurityTests : IClassFixture<CustomWebApplicat
             .GetAsync($"/TicketBuilder/success/{ticket.Id}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public void TicketModel_UsesUniqueFilteredIndex_ForActiveSeatReservations()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+        var ticketType = dbContext.Model.FindEntityType(typeof(Ticket));
+
+        var index = ticketType!.GetIndexes()
+            .Single(existing => existing.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { nameof(Ticket.ScreeningId), nameof(Ticket.SeatId) }));
+
+        index.IsUnique.Should().BeTrue();
+        index.GetFilter().Should().Contain("[DeletedAt] IS NULL");
+        index.GetFilter().Should().Contain("[Status] IN (0, 2)");
     }
 }

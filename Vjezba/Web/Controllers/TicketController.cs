@@ -126,11 +126,20 @@ public class TicketController : Controller
             return View(model);
         }
 
-        var ticket = new Ticket();
+        var ticket = new Ticket { ConfirmationCode = Guid.NewGuid() };
         MapTicketForm(model, ticket);
 
         _dbContext.Tickets.Add(ticket);
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsSeatAlreadyReserved(model.ScreeningId!.Value, model.SeatId))
+        {
+            ModelState.AddModelError(nameof(model.SeatId), "Odabrano sjedalo je već rezervirano za tu projekciju.");
+            PrepareTicketForm(model);
+            return View(model);
+        }
 
         _logger.LogInformation(
             "Ticket created by MVC. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
@@ -181,7 +190,7 @@ public class TicketController : Controller
             return View(model);
         }
 
-        ValidateTicketBusinessRules(model);
+        ValidateTicketBusinessRules(model, id);
 
         if (!ModelState.IsValid)
         {
@@ -191,7 +200,17 @@ public class TicketController : Controller
         }
 
         MapTicketForm(model, ticket);
-        _dbContext.SaveChanges();
+
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsSeatAlreadyReserved(model.ScreeningId!.Value, model.SeatId, id))
+        {
+            ModelState.AddModelError(nameof(model.SeatId), "Odabrano sjedalo je već rezervirano za tu projekciju.");
+            PrepareTicketForm(model);
+            return View(model);
+        }
 
         _logger.LogInformation(
             "Ticket updated by MVC. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
@@ -386,7 +405,7 @@ public class TicketController : Controller
         ticket.CustomerId = model.CustomerId!.Value;
     }
 
-    private void ValidateTicketBusinessRules(TicketFormViewModel model)
+    private void ValidateTicketBusinessRules(TicketFormViewModel model, int? excludedTicketId = null)
     {
         if (!model.ScreeningId.HasValue)
         {
@@ -429,6 +448,29 @@ public class TicketController : Controller
         if (seat is not null && seat.HallId != screening.HallId)
         {
             ModelState.AddModelError(nameof(model.SeatId), "Odabrano sjedalo ne pripada dvorani projekcije.");
+            return;
         }
+
+        if (seat is not null
+            && OccupiesSeat(model.Status)
+            && IsSeatAlreadyReserved(model.ScreeningId.Value, model.SeatId, excludedTicketId))
+        {
+            ModelState.AddModelError(nameof(model.SeatId), "Odabrano sjedalo je već rezervirano za tu projekciju.");
+        }
+    }
+
+    private bool IsSeatAlreadyReserved(int screeningId, int? seatId, int? excludedTicketId = null)
+    {
+        return seatId.HasValue && _dbContext.Tickets.Any(ticket =>
+            ticket.Id != excludedTicketId
+            && ticket.ScreeningId == screeningId
+            && ticket.SeatId == seatId
+            && ticket.DeletedAt == null
+            && (ticket.Status == TicketStatus.Active || ticket.Status == TicketStatus.Used));
+    }
+
+    private static bool OccupiesSeat(TicketStatus status)
+    {
+        return status is TicketStatus.Active or TicketStatus.Used;
     }
 }

@@ -119,6 +119,41 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     [Fact]
+    public async Task PostTicket_ReturnsBadRequest_WhenSeatIsAlreadyReserved()
+    {
+        await _factory.ClearDatabaseAsync();
+        var setup = await CreateTicketSetupAsync();
+        await ApiTestData.CreateTicketAsync(_factory, setup.Screening.Id, setup.Seat.Id, setup.Customer.Id);
+        var anotherCustomer = await ApiTestData.CreateCustomerAsync(_factory, firstName: "Another", lastName: "Customer");
+        var request = CreateTicketWriteDto(setup.Screening.Id, setup.Seat.Id, anotherCustomer.Id, "DUPLICATE-SEAT-001");
+
+        var response = await _client.PostAsJsonAsync("/api/ulaznice", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Odabrano sjedalo je već rezervirano za tu projekciju.");
+    }
+
+    [Fact]
+    public async Task PostTicket_AllowsSeatThatWasReleasedByCancelledTicket()
+    {
+        await _factory.ClearDatabaseAsync();
+        var setup = await CreateTicketSetupAsync();
+        await ApiTestData.CreateTicketAsync(
+            _factory,
+            setup.Screening.Id,
+            setup.Seat.Id,
+            setup.Customer.Id,
+            status: TicketStatus.Cancelled);
+        var anotherCustomer = await ApiTestData.CreateCustomerAsync(_factory, firstName: "Available", lastName: "Seat");
+        var request = CreateTicketWriteDto(setup.Screening.Id, setup.Seat.Id, anotherCustomer.Id, "RELEASED-SEAT-001");
+
+        var response = await _client.PostAsJsonAsync("/api/ulaznice", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
     public async Task PostTicket_ReturnsBadRequest_WhenSeatDoesNotBelongToScreeningHall()
     {
         await _factory.ClearDatabaseAsync();

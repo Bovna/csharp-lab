@@ -273,7 +273,21 @@ public class TicketBuilderController : Controller
         _dbContext.Tickets.Add(ticket);
         EnsureCustomersIdentity();
         EnsureTicketsIdentity();
-        _dbContext.SaveChanges();
+
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsSeatTaken(input.ScreeningId, input.SeatId))
+        {
+            _logger.LogWarning(
+                "Ticket purchase lost a seat reservation race. ScreeningId={ScreeningId}, SeatId={SeatId}",
+                input.ScreeningId,
+                input.SeatId);
+
+            ModelState.AddModelError(string.Empty, "Odabrano sjedalo je u meduvremenu zauzeto. Odaberite drugo sjedalo.");
+            return View("Checkout", BuildCheckoutViewModel(cinema!, movie!, screening!, seat!, input));
+        }
 
         _logger.LogInformation(
             "Ticket purchased. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CinemaId={CinemaId}, MovieId={MovieId}, Price={Price}",

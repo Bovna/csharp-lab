@@ -41,6 +41,11 @@ public class CinemaDbContext : IdentityDbContext<AppUser>
             .HasIndex(ticket => ticket.ConfirmationCode)
             .IsUnique();
 
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => new { ticket.ScreeningId, ticket.SeatId })
+            .IsUnique()
+            .HasFilter("[SeatId] IS NOT NULL AND [DeletedAt] IS NULL AND [Status] IN (0, 2)");
+
         modelBuilder.Entity<Cinema>().HasData(
             new Cinema
             {

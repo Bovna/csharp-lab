@@ -102,6 +102,7 @@ public class TicketApiController : ControllerBase
         var ticket = new Ticket
         {
             TicketNumber = dto.TicketNumber,
+            ConfirmationCode = Guid.NewGuid(),
             PurchasedAt = dto.PurchasedAt,
             Price = dto.Price,
             Status = dto.Status,
@@ -111,7 +112,15 @@ public class TicketApiController : ControllerBase
         };
 
         _dbContext.Tickets.Add(ticket);
-        _dbContext.SaveChanges();
+
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsSeatAlreadyReserved(dto.ScreeningId, dto.SeatId))
+        {
+            return Conflict(new { error = "Odabrano sjedalo je već rezervirano za tu projekciju." });
+        }
 
         _logger.LogInformation(
             "Ticket created by API. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
@@ -144,7 +153,7 @@ public class TicketApiController : ControllerBase
             return NotFound();
         }
 
-        var validationError = ValidateTicketWriteDto(dto);
+        var validationError = ValidateTicketWriteDto(dto, id);
         if (validationError is not null)
         {
             return BadRequest(validationError);
@@ -158,7 +167,14 @@ public class TicketApiController : ControllerBase
         ticket.SeatId = dto.SeatId;
         ticket.CustomerId = dto.CustomerId;
 
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (DbUpdateException) when (IsSeatAlreadyReserved(dto.ScreeningId, dto.SeatId, id))
+        {
+            return Conflict(new { error = "Odabrano sjedalo je već rezervirano za tu projekciju." });
+        }
 
         _logger.LogInformation(
             "Ticket updated by API. TicketId={TicketId}, TicketNumber={TicketNumber}, ScreeningId={ScreeningId}, SeatId={SeatId}, CustomerId={CustomerId}, Status={Status}, UserId={UserId}",
@@ -227,7 +243,7 @@ public class TicketApiController : ControllerBase
                         && ticket.Seat.Hall.Cinema.DeletedAt == null)));
     }
 
-    private object? ValidateTicketWriteDto(TicketWriteDTO dto)
+    private object? ValidateTicketWriteDto(TicketWriteDTO dto, int? excludedTicketId = null)
     {
         var customerExists = _dbContext.Customers.Any(customer => customer.Id == dto.CustomerId && customer.DeletedAt == null);
         if (!customerExists)
@@ -274,9 +290,29 @@ public class TicketApiController : ControllerBase
             {
                 return new { error = "Odabrano sjedalo ne pripada dvorani projekcije." };
             }
+
+            if (OccupiesSeat(dto.Status) && IsSeatAlreadyReserved(dto.ScreeningId, dto.SeatId, excludedTicketId))
+            {
+                return new { error = "Odabrano sjedalo je već rezervirano za tu projekciju." };
+            }
         }
 
         return null;
+    }
+
+    private bool IsSeatAlreadyReserved(int screeningId, int? seatId, int? excludedTicketId = null)
+    {
+        return seatId.HasValue && _dbContext.Tickets.Any(ticket =>
+            ticket.Id != excludedTicketId
+            && ticket.ScreeningId == screeningId
+            && ticket.SeatId == seatId
+            && ticket.DeletedAt == null
+            && (ticket.Status == TicketStatus.Active || ticket.Status == TicketStatus.Used));
+    }
+
+    private static bool OccupiesSeat(TicketStatus status)
+    {
+        return status is TicketStatus.Active or TicketStatus.Used;
     }
 
     private static TicketDTO ToDTO(Ticket ticket)
