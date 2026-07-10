@@ -50,6 +50,7 @@ UploadStorage__RootPath
 UploadStorage__RequestPath
 Authentication__Google__ClientId
 Authentication__Google__ClientSecret
+APPLICATIONINSIGHTS_CONNECTION_STRING
 ```
 
 `UploadStorage__RootPath` treba pokazivati na zapisivu i trajnu lokaciju ako se uploadani posteri moraju zadržati između deployeva.
@@ -67,6 +68,8 @@ Produkcijski korisnici i njihove lozinke provisioniraju se odvojeno od izvornog 
 Azure aplikacija: [KinoKlik](https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/)
 
 GitHub Actions workflow radi restore, build, test, publish, deploy na Azure App Service i nakon deploya provjerava `/health`. Workflow koristi GitHub Secret za publish profile; publish profili i connection stringovi nisu tracked datoteke.
+
+Application Insights SDK prikuplja zahtjeve, ovisnosti, iznimke i strukturirane `ILogger` zapise. Nakon deploya provjeri Application Insights **Transaction search**, **Failures** i **Logs**; connection string ostaje samo u Azure konfiguraciji.
 
 Health endpointi:
 

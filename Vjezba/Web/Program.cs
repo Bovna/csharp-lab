@@ -10,9 +10,17 @@ using Vjezba.Web.Options;
 using Vjezba.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+var applicationInsightsConnectionString =
+    builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+    ?? builder.Configuration["ApplicationInsights:ConnectionString"];
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+if (!string.IsNullOrWhiteSpace(applicationInsightsConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 builder.Services.Configure<UploadStorageOptions>(builder.Configuration.GetSection("UploadStorage"));
 builder.Services.AddSingleton<IUploadStorage, UploadStorage>();
 
@@ -70,6 +78,10 @@ var applicationVersion =
     ?? typeof(Program).Assembly.GetName().Version?.ToString()
     ?? "unknown";
 var uploadStorage = app.Services.GetRequiredService<IUploadStorage>();
+
+app.Logger.LogInformation(
+    "Application Insights telemetry enabled={ApplicationInsightsEnabled}",
+    !string.IsNullOrWhiteSpace(applicationInsightsConnectionString));
 
 try
 {
