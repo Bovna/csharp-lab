@@ -85,53 +85,36 @@ catch (Exception ex)
         ex,
         "Upload storage initialization failed. RequestPath={RequestPath}",
         uploadStorage.RequestPath);
-
-    throw;
 }
 
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
-    var seedDemoUsers = app.Environment.IsDevelopment();
+    using var scope = app.Services.CreateScope();
+
     try
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
-
-        if (!await dbContext.Database.CanConnectAsync())
-        {
-            throw new InvalidOperationException("Database is not reachable during startup.");
-        }
-
-        if (dbContext.Database.IsRelational())
-        {
-            var pendingMigrations = (await dbContext.Database.GetPendingMigrationsAsync()).ToList();
-
-            if (pendingMigrations.Count > 0)
-            {
-                throw new InvalidOperationException(
-                    $"Database has pending migrations during startup: {string.Join(", ", pendingMigrations)}.");
-            }
-        }
-
         await IdentityDataSeeder.SeedAsync(
             scope.ServiceProvider,
             app.Configuration,
-            seedDemoUsers: seedDemoUsers);
+            seedDemoUsers: true);
 
         app.Logger.LogInformation(
-            "Identity data seeded. SeedDemoUsers={SeedDemoUsers}, Environment={EnvironmentName}",
-            seedDemoUsers,
+            "Development identity data seeded. Environment={EnvironmentName}",
             app.Environment.EnvironmentName);
     }
     catch (Exception ex)
     {
         app.Logger.LogError(
             ex,
-            "Identity data seed failed. SeedDemoUsers={SeedDemoUsers}, Environment={EnvironmentName}",
-            seedDemoUsers,
+            "Development identity seed failed. Environment={EnvironmentName}",
             app.Environment.EnvironmentName);
-
-        throw;
     }
+}
+else
+{
+    app.Logger.LogInformation(
+        "Skipping identity seed during startup. Environment={EnvironmentName}",
+        app.Environment.EnvironmentName);
 }
 
 // Configure the HTTP request pipeline.
@@ -202,6 +185,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 app.MapHealthChecks("/health");
+app.MapGet("/health/live", () => Results.Text("Healthy"));
 
 app.Logger.LogInformation(
     "Application configured. Environment={EnvironmentName}, Version={Version}",

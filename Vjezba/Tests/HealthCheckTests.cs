@@ -21,4 +21,14 @@ public sealed class HealthCheckTests : IClassFixture<CustomWebApplicationFactory
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         content.Should().Be("Healthy");
     }
+
+    [Fact]
+    public async Task LivenessEndpoint_ReturnsHealthy()
+    {
+        var response = await _client.GetAsync("/health/live");
+        var content = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        content.Should().Be("Healthy");
+    }
 }

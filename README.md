@@ -1,77 +1,78 @@
-Sustav za prodaju kino ulaznica
+# KinoKlik
 
-## Prvi testni deploy
+KinoKlik je ASP.NET Core aplikacija za upravljanje kinima, filmovima, projekcijama, sjedalima, kupcima i ulaznicama. Javna kupnja vodi korisnika kroz odabir kina, filma, projekcije i sjedala, a administrativne role upravljaju podacima i API-jem.
 
-Minimalni cilj prvog deploya je potvrditi da se aplikacija digne na testnom
-okruzenju, spoji na SQL Server bazu, primijeni postojece migracije i omoguci
-prijavu barem jednom korisniku s administracijskom rolom.
+## Arhitektura
 
-### Potrebne varijable
+- `Model` — entiteti i poslovni modeli.
+- `DAL` — `CinemaDbContext`, EF Core konfiguracija, seed podaci i migracije.
+- `Web` — MVC sučelje, API kontroleri, Identity, TicketBuilder i upload postera.
+- `Tests` — integracijski testovi API-ja, autorizacije, globalne pretrage, health endpointa i sigurnosnih pravila ulaznica.
 
-Obavezno:
+## Lokalni preduvjeti
 
-```powershell
-ASPNETCORE_ENVIRONMENT=Staging
-ConnectionStrings__CinemaDbContext=<sql-server-connection-string>
-SeedUsers__Admin__Email=<admin-email>
-SeedUsers__Admin__Password=<admin-password>
-SeedUsers__Admin__OIB=<11-znamenki>
-SeedUsers__Admin__JMBAG=<13-znamenki>
-```
+- .NET 8 SDK
+- SQL Server ili LocalDB
+- `dotnet-ef` alat, istog glavnog izdanja kao EF Core paketi
 
-Opcionalno, ako treba Manager korisnik odmah na testnom okruzenju:
-
-```powershell
-SeedUsers__Manager__Email=<manager-email>
-SeedUsers__Manager__Password=<manager-password>
-SeedUsers__Manager__OIB=<11-znamenki>
-SeedUsers__Manager__JMBAG=<13-znamenki>
-```
-
-Opcionalno, samo ako se testira Google prijava:
-
-```powershell
-Authentication__Google__ClientId=<google-client-id>
-Authentication__Google__ClientSecret=<google-client-secret>
-```
-
-Ako Google vrijednosti nisu postavljene, Google prijava se ne registrira i
-nece se prikazati kao opcija prijave.
-
-Opcionalno, ali preporuceno za test okruzenje koje se redeploya ili koristi
-container:
-
-```powershell
-UploadStorage__RootPath=<persistent-upload-folder>
-UploadStorage__RequestPath=/uploads
-```
-
-Ako `UploadStorage__RootPath` nije postavljen, aplikacija koristi
-`wwwroot/uploads`. Na test serveru taj folder mora biti zapisiv i po mogucnosti
-persistentan izmedu deployeva.
-
-### Redoslijed deploya
+## Lokalno pokretanje
 
 ```powershell
 dotnet restore Vjezba\Vjezba.sln
 dotnet build Vjezba\Vjezba.sln --configuration Release --no-restore
 dotnet test Vjezba\Vjezba.sln --configuration Release --no-build
-dotnet ef database update --project Vjezba\DAL\Vjezba.DAL.csproj --startup-project Vjezba\Web\Vjezba.Web.csproj --configuration Release
-dotnet publish Vjezba\Web\Vjezba.Web.csproj --configuration Release --output <publish-folder>
+dotnet ef database update --project Vjezba\DAL\Vjezba.DAL.csproj --startup-project Vjezba\Web\Vjezba.Web.csproj
+dotnet run --project Vjezba\Web\Vjezba.Web.csproj
 ```
 
-Nakon deploya provjeri:
+Ako `dotnet ef` nije globalno instaliran, možeš ga instalirati kao lokalni alat iz manifesta:
+
+```powershell
+dotnet tool restore --tool-manifest Vjezba\Web\dotnet-tools.json
+```
+
+## Migracije
+
+Migracije se ne primjenjuju automatski pri produkcijskom startupu. Prije deploya koji sadrži novu migraciju prvo primijeni migraciju na ciljnu bazu, a tek zatim deployaj aplikaciju.
+
+```powershell
+dotnet ef database update --project Vjezba\DAL\Vjezba.DAL.csproj --startup-project Vjezba\Web\Vjezba.Web.csproj --configuration Release --connection "<production-connection-string>"
+```
+
+## Konfiguracija okruženja
+
+U produkciji se vrijednosti postavljaju kroz Azure App Service Environment variables / Connection strings, nikad u repozitorij. Potrebna su samo imena varijabli, bez javnih vrijednosti:
 
 ```text
-GET /health
+ASPNETCORE_ENVIRONMENT
+ConnectionStrings__CinemaDbContext
+UploadStorage__RootPath
+UploadStorage__RequestPath
+Authentication__Google__ClientId
+Authentication__Google__ClientSecret
 ```
 
-Ocekivani odgovor je `Healthy`. Health endpoint provjerava dostupnost baze i
-provjerava da nema pending migracija.
+`UploadStorage__RootPath` treba pokazivati na zapisivu i trajnu lokaciju ako se uploadani posteri moraju zadržati između deployeva.
 
-Aplikacija se nece pokrenuti ako baza nije dostupna, migracije nisu
-primijenjene, identity seed ne uspije ili upload storage nije spreman.
+## Role i pristup
 
-Nakon prvog uspjesnog deploya preporuceno je maknuti `SeedUsers__*__Password`
-varijable iz trajne konfiguracije okruzenja. Seeder ce postojecem korisniku
-i dalje moci potvrditi rolu ako je korisnik vec kreiran.
+- `Admin` — puni pristup, uključujući brisanje.
+- `Manager` — upravljanje podacima bez administrativnog brisanja.
+- Anonimni korisnik — javni katalog, globalna pretraga javnih podataka i TicketBuilder kupnja.
+
+Produkcijski korisnici i njihove lozinke provisioniraju se odvojeno od izvornog koda. Lozinke se ne objavljuju u README-u niti u seed podacima za produkciju.
+
+## Deploy
+
+Azure aplikacija: [KinoKlik](https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/)
+
+GitHub Actions workflow radi restore, build, test, publish, deploy na Azure App Service i nakon deploya provjerava `/health`. Workflow koristi GitHub Secret za publish profile; publish profili i connection stringovi nisu tracked datoteke.
+
+Health endpointi:
+
+- `/health` — readiness: baza je dostupna i nema pending migracija.
+- `/health/live` — liveness: ASP.NET proces radi bez ovisnosti o bazi.
+
+## Demo podaci i vizuali
+
+Podaci, nazivi filmova, kina i vizuali u projektu su izmišljeni. Za demonstraciju se ne koriste stvarni OIB, JMBAG, privatni telefon ni privatna e-pošta. Statički demo posteri trebaju biti u commitanoj mapi izvan `wwwroot/uploads`; uploadani sadržaj ostaje runtime podatak.
