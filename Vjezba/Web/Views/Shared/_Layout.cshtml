@@ -70,6 +70,7 @@
             </a>
             <nav class="site-nav" aria-label="Glavna navigacija">
                 <ul class="nav-menu">
+                    <li><a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">Početna</a></li>
                     <li><a class="nav-link @(currentController == "Movie" && !isManagementQuery ? "active" : "")" asp-controller="Movie" asp-action="Index">Na programu</a></li>
                     <li><a class="nav-link @(currentController == "Screening" && !isManagementQuery ? "active" : "")" asp-controller="Screening" asp-action="Index">Raspored</a></li>
                     <li><a class="nav-link @(currentController == "Cinema" && !isManagementQuery ? "active" : "")" asp-controller="Cinema" asp-action="Index">Kina</a></li>
