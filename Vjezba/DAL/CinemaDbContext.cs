@@ -33,6 +33,14 @@ public class CinemaDbContext : IdentityDbContext<AppUser>
             .Property(ticket => ticket.Price)
             .HasPrecision(18, 2);
 
+        modelBuilder.Entity<Ticket>()
+            .Property(ticket => ticket.ConfirmationCode)
+            .HasDefaultValueSql("NEWID()");
+
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => ticket.ConfirmationCode)
+            .IsUnique();
+
         modelBuilder.Entity<Cinema>().HasData(
             new Cinema
             {

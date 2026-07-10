@@ -156,6 +156,7 @@ internal static class ApiTestData
         var ticket = new Ticket
         {
             TicketNumber = ticketNumber ?? $"TICKET-{Guid.NewGuid():N}"[..20],
+            ConfirmationCode = Guid.NewGuid(),
             PurchasedAt = new DateTime(2026, 3, 1, 12, 0, 0),
             Price = 9.99m,
             Status = status,

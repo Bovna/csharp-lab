@@ -8,6 +8,7 @@ public class Ticket
     [Key]
     public int Id { get; set; }
     public string TicketNumber { get; set; } = string.Empty;
+    public Guid ConfirmationCode { get; set; }
     public DateTime PurchasedAt { get; set; }
     public decimal Price { get; set; }
     public TicketStatus Status { get; set; } = TicketStatus.Active;

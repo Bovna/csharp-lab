@@ -260,6 +260,7 @@ public class TicketBuilderController : Controller
         var ticket = new Ticket
         {
             TicketNumber = GenerateTicketNumber(cinema!),
+            ConfirmationCode = Guid.NewGuid(),
             PurchasedAt = DateTime.Now,
             Price = CalculateSeatPrice(seat!.SeatType, screening!.Is3D),
             Status = TicketStatus.Active,
@@ -284,11 +285,12 @@ public class TicketBuilderController : Controller
             input.MovieId,
             ticket.Price);
 
-        return RedirectToAction(nameof(Success), new { id = ticket.Id });
+        return RedirectToAction(nameof(Success), new { confirmationCode = ticket.ConfirmationCode });
     }
 
-    [HttpGet("success/{id:int}")]
-    public IActionResult Success(int id)
+    [HttpGet("success/{confirmationCode:guid}")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public IActionResult Success(Guid confirmationCode)
     {
         var ticket = _dbContext.Tickets
             .Include(t => t.Customer)
@@ -298,7 +300,7 @@ public class TicketBuilderController : Controller
             .Include(t => t.Screening)
                 .ThenInclude(s => s.Hall)
                     .ThenInclude(h => h.Cinema)
-            .FirstOrDefault(t => t.Id == id
+            .FirstOrDefault(t => t.ConfirmationCode == confirmationCode
                 && t.DeletedAt == null
                 && t.Customer.DeletedAt == null
                 && t.Screening.DeletedAt == null

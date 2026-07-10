@@ -32,14 +32,14 @@ builder.Services
 
 var authenticationBuilder = builder.Services.AddAuthentication();
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
-var googleClientSecret = ***REMOVED***"Authentication:Google:ClientSecret"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
 
 if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
 {
     authenticationBuilder.AddGoogle(options =>
     {
         options.ClientId = googleClientId;
-        options.ClientSecret = ***REMOVED***;
+        options.ClientSecret = googleClientSecret;
     });
 }
 

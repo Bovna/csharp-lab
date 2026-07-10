@@ -54,7 +54,8 @@ public sealed class NavigationAuthorizationTests : IClassFixture<CustomWebApplic
     {
         html.Should().Contain("KinoKlik");
         html.Should().NotContain("Kino Sustav");
-        html.Should().Contain("Početna");
+        html.Should().Contain("aria-label=\"KinoKlik — početna\"");
+        html.Should().Contain("href=\"/\"");
         html.Should().Contain("Na programu");
         html.Should().Contain("Raspored");
         html.Should().Contain("Kina");
