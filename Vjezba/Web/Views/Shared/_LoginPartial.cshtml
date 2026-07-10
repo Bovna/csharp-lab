@@ -5,9 +5,12 @@
     <ul class="site-auth__links">
     @if (SignInManager.IsSignedIn(User))
     {
+        var email = User.Identity?.Name ?? string.Empty;
+        var userName = email.Split('@')[0];
+        var role = User.IsInRole("Admin") ? "Admin" : User.IsInRole("Manager") ? "Manager" : null;
         <li class="site-auth__item site-auth__item--meta">
             <span class="site-auth__label">Prijavljeni ste kao</span>
-            <strong class="site-auth__name">@User.Identity?.Name</strong>
+            <strong class="site-auth__name">@userName@if (role is not null) { <span>(@role)</span> }</strong>
         </li>
         <li class="site-auth__item">
             <form class="site-auth__form" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

@@ -1,5 +1,11 @@
 @model List<Vjezba.Model.Entities.Screening>
 
+@if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && (ViewBag.Management == true))
+{
+<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Film</th><th>Kino</th><th>Dvorana</th><th>Početak</th><th>Kraj</th><th>Format</th><th></th></tr></thead><tbody>@foreach(var s in Model){<tr><td>@s.Id</td><td>@s.Movie.Title</td><td>@s.Hall.Cinema.Name</td><td>@s.Hall.Name</td><td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td><td>@s.EndTime.ToString("HH:mm")</td><td>@(s.Is3D ? "3D" : "2D")</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@s.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
+}
+else
+{
 <section class="schedule" data-ajax-search-results aria-live="polite">
     <p class="schedule__summary">Prikazano projekcija: @Model.Count</p>
     @if (Model.Any())
@@ -23,3 +29,4 @@
     }
     else { <div class="ui-empty-state">Nema dostupnih projekcija za odabrane filtre.</div> }
 </section>
+}

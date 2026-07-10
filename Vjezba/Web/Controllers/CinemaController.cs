@@ -25,7 +25,7 @@ public class CinemaController : Controller
     [Route("")]
     [Route("pretraga")]
     [AllowAnonymous]
-    public IActionResult Index(string? city, bool partial = false)
+    public IActionResult Index(string? city, bool management = false, bool partial = false)
     {
         var cinemasQuery = ActiveCinemasQuery();
 
@@ -34,7 +34,7 @@ public class CinemaController : Controller
             cinemasQuery = cinemasQuery.Where(cinema => cinema.City == city);
         }
 
-        PrepareCinemaIndex(city, null);
+        PrepareCinemaIndex(city, null); ViewBag.Management = management;
 
         var cinemas = cinemasQuery
             .OrderBy(cinema => cinema.Id)
@@ -50,7 +50,7 @@ public class CinemaController : Controller
 
     [HttpGet("rezultati")]
     [AllowAnonymous]
-    public IActionResult Search(string? query, string? city, bool partial = false)
+    public IActionResult Search(string? query, string? city, bool management = false, bool partial = false)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
         var cinemasQuery = ActiveCinemasQuery();
@@ -68,7 +68,7 @@ public class CinemaController : Controller
                 cinema.Street.Contains(normalizedQuery));
         }
 
-        PrepareCinemaIndex(city, query);
+        PrepareCinemaIndex(city, query); ViewBag.Management = management;
 
         var cinemas = cinemasQuery
             .OrderBy(cinema => cinema.Id)

@@ -42,11 +42,29 @@ public sealed class GlobalSearchControllerTests : IClassFixture<CustomWebApplica
     }
 
     [Fact]
-    public async Task GlobalSearch_DoesNotReturnSensitivePages_WhenUserIsManager()
+    public async Task GlobalSearch_UsesPublicUrls_ForAnonymousDataResults()
+    {
+        await _factory.ClearDatabaseAsync();
+        await CreatePublicSearchGraphAsync("PublicLink");
+
+        var response = await _factory.CreateClient().GetAsync("/global-search?query=PublicLink");
+        var results = await ReadResultsAsync(response);
+
+        var dataUrls = results
+            .Where(result => GetString(result, "kind") == "data")
+            .Select(result => GetString(result, "url"))
+            .ToList();
+
+        dataUrls.Should().NotBeEmpty();
+        dataUrls.Should().OnlyContain(url => !url.Contains("/detalji/", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task GlobalSearch_DoesNotReturnManagementPages_WhenUserHasNoRole()
     {
         await _factory.ClearDatabaseAsync();
 
-        var response = await _factory.CreateAuthenticatedClient("Manager")
+        var response = await _factory.CreateAuthenticatedClient()
             .GetAsync("/global-search?query=kupci");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -61,13 +79,62 @@ public sealed class GlobalSearchControllerTests : IClassFixture<CustomWebApplica
         categories.Should().NotContain("Ulaznice");
     }
 
+    [Theory]
+    [InlineData("Admin")]
+    [InlineData("Manager")]
+    public async Task GlobalSearch_ReturnsManagementPages_WhenUserHasManagementRole(string role)
+    {
+        await _factory.ClearDatabaseAsync();
+
+        var response = await _factory.CreateAuthenticatedClient(role)
+            .GetAsync("/global-search?query=kupci");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var results = await ReadResultsAsync(response);
+
+        results.Should().Contain(result =>
+            GetString(result, "title") == "Kupci" &&
+            GetString(result, "kind") == "page");
+    }
+
+    [Theory]
+    [InlineData("Admin")]
+    [InlineData("Manager")]
+    public async Task GlobalSearch_ReturnsProtectedData_OnlyForManagementRoles(string role)
+    {
+        await _factory.ClearDatabaseAsync();
+        await CreateManagementSearchGraphAsync("RoleSearch");
+
+        var managementResponse = await _factory.CreateAuthenticatedClient(role)
+            .GetAsync("/global-search?query=RoleSearch");
+        var anonymousResponse = await _factory.CreateClient()
+            .GetAsync("/global-search?query=RoleSearch");
+        var regularUserResponse = await _factory.CreateAuthenticatedClient()
+            .GetAsync("/global-search?query=RoleSearch");
+
+        var managementResults = await ReadResultsAsync(managementResponse);
+        var anonymousResults = await ReadResultsAsync(anonymousResponse);
+        var regularUserResults = await ReadResultsAsync(regularUserResponse);
+
+        managementResults.Should().Contain(result => GetString(result, "category") == "Kupci");
+        managementResults.Should().Contain(result => GetString(result, "category") == "Ulaznice");
+        anonymousResults.Should().NotContain(result =>
+            GetString(result, "category") == "Kupci" ||
+            GetString(result, "category") == "Ulaznice");
+        regularUserResults.Should().NotContain(result =>
+            GetString(result, "category") == "Kupci" ||
+            GetString(result, "category") == "Ulaznice");
+    }
+
     [Fact]
     public async Task GlobalSearch_ReturnsOnlyNavigationPages_ForHallsAndSeats()
     {
         await _factory.ClearDatabaseAsync();
         await CreateScreeningWithHallNameAsync("Dvorana Posebna");
 
-        var response = await _factory.CreateClient().GetAsync("/global-search?query=dvor");
+        var response = await _factory.CreateAuthenticatedClient("Manager")
+            .GetAsync("/global-search?query=dvor");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -79,6 +146,17 @@ public sealed class GlobalSearchControllerTests : IClassFixture<CustomWebApplica
             GetString(result, "badge") == "Stranica");
 
         results.Should().OnlyContain(result => GetString(result, "kind") == "page");
+    }
+
+    [Fact]
+    public async Task GlobalSearch_DoesNotReturnManagementNavigation_ForAnonymousUser()
+    {
+        await _factory.ClearDatabaseAsync();
+
+        var response = await _factory.CreateClient().GetAsync("/global-search?query=dvorane");
+        var results = await ReadResultsAsync(response);
+
+        results.Should().NotContain(result => GetString(result, "title") == "Dvorane");
     }
 
     [Fact]
@@ -303,6 +381,41 @@ public sealed class GlobalSearchControllerTests : IClassFixture<CustomWebApplica
     }
 
     [Fact]
+    public async Task GlobalSearch_DoesNotReturnSoftDeletedProtectedData()
+    {
+        await _factory.ClearDatabaseAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+            var deletedAt = DateTime.UtcNow;
+            var customer = new Customer
+            {
+                FirstName = "DeletedSensitive",
+                LastName = "Kupac",
+                City = "Zagreb",
+                Street = "Skrivena",
+                HouseNumber = "1",
+                PostalCode = "10000",
+                Email = "deleted.sensitive@example.test",
+                Phone = "+385 99 000 000",
+                RegisteredAt = new DateTime(2026, 1, 1),
+                DeletedAt = deletedAt
+            };
+
+            dbContext.Customers.Add(customer);
+            await dbContext.SaveChangesAsync();
+        }
+
+        var response = await _factory.CreateAuthenticatedClient("Manager")
+            .GetAsync("/global-search?query=DeletedSensitive");
+        var results = await ReadResultsAsync(response);
+
+        results.Should().NotContain(result => GetString(result, "category") == "Kupci");
+        results.Should().NotContain(result => GetString(result, "category") == "Ulaznice");
+    }
+
+    [Fact]
     public async Task GlobalSearch_RequiresTwoCharacters()
     {
         await _factory.ClearDatabaseAsync();
@@ -463,6 +576,72 @@ public sealed class GlobalSearchControllerTests : IClassFixture<CustomWebApplica
             StartTime = new DateTime(2026, 9, 1, 19, 0, 0),
             EndTime = new DateTime(2026, 9, 1, 21, 0, 0),
             Is3D = false
+        });
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    private async Task CreateManagementSearchGraphAsync(string prefix)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<CinemaDbContext>();
+
+        var cinema = new Cinema
+        {
+            Name = "Management Kino",
+            City = "Zagreb",
+            Street = "Upraviteljska",
+            HouseNumber = "1",
+            PostalCode = "10000",
+            Email = "management@example.test",
+            Phone = "+385 1 555 000"
+        };
+        var hall = new Hall
+        {
+            Name = "Management Dvorana",
+            Capacity = 40,
+            Supports3D = false,
+            Cinema = cinema
+        };
+        var movie = new Movie
+        {
+            Title = "Management Film",
+            Description = "Film za autorizacijski test.",
+            DurationMinutes = 95,
+            ReleaseDate = new DateTime(2026, 1, 1),
+            Genre = MovieGenre.Drama,
+            Language = "HR",
+            AgeRating = "12+"
+        };
+        var screening = new Screening
+        {
+            Movie = movie,
+            Hall = hall,
+            StartTime = new DateTime(2026, 9, 1, 18, 0, 0),
+            EndTime = new DateTime(2026, 9, 1, 20, 0, 0),
+            Is3D = false
+        };
+        var customer = new Customer
+        {
+            FirstName = prefix,
+            LastName = "Kupac",
+            City = "Zagreb",
+            Street = "Testna",
+            HouseNumber = "1",
+            PostalCode = "10000",
+            Email = $"{prefix.ToLowerInvariant()}@example.test",
+            Phone = "+385 99 555 000",
+            RegisteredAt = new DateTime(2026, 1, 1)
+        };
+
+        dbContext.Tickets.Add(new Ticket
+        {
+            TicketNumber = $"{prefix}-001",
+            PurchasedAt = new DateTime(2026, 1, 2),
+            Price = 10,
+            Status = TicketStatus.Active,
+            Screening = screening,
+            Customer = customer
         });
 
         await dbContext.SaveChangesAsync();

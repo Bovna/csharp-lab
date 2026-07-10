@@ -30,10 +30,11 @@ namespace Vjezba.Web.Controllers
             var movies = _dbContext.Movies
                 .AsNoTracking()
                 .Include(movie => movie.Attachments)
-                .Where(movie => movie.DeletedAt == null)
+                .Where(movie => movie.DeletedAt == null && movie.Title != "Signal 404")
                 .ToList()
                 .Select(movie => ToHomeMovieCard(movie, nextScreeningByMovie))
-                .OrderBy(movie => movie.NextScreening is null)
+                .OrderBy(movie => movie.Title != "Dnevnik Sjevera")
+                .ThenBy(movie => movie.NextScreening is null)
                 .ThenBy(movie => movie.NextScreening?.StartTime ?? DateTime.MaxValue)
                 .ThenByDescending(movie => movie.ReleaseDate)
                 .Take(6)

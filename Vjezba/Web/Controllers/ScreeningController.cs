@@ -29,7 +29,7 @@ public class ScreeningController : BaseController
 
     [Route("pretraga")]
     [AllowAnonymous]
-    public IActionResult Index(int? dayOfWeek, bool partial = false)
+    public IActionResult Index(int? dayOfWeek, bool management = false, bool partial = false)
     {
         var screenings = ActiveScreeningsQuery()
             .OrderBy(screening => screening.Id)
@@ -45,6 +45,7 @@ public class ScreeningController : BaseController
 
         ViewBag.SelectedDayOfWeek = dayOfWeek;
         ViewBag.Search = null;
+        ViewBag.Management = management;
 
         if (partial)
         {
@@ -55,7 +56,7 @@ public class ScreeningController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Search(string? query, int? dayOfWeek, bool partial = false)
+    public IActionResult Search(string? query, int? dayOfWeek, bool management = false, bool partial = false)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
         var screeningsQuery = ActiveScreeningsQuery();
@@ -82,6 +83,7 @@ public class ScreeningController : BaseController
 
         ViewBag.SelectedDayOfWeek = dayOfWeek;
         ViewBag.Search = query;
+        ViewBag.Management = management;
 
         if (partial)
         {

@@ -44,7 +44,7 @@ public class MovieController : BaseController
 
     [Route("pretraga")]
     [AllowAnonymous]
-    public IActionResult Index(string? language, bool partial = false)
+    public IActionResult Index(string? language, bool management = false, bool partial = false)
     {
         var query = _dbContext.Movies
             .Include(m => m.Attachments)
@@ -61,6 +61,7 @@ public class MovieController : BaseController
 
         ViewBag.SelectedLanguage = language;
         ViewBag.Search = null;
+        ViewBag.Management = management;
 
         if (!string.IsNullOrWhiteSpace(language))
         {
@@ -79,7 +80,7 @@ public class MovieController : BaseController
     }
 
     [AllowAnonymous]
-    public IActionResult Search(string? query, string? language, bool partial = false)
+    public IActionResult Search(string? query, string? language, bool management = false, bool partial = false)
     {
         var normalizedQuery = (query ?? string.Empty).Trim();
 
@@ -93,6 +94,7 @@ public class MovieController : BaseController
 
         ViewBag.SelectedLanguage = null;
         ViewBag.Search = query;
+        ViewBag.Management = management;
 
         var moviesQuery = _dbContext.Movies
             .Include(movie => movie.Attachments)

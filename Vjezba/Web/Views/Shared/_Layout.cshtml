@@ -14,6 +14,7 @@
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
         var canViewSensitiveNavigation = User.IsInRole("Admin") || User.IsInRole("Manager");
+        var isManagementQuery = string.Equals(Context.Request.Query["management"], "true", StringComparison.OrdinalIgnoreCase);
 
         var uiControllerLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -69,26 +70,31 @@
             </a>
             <nav class="site-nav" aria-label="Glavna navigacija">
                 <ul class="nav-menu">
-                    <li><a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">Početna</a></li>
-                    <li><a class="nav-link @(currentController == "Movie" ? "active" : "")" asp-controller="Movie" asp-action="Index">Na programu</a></li>
-                    <li><a class="nav-link @(currentController == "Screening" ? "active" : "")" asp-controller="Screening" asp-action="Index">Raspored</a></li>
-                    <li><a class="nav-link @(currentController == "Cinema" ? "active" : "")" asp-controller="Cinema" asp-action="Index">Kina</a></li>
+                    <li><a class="nav-link @(currentController == "Movie" && !isManagementQuery ? "active" : "")" asp-controller="Movie" asp-action="Index">Na programu</a></li>
+                    <li><a class="nav-link @(currentController == "Screening" && !isManagementQuery ? "active" : "")" asp-controller="Screening" asp-action="Index">Raspored</a></li>
+                    <li><a class="nav-link @(currentController == "Cinema" && !isManagementQuery ? "active" : "")" asp-controller="Cinema" asp-action="Index">Kina</a></li>
                     <li><a class="nav-link nav-link--cta @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Kupi ulaznicu</a></li>
                     @if (canViewSensitiveNavigation)
                     {
                         var isManagementActive =
-                            string.Equals(currentController, "Hall", StringComparison.OrdinalIgnoreCase)
+                            ((string.Equals(currentController, "Cinema", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(currentController, "Movie", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(currentController, "Screening", StringComparison.OrdinalIgnoreCase)) && isManagementQuery)
+                            || string.Equals(currentController, "Hall", StringComparison.OrdinalIgnoreCase)
                             || string.Equals(currentController, "Seat", StringComparison.OrdinalIgnoreCase)
                             || string.Equals(currentController, "Customer", StringComparison.OrdinalIgnoreCase)
                             || string.Equals(currentController, "Ticket", StringComparison.OrdinalIgnoreCase);
 
                         <li class="nav-menu__item nav-dropdown">
                             <details class="nav-dropdown__details">
-                                <summary class="nav-link nav-dropdown__trigger @(isManagementActive ? "active" : "")">
+                                <summary class="nav-link nav-dropdown__trigger nav-dropdown__trigger--management @(isManagementActive ? "active" : "")">
                                     Upravljanje
                                     <span class="nav-dropdown__chevron" aria-hidden="true"></span>
                                 </summary>
                                 <ul class="nav-dropdown__menu" aria-label="Administrativna navigacija">
+                                    <li><a class="nav-dropdown__link @(currentController == "Cinema" && isManagementQuery ? "active" : "")" asp-controller="Cinema" asp-action="Index" asp-route-management="true">Kina</a></li>
+                                    <li><a class="nav-dropdown__link @(currentController == "Movie" && isManagementQuery ? "active" : "")" asp-controller="Movie" asp-action="Index" asp-route-management="true">Filmovi</a></li>
+                                    <li><a class="nav-dropdown__link @(currentController == "Screening" && isManagementQuery ? "active" : "")" asp-controller="Screening" asp-action="Index" asp-route-management="true">Projekcije</a></li>
                                     <li><a class="nav-dropdown__link @(currentController == "Hall" ? "active" : "")" asp-controller="Hall" asp-action="Index">Dvorane</a></li>
                                     <li><a class="nav-dropdown__link @(currentController == "Seat" ? "active" : "")" asp-controller="Seat" asp-action="Index">Sjedala</a></li>
                                     <li><a class="nav-dropdown__link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">Kupci</a></li>

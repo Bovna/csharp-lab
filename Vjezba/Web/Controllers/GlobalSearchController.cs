@@ -17,6 +17,8 @@ public sealed class GlobalSearchController : Controller
     private const int MaxTotalResults = 20;
     private const int ResultsPageCategoryLimit = 25;
     private const int ResultsPageMaxTotal = 100;
+    private const string AdminRole = "Admin";
+    private const string ManagerRole = "Manager";
 
     private readonly CinemaDbContext _dbContext;
 
@@ -83,22 +85,32 @@ public sealed class GlobalSearchController : Controller
         int maxTotalResults)
     {
         var results = new List<GlobalSearchResultViewModel>();
+        var canViewManagementResults = CanViewManagementResults();
 
-        results.AddRange(SearchPages(query, perCategoryLimit));
+        results.AddRange(SearchPages(query, perCategoryLimit, canViewManagementResults));
         results.AddRange(SearchMovies(query, perCategoryLimit));
         results.AddRange(SearchCinemas(query, perCategoryLimit));
         results.AddRange(SearchScreenings(query, perCategoryLimit));
+
+        if (canViewManagementResults)
+        {
+            results.AddRange(SearchCustomers(query, perCategoryLimit));
+            results.AddRange(SearchTickets(query, perCategoryLimit));
+        }
 
         return results
             .Take(maxTotalResults)
             .ToList();
     }
 
-    private IEnumerable<GlobalSearchResultViewModel> SearchPages(string query, int limit)
+    private IEnumerable<GlobalSearchResultViewModel> SearchPages(
+        string query,
+        int limit,
+        bool canViewManagementResults)
     {
         var comparableQuery = NormalizeForCompare(query);
 
-        return BuildPageDefinitions()
+        return BuildPageDefinitions(canViewManagementResults)
             .Where(page => MatchesQuery(comparableQuery, page.Title, page.Description))
             .Take(limit)
             .Select(page => new GlobalSearchResultViewModel
@@ -147,9 +159,13 @@ public sealed class GlobalSearchController : Controller
                 Title = movie.Title,
                 Description = movie.Description,
                 Meta = $"{movie.Language} - {movie.DurationMinutes} min",
-                Url = Url.Action(nameof(MovieController.Details), "Movie", new { id = movie.Id })
-                    ?? Url.Action(nameof(MovieController.Search), "Movie", new { query = movie.Title })
-                    ?? "/filmovi/pretraga"
+                Url = BuildAccessibleDataUrl(
+                    nameof(MovieController.Details),
+                    "Movie",
+                    movie.Id,
+                    nameof(MovieController.Search),
+                    movie.Title,
+                    "/filmovi/pretraga")
             })
             .ToList();
     }
@@ -188,9 +204,13 @@ public sealed class GlobalSearchController : Controller
                 Title = cinema.Name,
                 Description = $"{cinema.Street} {cinema.HouseNumber}, {cinema.City}",
                 Meta = cinema.City,
-                Url = Url.Action(nameof(CinemaController.Details), "Cinema", new { id = cinema.Id })
-                    ?? Url.Action(nameof(CinemaController.Search), "Cinema", new { query = cinema.Name })
-                    ?? "/kina"
+                Url = BuildAccessibleDataUrl(
+                    nameof(CinemaController.Details),
+                    "Cinema",
+                    cinema.Id,
+                    nameof(CinemaController.Search),
+                    cinema.Name,
+                    "/kina")
             })
             .ToList();
     }
@@ -232,16 +252,139 @@ public sealed class GlobalSearchController : Controller
                 Title = screening.MovieTitle,
                 Description = $"{screening.CinemaName} / {screening.HallName}",
                 Meta = $"{screening.StartTime:dd.MM.yyyy HH:mm} - {(screening.Is3D ? "3D" : "2D")}",
-                Url = Url.Action(nameof(ScreeningController.Details), "Screening", new { id = screening.Id })
-                    ?? Url.Action(nameof(ScreeningController.Search), "Screening", new { query = screening.MovieTitle })
-                    ?? "/projekcije/pretraga"
+                Url = BuildAccessibleDataUrl(
+                    nameof(ScreeningController.Details),
+                    "Screening",
+                    screening.Id,
+                    nameof(ScreeningController.Search),
+                    screening.MovieTitle,
+                    "/projekcije/pretraga")
             })
             .ToList();
     }
 
-    private static IReadOnlyList<PageSearchDefinition> BuildPageDefinitions()
+    private List<GlobalSearchResultViewModel> SearchCustomers(string query, int limit)
     {
-        return new[]
+        var comparableQuery = NormalizeForCompare(query);
+
+        var customers = _dbContext.Customers
+            .AsNoTracking()
+            .Where(customer => customer.DeletedAt == null)
+            .Select(customer => new
+            {
+                customer.Id,
+                customer.FirstName,
+                customer.LastName,
+                customer.City,
+                customer.Email,
+                customer.IsLoyaltyMember
+            })
+            .ToList()
+            .Where(customer => MatchesQuery(
+                comparableQuery,
+                $"{customer.FirstName} {customer.LastName}",
+                customer.City,
+                customer.Email))
+            .OrderBy(customer => customer.LastName)
+            .ThenBy(customer => customer.FirstName)
+            .Take(limit)
+            .ToList();
+
+        return customers
+            .Select(customer => new GlobalSearchResultViewModel
+            {
+                Category = "Kupci",
+                Kind = "data",
+                Badge = "Kupac",
+                Title = $"{customer.FirstName} {customer.LastName}",
+                Description = $"{customer.Email} - {customer.City}",
+                Meta = customer.IsLoyaltyMember ? "Loyalty član" : "Standardni kupac",
+                Url = Url.Action(nameof(CustomerController.Details), "Customer", new { id = customer.Id })
+                    ?? "/kupci"
+            })
+            .ToList();
+    }
+
+    private List<GlobalSearchResultViewModel> SearchTickets(string query, int limit)
+    {
+        var comparableQuery = NormalizeForCompare(query);
+
+        var tickets = _dbContext.Tickets
+            .AsNoTracking()
+            .Where(ticket => ticket.DeletedAt == null
+                && ticket.Customer.DeletedAt == null
+                && ticket.Screening.DeletedAt == null
+                && ticket.Screening.Movie.DeletedAt == null
+                && ticket.Screening.Hall.DeletedAt == null
+                && ticket.Screening.Hall.Cinema.DeletedAt == null
+                && (ticket.Seat == null
+                    || (ticket.Seat.DeletedAt == null
+                        && ticket.Seat.Hall.DeletedAt == null
+                        && ticket.Seat.Hall.Cinema.DeletedAt == null)))
+            .Select(ticket => new
+            {
+                ticket.Id,
+                ticket.TicketNumber,
+                ticket.Status,
+                ticket.PurchasedAt,
+                CustomerName = ticket.Customer.FirstName + " " + ticket.Customer.LastName,
+                MovieTitle = ticket.Screening.Movie.Title,
+                HallName = ticket.Screening.Hall.Name,
+                CinemaName = ticket.Screening.Hall.Cinema.Name
+            })
+            .ToList()
+            .Where(ticket => MatchesQuery(
+                comparableQuery,
+                ticket.TicketNumber,
+                ticket.CustomerName,
+                ticket.MovieTitle,
+                ticket.HallName,
+                ticket.CinemaName))
+            .OrderByDescending(ticket => ticket.PurchasedAt)
+            .Take(limit)
+            .ToList();
+
+        return tickets
+            .Select(ticket => new GlobalSearchResultViewModel
+            {
+                Category = "Ulaznice",
+                Kind = "data",
+                Badge = "Ulaznica",
+                Title = ticket.TicketNumber,
+                Description = $"{ticket.CustomerName} - {ticket.MovieTitle}",
+                Meta = $"{ticket.CinemaName} / {ticket.HallName} - {ticket.Status}",
+                Url = Url.Action(nameof(TicketController.Details), "Ticket", new { id = ticket.Id })
+                    ?? "/ulaznice"
+            })
+            .ToList();
+    }
+
+    private string BuildAccessibleDataUrl(
+        string detailsAction,
+        string controller,
+        int id,
+        string searchAction,
+        string query,
+        string fallbackUrl)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return Url.Action(detailsAction, controller, new { id })
+                ?? fallbackUrl;
+        }
+
+        return Url.Action(searchAction, controller, new { query })
+            ?? fallbackUrl;
+    }
+
+    private bool CanViewManagementResults()
+    {
+        return User.IsInRole(AdminRole) || User.IsInRole(ManagerRole);
+    }
+
+    private static IReadOnlyList<PageSearchDefinition> BuildPageDefinitions(bool includeManagementPages)
+    {
+        var pages = new List<PageSearchDefinition>
         {
             new PageSearchDefinition(
                 "Početna",
@@ -268,24 +411,45 @@ public sealed class GlobalSearchController : Controller
                 "Index",
                 "/kina"),
             new PageSearchDefinition(
-                "Dvorane",
-                "Pregled dvorana po kinima.",
-                "Hall",
-                "Index",
-                "/dvorana"),
-            new PageSearchDefinition(
-                "Sjedala",
-                "Pregled sjedala i njihovih oznaka.",
-                "Seat",
-                "Index",
-                "/sjedala"),
-            new PageSearchDefinition(
                 "Brza kupnja",
                 "Vodič kroz odabir kina, filma, termina i sjedala.",
                 "TicketBuilder",
                 "Index",
                 "/TicketBuilder")
         };
+
+        if (includeManagementPages)
+        {
+            pages.AddRange(new[]
+            {
+                new PageSearchDefinition(
+                    "Dvorane",
+                    "Pregled dvorana po kinima.",
+                    "Hall",
+                    "Index",
+                    "/dvorana"),
+                new PageSearchDefinition(
+                    "Sjedala",
+                    "Pregled sjedala i njihovih oznaka.",
+                    "Seat",
+                    "Index",
+                    "/sjedala"),
+                new PageSearchDefinition(
+                    "Kupci",
+                    "Pregled i upravljanje kupcima.",
+                    "Customer",
+                    "Index",
+                    "/kupci"),
+                new PageSearchDefinition(
+                    "Ulaznice",
+                    "Pregled i upravljanje ulaznicama.",
+                    "Ticket",
+                    "Index",
+                    "/ulaznice")
+            });
+        }
+
+        return pages;
     }
 
     private static string NormalizeForCompare(string value)

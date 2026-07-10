@@ -9,7 +9,7 @@
 <div class="container py-4 animate-fade-in-up">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <div>
-            <h1 class="movie-catalog__title">Pronađite svoj sljedeći film</h1>
+            <h1 class="@(User.IsInRole("Admin") || User.IsInRole("Manager") ? "admin-index-title" : "movie-catalog__title")">@(User.IsInRole("Admin") || User.IsInRole("Manager") ? "Popis filmova" : "Pronađite svoj sljedeći film")</h1>
             </div>
             @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
             {
@@ -22,6 +22,7 @@
             <div class="cinema-card-body">
                 <form asp-action="Search" method="get" class="ui-form entity-index-search"
                       data-ajax-search-form data-ajax-results-target="#movie-index-results">
+                    <input type="hidden" name="management" value="@(ViewBag.Management == true ? "true" : "false")" />
                     <div class="row g-4 align-items-end">
                         <div class="col-12 col-lg-7">
                             <div class="ui-field mb-0">
