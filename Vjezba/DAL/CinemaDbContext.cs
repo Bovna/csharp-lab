@@ -50,57 +50,57 @@ public class CinemaDbContext : IdentityDbContext<AppUser>
             new Cinema
             {
                 Id = 1,
-                Name = "CineStar Branimir",
+                Name = "KinoKlik Zagreb",
                 City = "Zagreb",
-                Street = "Branimirova",
-                HouseNumber = "29",
+                Street = "Filmska ulica",
+                HouseNumber = "12",
                 PostalCode = "10000",
-                Email = "branimir@cinestar.hr",
-                Phone = "+385 1 111 222"
+                Email = "zagreb@kinoklik.example",
+                Phone = "+385 1 555 0101"
             },
             new Cinema
             {
                 Id = 2,
-                Name = "Kino Europa",
+                Name = "KinoKlik Rijeka",
                 City = "Rijeka",
-                Street = "Korzo",
-                HouseNumber = "14",
+                Street = "Svjetionikova",
+                HouseNumber = "8",
                 PostalCode = "51000",
-                Email = "info@kinoeuropa.hr",
-                Phone = "+385 51 333 444"
+                Email = "rijeka@kinoklik.example",
+                Phone = "+385 51 555 0202"
             },
             new Cinema
             {
                 Id = 3,
-                Name = "Arena Cinema",
+                Name = "KinoKlik Osijek",
                 City = "Osijek",
-                Street = "Sjenjak",
-                HouseNumber = "6",
+                Street = "Platnena avenija",
+                HouseNumber = "17",
                 PostalCode = "31000",
-                Email = "kontakt@arenacinema.hr",
-                Phone = "+385 31 555 666"
+                Email = "osijek@kinoklik.example",
+                Phone = "+385 31 555 0303"
             },
             new Cinema
             {
                 Id = 4,
-                Name = "Marina Cineplex",
+                Name = "KinoKlik Split",
                 City = "Split",
-                Street = "Obala",
-                HouseNumber = "9",
+                Street = "Kadrova obala",
+                HouseNumber = "4",
                 PostalCode = "21000",
-                Email = "hello@marinacineplex.hr",
-                Phone = "+385 21 777 888"
+                Email = "split@kinoklik.example",
+                Phone = "+385 21 555 0404"
             },
             new Cinema
             {
                 Id = 5,
-                Name = "Forum Cinema",
+                Name = "KinoKlik Zadar",
                 City = "Zadar",
-                Street = "Siroka",
-                HouseNumber = "12",
+                Street = "Morski kadar",
+                HouseNumber = "9",
                 PostalCode = "23000",
-                Email = "info@forumcinema.hr",
-                Phone = "+385 23 456 700"
+                Email = "zadar@kinoklik.example",
+                Phone = "+385 23 555 0505"
             });
 
         modelBuilder.Entity<Hall>().HasData(
