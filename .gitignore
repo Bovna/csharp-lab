@@ -13,6 +13,27 @@
 # Logs
 *.log
 .github/logs/
+**/agent_log.txt
 
 # Local temporary artifacts
 .tmp/
+
+# Local secrets and environment-specific configuration
+.env
+.env.*
+!.env.example
+appsettings.Production.json
+appsettings.Staging.json
+*.PublishSettings
+*.pubxml
+*.pubxml.user
+
+# Deployment and test outputs
+publish/
+artifacts/
+TestResults/
+
+# Runtime uploads and local assistant state
+**/wwwroot/uploads/
+.agents/
+.codex/
