@@ -34,6 +34,38 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     [Fact]
+    public async Task GetAllTickets_FiltersByStatus()
+    {
+        await _factory.ClearDatabaseAsync();
+        var activeTicket = await ApiTestData.CreateTicketAsync(_factory, ticketNumber: "ACTIVE-001", status: TicketStatus.Active);
+        var usedTicket = await ApiTestData.CreateTicketAsync(_factory, ticketNumber: "USED-001", status: TicketStatus.Used);
+
+        var response = await _client.GetAsync("/api/ulaznice?status=Used");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var tickets = await response.Content.ReadFromJsonAsync<List<TicketDTO>>();
+        tickets.Should().NotBeNull();
+        tickets.Should().ContainSingle(t => t.Id == usedTicket.Id);
+        tickets.Should().NotContain(t => t.Id == activeTicket.Id);
+    }
+
+    [Fact]
+    public async Task SearchTickets_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var matchingTicket = await ApiTestData.CreateTicketAsync(_factory, ticketNumber: "AURORA-001");
+        var nonMatchingTicket = await ApiTestData.CreateTicketAsync(_factory, ticketNumber: "BOREALIS-001");
+
+        var response = await _client.GetAsync("/api/ulaznice/pretraga/AURORA");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var tickets = await response.Content.ReadFromJsonAsync<List<TicketDTO>>();
+        tickets.Should().NotBeNull();
+        tickets.Should().ContainSingle(t => t.Id == matchingTicket.Id);
+        tickets.Should().NotContain(t => t.Id == nonMatchingTicket.Id);
+    }
+
+    [Fact]
     public async Task GetTicketById_ReturnsTicket_WhenTicketExists()
     {
         await _factory.ClearDatabaseAsync();
@@ -154,6 +186,23 @@ public sealed class TicketApiControllerTests : IClassFixture<CustomWebApplicatio
         var response = await _client.PutAsJsonAsync("/api/ulaznice/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutTicket_ReturnsBadRequest_WhenSeatDoesNotBelongToScreeningHall()
+    {
+        await _factory.ClearDatabaseAsync();
+        var ticket = await ApiTestData.CreateTicketAsync(_factory);
+        var setup = await CreateTicketSetupAsync();
+        var otherHall = await ApiTestData.CreateHallAsync(_factory, name: "Other Hall");
+        var otherSeat = await ApiTestData.CreateSeatAsync(_factory, otherHall.Id);
+        var request = CreateTicketWriteDto(setup.Screening.Id, otherSeat.Id, setup.Customer.Id, "WRONG-PUT-001");
+
+        var response = await _client.PutAsJsonAsync($"/api/ulaznice/{ticket.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().Be("Odabrano sjedalo ne pripada dvorani projekcije.");
     }
 
     [Fact]

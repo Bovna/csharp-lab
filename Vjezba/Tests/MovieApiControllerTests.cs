@@ -73,6 +73,38 @@ public sealed class MovieApiControllerTests : IClassFixture<CustomWebApplication
     }
 
     [Fact]
+    public async Task GetAllMovies_FiltersByLanguage()
+    {
+        await _factory.ClearDatabaseAsync();
+        var englishMovie = await CreateTestMovieAsync(title: "English Movie", language: "EN");
+        var croatianMovie = await CreateTestMovieAsync(title: "Croatian Movie", language: "HR");
+
+        var response = await _client.GetAsync("/api/film?language=HR");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var movies = await response.Content.ReadFromJsonAsync<List<MovieDTO>>();
+        movies.Should().NotBeNull();
+        movies.Should().ContainSingle(m => m.Id == croatianMovie.Id);
+        movies.Should().NotContain(m => m.Id == englishMovie.Id);
+    }
+
+    [Fact]
+    public async Task SearchMovies_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var matchingMovie = await CreateTestMovieAsync(title: "Aurora Movie");
+        var nonMatchingMovie = await CreateTestMovieAsync(title: "Borealis Movie");
+
+        var response = await _client.GetAsync("/api/film/pretraga/Aurora");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var movies = await response.Content.ReadFromJsonAsync<List<MovieDTO>>();
+        movies.Should().NotBeNull();
+        movies.Should().ContainSingle(m => m.Id == matchingMovie.Id);
+        movies.Should().NotContain(m => m.Id == nonMatchingMovie.Id);
+    }
+
+    [Fact]
     public async Task PostMovie_CreatesMovie_AndReturnsCreated()
     {
         await _factory.ClearDatabaseAsync();
@@ -181,6 +213,20 @@ public sealed class MovieApiControllerTests : IClassFixture<CustomWebApplication
         var response = await _client.PutAsJsonAsync("/api/film/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutMovie_ReturnsBadRequest_WhenAgeRatingIsNotAllowed()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await CreateTestMovieAsync(title: "Movie To Update");
+        var request = CreateMovieWriteDto(title: "Updated Movie", ageRating: "R");
+
+        var response = await _client.PutAsJsonAsync($"/api/film/{movie.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

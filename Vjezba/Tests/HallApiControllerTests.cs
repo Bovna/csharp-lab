@@ -33,6 +33,38 @@ public sealed class HallApiControllerTests : IClassFixture<CustomWebApplicationF
     }
 
     [Fact]
+    public async Task GetAllHalls_FiltersBySupports3D()
+    {
+        await _factory.ClearDatabaseAsync();
+        var threeDimensionalHall = await ApiTestData.CreateHallAsync(_factory, name: "3D Hall", supports3D: true);
+        var standardHall = await ApiTestData.CreateHallAsync(_factory, name: "Standard Hall", supports3D: false);
+
+        var response = await _client.GetAsync("/api/dvorane?supports3D=false");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var halls = await response.Content.ReadFromJsonAsync<List<HallDTO>>();
+        halls.Should().NotBeNull();
+        halls.Should().ContainSingle(h => h.Id == standardHall.Id);
+        halls.Should().NotContain(h => h.Id == threeDimensionalHall.Id);
+    }
+
+    [Fact]
+    public async Task SearchHalls_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var matchingHall = await ApiTestData.CreateHallAsync(_factory, name: "Aurora Hall");
+        var nonMatchingHall = await ApiTestData.CreateHallAsync(_factory, name: "Borealis Hall");
+
+        var response = await _client.GetAsync("/api/dvorane/pretraga/Aurora");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var halls = await response.Content.ReadFromJsonAsync<List<HallDTO>>();
+        halls.Should().NotBeNull();
+        halls.Should().ContainSingle(h => h.Id == matchingHall.Id);
+        halls.Should().NotContain(h => h.Id == nonMatchingHall.Id);
+    }
+
+    [Fact]
     public async Task GetHallById_ReturnsHall_WhenHallExists()
     {
         await _factory.ClearDatabaseAsync();
@@ -124,6 +156,22 @@ public sealed class HallApiControllerTests : IClassFixture<CustomWebApplicationF
         var response = await _client.PutAsJsonAsync("/api/dvorane/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutHall_ReturnsBadRequest_WhenNameAlreadyExistsInCinema()
+    {
+        await _factory.ClearDatabaseAsync();
+        var cinema = await ApiTestData.CreateCinemaAsync(_factory);
+        await ApiTestData.CreateHallAsync(_factory, name: "Dvorana A", cinemaId: cinema.Id);
+        var hallToUpdate = await ApiTestData.CreateHallAsync(_factory, name: "Dvorana B", cinemaId: cinema.Id);
+        var request = CreateHallWriteDto("Dvorana A", cinema.Id);
+
+        var response = await _client.PutAsJsonAsync($"/api/dvorane/{hallToUpdate.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

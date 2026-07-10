@@ -34,6 +34,40 @@ public sealed class SeatApiControllerTests : IClassFixture<CustomWebApplicationF
     }
 
     [Fact]
+    public async Task GetAllSeats_FiltersBySeatType()
+    {
+        await _factory.ClearDatabaseAsync();
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var standardSeat = await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "A", seatType: SeatType.Standard);
+        var vipSeat = await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "B", seatType: SeatType.Vip);
+
+        var response = await _client.GetAsync("/api/sjedala?seatType=Vip");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var seats = await response.Content.ReadFromJsonAsync<List<SeatDTO>>();
+        seats.Should().NotBeNull();
+        seats.Should().ContainSingle(s => s.Id == vipSeat.Id);
+        seats.Should().NotContain(s => s.Id == standardSeat.Id);
+    }
+
+    [Fact]
+    public async Task SearchSeats_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var matchingSeat = await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "Z", seatNumber: 1);
+        var nonMatchingSeat = await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "A", seatNumber: 2);
+
+        var response = await _client.GetAsync("/api/sjedala/pretraga/Z");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var seats = await response.Content.ReadFromJsonAsync<List<SeatDTO>>();
+        seats.Should().NotBeNull();
+        seats.Should().ContainSingle(s => s.Id == matchingSeat.Id);
+        seats.Should().NotContain(s => s.Id == nonMatchingSeat.Id);
+    }
+
+    [Fact]
     public async Task GetSeatById_ReturnsSeat_WhenSeatExists()
     {
         await _factory.ClearDatabaseAsync();
@@ -129,6 +163,22 @@ public sealed class SeatApiControllerTests : IClassFixture<CustomWebApplicationF
         var response = await _client.PutAsJsonAsync("/api/sjedala/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutSeat_ReturnsBadRequest_WhenSeatLabelAlreadyExistsInHall()
+    {
+        await _factory.ClearDatabaseAsync();
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "A", seatNumber: 1);
+        var seatToUpdate = await ApiTestData.CreateSeatAsync(_factory, hall.Id, rowLabel: "B", seatNumber: 2);
+        var request = CreateSeatWriteDto(hall.Id, rowLabel: "A", seatNumber: 1);
+
+        var response = await _client.PutAsJsonAsync($"/api/sjedala/{seatToUpdate.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

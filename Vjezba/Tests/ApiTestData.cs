@@ -9,7 +9,8 @@ internal static class ApiTestData
     public static async Task<Cinema> CreateCinemaAsync(
         CustomWebApplicationFactory factory,
         string name = "Test Cinema",
-        string city = "Zagreb")
+        string city = "Zagreb",
+        string? email = null)
     {
         var cinema = new Cinema
         {
@@ -18,7 +19,7 @@ internal static class ApiTestData
             Street = "Test Street",
             HouseNumber = "1",
             PostalCode = "10000",
-            Email = "cinema@example.com",
+            Email = email ?? "cinema@example.com",
             Phone = "+385 1 234 567"
         };
 
@@ -28,21 +29,25 @@ internal static class ApiTestData
     public static async Task<Customer> CreateCustomerAsync(
         CustomWebApplicationFactory factory,
         string firstName = "Test",
-        string lastName = "Customer")
+        string lastName = "Customer",
+        string city = "Zagreb",
+        bool isLoyaltyMember = true,
+        int loyaltyPoints = 10,
+        string? email = null)
     {
         var customer = new Customer
         {
             FirstName = firstName,
             LastName = lastName,
-            City = "Zagreb",
+            City = city,
             Street = "Customer Street",
             HouseNumber = "2",
             PostalCode = "10000",
-            Email = $"{firstName.ToLowerInvariant()}.{lastName.ToLowerInvariant()}@example.com",
+            Email = email ?? $"{firstName.ToLowerInvariant()}.{lastName.ToLowerInvariant()}@example.com",
             Phone = "+385 91 234 5678",
             RegisteredAt = new DateTime(2026, 1, 1),
-            IsLoyaltyMember = true,
-            LoyaltyPoints = 10
+            IsLoyaltyMember = isLoyaltyMember,
+            LoyaltyPoints = loyaltyPoints
         };
 
         return await AddAsync(factory, customer);
@@ -50,16 +55,18 @@ internal static class ApiTestData
 
     public static async Task<Movie> CreateMovieAsync(
         CustomWebApplicationFactory factory,
-        string title = "Test Movie")
+        string title = "Test Movie",
+        string language = "EN",
+        string description = "A movie created for API integration testing.")
     {
         var movie = new Movie
         {
             Title = title,
-            Description = "A movie created for API integration testing.",
+            Description = description,
             DurationMinutes = 120,
             ReleaseDate = new DateTime(2026, 2, 1),
             Genre = MovieGenre.Action,
-            Language = "EN",
+            Language = language,
             AgeRating = "12+"
         };
 
@@ -89,7 +96,8 @@ internal static class ApiTestData
         int? movieId = null,
         int? hallId = null,
         DateTime? startTime = null,
-        DateTime? endTime = null)
+        DateTime? endTime = null,
+        bool is3D = false)
     {
         var movie = movieId.HasValue ? null : await CreateMovieAsync(factory);
         var hall = hallId.HasValue ? null : await CreateHallAsync(factory);
@@ -97,7 +105,7 @@ internal static class ApiTestData
         {
             StartTime = startTime ?? new DateTime(2026, 3, 1, 18, 0, 0),
             EndTime = endTime ?? new DateTime(2026, 3, 1, 20, 0, 0),
-            Is3D = false,
+            Is3D = is3D,
             MovieId = movieId ?? movie!.Id,
             HallId = hallId ?? hall!.Id
         };
@@ -109,14 +117,15 @@ internal static class ApiTestData
         CustomWebApplicationFactory factory,
         int? hallId = null,
         string rowLabel = "A",
-        int seatNumber = 1)
+        int seatNumber = 1,
+        SeatType seatType = SeatType.Standard)
     {
         var hall = hallId.HasValue ? null : await CreateHallAsync(factory);
         var seat = new Seat
         {
             RowLabel = rowLabel,
             SeatNumber = seatNumber,
-            SeatType = SeatType.Standard,
+            SeatType = seatType,
             HallId = hallId ?? hall!.Id
         };
 
@@ -127,7 +136,9 @@ internal static class ApiTestData
         CustomWebApplicationFactory factory,
         int? screeningId = null,
         int? seatId = null,
-        int? customerId = null)
+        int? customerId = null,
+        string? ticketNumber = null,
+        TicketStatus status = TicketStatus.Active)
     {
         Screening? screening = null;
         Seat? seat = null;
@@ -144,10 +155,10 @@ internal static class ApiTestData
         var customer = customerId.HasValue ? null : await CreateCustomerAsync(factory);
         var ticket = new Ticket
         {
-            TicketNumber = $"TICKET-{Guid.NewGuid():N}"[..20],
+            TicketNumber = ticketNumber ?? $"TICKET-{Guid.NewGuid():N}"[..20],
             PurchasedAt = new DateTime(2026, 3, 1, 12, 0, 0),
             Price = 9.99m,
-            Status = TicketStatus.Active,
+            Status = status,
             ScreeningId = screeningId ?? screening!.Id,
             SeatId = seatId ?? seat?.Id,
             CustomerId = customerId ?? customer!.Id

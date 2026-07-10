@@ -33,6 +33,42 @@ public sealed class CustomerApiControllerTests : IClassFixture<CustomWebApplicat
     }
 
     [Fact]
+    public async Task GetAllCustomers_FiltersByLoyaltyMembership()
+    {
+        await _factory.ClearDatabaseAsync();
+        var loyaltyCustomer = await ApiTestData.CreateCustomerAsync(_factory, firstName: "Loyal", isLoyaltyMember: true);
+        var regularCustomer = await ApiTestData.CreateCustomerAsync(
+            _factory,
+            firstName: "Regular",
+            isLoyaltyMember: false,
+            loyaltyPoints: 0);
+
+        var response = await _client.GetAsync("/api/kupci?loyaltyMember=false");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var customers = await response.Content.ReadFromJsonAsync<List<CustomerDTO>>();
+        customers.Should().NotBeNull();
+        customers.Should().ContainSingle(c => c.Id == regularCustomer.Id);
+        customers.Should().NotContain(c => c.Id == loyaltyCustomer.Id);
+    }
+
+    [Fact]
+    public async Task SearchCustomers_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var matchingCustomer = await ApiTestData.CreateCustomerAsync(_factory, firstName: "Aurora", lastName: "Buyer");
+        var nonMatchingCustomer = await ApiTestData.CreateCustomerAsync(_factory, firstName: "Marko", lastName: "Buyer");
+
+        var response = await _client.GetAsync("/api/kupci/pretraga/Aurora");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var customers = await response.Content.ReadFromJsonAsync<List<CustomerDTO>>();
+        customers.Should().NotBeNull();
+        customers.Should().ContainSingle(c => c.Id == matchingCustomer.Id);
+        customers.Should().NotContain(c => c.Id == nonMatchingCustomer.Id);
+    }
+
+    [Fact]
     public async Task GetCustomerById_ReturnsCustomer_WhenCustomerExists()
     {
         await _factory.ClearDatabaseAsync();
@@ -132,6 +168,28 @@ public sealed class CustomerApiControllerTests : IClassFixture<CustomWebApplicat
         var response = await _client.PutAsJsonAsync("/api/kupci/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutCustomer_ReturnsBadRequest_WhenEmailAlreadyExists()
+    {
+        await _factory.ClearDatabaseAsync();
+        var existingCustomer = await ApiTestData.CreateCustomerAsync(
+            _factory,
+            firstName: "Existing",
+            email: "existing-customer@example.com");
+        var customerToUpdate = await ApiTestData.CreateCustomerAsync(
+            _factory,
+            firstName: "Update",
+            email: "update-customer@example.com");
+        var request = CreateCustomerWriteDto("Updated");
+        request.Email = existingCustomer.Email;
+
+        var response = await _client.PutAsJsonAsync($"/api/kupci/{customerToUpdate.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

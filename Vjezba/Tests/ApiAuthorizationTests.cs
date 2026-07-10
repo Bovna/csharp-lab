@@ -16,10 +16,15 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
     public static IEnumerable<object[]> PublicListEndpoints()
     {
         yield return new object[] { "/api/kina" };
+        yield return new object[] { "/api/kina/pretraga/test" };
         yield return new object[] { "/api/dvorane" };
+        yield return new object[] { "/api/dvorane/pretraga/test" };
         yield return new object[] { "/api/film" };
+        yield return new object[] { "/api/film/pretraga/test" };
         yield return new object[] { "/api/projekcije" };
+        yield return new object[] { "/api/projekcije/pretraga/test" };
         yield return new object[] { "/api/sjedala" };
+        yield return new object[] { "/api/sjedala/pretraga/test" };
     }
 
     public static IEnumerable<object[]> SensitiveReadEndpoints()
@@ -28,6 +33,18 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
         yield return new object[] { "/api/kupci/pretraga/marko" };
         yield return new object[] { "/api/ulaznice" };
         yield return new object[] { "/api/ulaznice/pretraga/zg" };
+    }
+
+    public static IEnumerable<object[]> SensitiveReadEndpointsWithAllowedRoles()
+    {
+        yield return new object[] { "Admin", "/api/kupci" };
+        yield return new object[] { "Admin", "/api/kupci/pretraga/marko" };
+        yield return new object[] { "Admin", "/api/ulaznice" };
+        yield return new object[] { "Admin", "/api/ulaznice/pretraga/zg" };
+        yield return new object[] { "Manager", "/api/kupci" };
+        yield return new object[] { "Manager", "/api/kupci/pretraga/marko" };
+        yield return new object[] { "Manager", "/api/ulaznice" };
+        yield return new object[] { "Manager", "/api/ulaznice/pretraga/zg" };
     }
 
     public static IEnumerable<object[]> SensitiveMvcReadEndpoints()
@@ -113,6 +130,18 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
     }
 
     [Theory]
+    [MemberData(nameof(SensitiveReadEndpointsWithAllowedRoles))]
+    public async Task SensitiveReadEndpoints_ReturnOk_WhenUserHasAllowedRole(string role, string endpoint)
+    {
+        await _factory.ClearDatabaseAsync();
+        var client = _factory.CreateAuthenticatedClient(role);
+
+        var response = await client.GetAsync(endpoint);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Theory]
     [MemberData(nameof(AuthenticatedDetailEndpoints))]
     public async Task DetailEndpoints_ReturnUnauthorized_WhenUserIsNotAuthenticated(string endpoint)
     {
@@ -133,6 +162,18 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
     }
 
     [Theory]
+    [MemberData(nameof(ManagerMutatingEndpoints))]
+    public async Task ManagerMutatingEndpoints_DoNotReturnAuthorizationError_WhenUserIsManager(HttpMethod method, string endpoint)
+    {
+        var client = _factory.CreateAuthenticatedClient("Manager");
+
+        var response = await client.SendAsync(CreateJsonRequest(method, endpoint));
+
+        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
+    }
+
+    [Theory]
     [MemberData(nameof(AdminOnlyDeleteEndpoints))]
     public async Task DeleteEndpoints_ReturnForbidden_WhenUserIsManager(string endpoint)
     {
@@ -141,6 +182,17 @@ public sealed class ApiAuthorizationTests : IClassFixture<CustomWebApplicationFa
         var response = await client.DeleteAsync(endpoint);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Theory]
+    [MemberData(nameof(AdminOnlyDeleteEndpoints))]
+    public async Task DeleteEndpoints_ReturnNotFound_WhenUserIsAdmin(string endpoint)
+    {
+        var client = _factory.CreateAuthenticatedClient("Admin");
+
+        var response = await client.DeleteAsync(endpoint);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     private static HttpRequestMessage CreateJsonRequest(HttpMethod method, string endpoint)

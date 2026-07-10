@@ -33,6 +33,65 @@ public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplica
     }
 
     [Fact]
+    public async Task GetAllScreenings_FiltersByDayOfWeek()
+    {
+        await _factory.ClearDatabaseAsync();
+        var movie = await ApiTestData.CreateMovieAsync(_factory);
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var mondayStart = new DateTime(2027, 3, 1, 18, 0, 0);
+        var tuesdayStart = new DateTime(2027, 3, 2, 18, 0, 0);
+        var mondayScreening = await ApiTestData.CreateScreeningAsync(
+            _factory,
+            movie.Id,
+            hall.Id,
+            mondayStart,
+            mondayStart.AddHours(2));
+        var tuesdayScreening = await ApiTestData.CreateScreeningAsync(
+            _factory,
+            movie.Id,
+            hall.Id,
+            tuesdayStart,
+            tuesdayStart.AddHours(2));
+
+        var response = await _client.GetAsync($"/api/projekcije?dayOfWeek={(int)mondayStart.DayOfWeek}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var screenings = await response.Content.ReadFromJsonAsync<List<ScreeningDTO>>();
+        screenings.Should().NotBeNull();
+        screenings.Should().ContainSingle(s => s.Id == mondayScreening.Id);
+        screenings.Should().NotContain(s => s.Id == tuesdayScreening.Id);
+    }
+
+    [Fact]
+    public async Task SearchScreenings_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var matchingMovie = await ApiTestData.CreateMovieAsync(_factory, "Aurora Screening Movie");
+        var nonMatchingMovie = await ApiTestData.CreateMovieAsync(_factory, "Borealis Screening Movie");
+        var hall = await ApiTestData.CreateHallAsync(_factory);
+        var matchingScreening = await ApiTestData.CreateScreeningAsync(
+            _factory,
+            matchingMovie.Id,
+            hall.Id,
+            new DateTime(2027, 3, 1, 18, 0, 0),
+            new DateTime(2027, 3, 1, 20, 0, 0));
+        var nonMatchingScreening = await ApiTestData.CreateScreeningAsync(
+            _factory,
+            nonMatchingMovie.Id,
+            hall.Id,
+            new DateTime(2027, 3, 2, 18, 0, 0),
+            new DateTime(2027, 3, 2, 20, 0, 0));
+
+        var response = await _client.GetAsync("/api/projekcije/pretraga/Aurora");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var screenings = await response.Content.ReadFromJsonAsync<List<ScreeningDTO>>();
+        screenings.Should().NotBeNull();
+        screenings.Should().ContainSingle(s => s.Id == matchingScreening.Id);
+        screenings.Should().NotContain(s => s.Id == nonMatchingScreening.Id);
+    }
+
+    [Fact]
     public async Task GetScreeningById_ReturnsScreening_WhenScreeningExists()
     {
         await _factory.ClearDatabaseAsync();
@@ -162,6 +221,21 @@ public sealed class ScreeningApiControllerTests : IClassFixture<CustomWebApplica
         var response = await _client.PutAsJsonAsync("/api/projekcije/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutScreening_ReturnsBadRequest_WhenEndTimeIsNotAfterStartTime()
+    {
+        await _factory.ClearDatabaseAsync();
+        var screening = await ApiTestData.CreateScreeningAsync(_factory);
+        var request = CreateScreeningWriteDto(screening.MovieId, screening.HallId);
+        request.EndTime = request.StartTime;
+
+        var response = await _client.PutAsJsonAsync($"/api/projekcije/{screening.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ReadErrorMessageAsync(response);
+        error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

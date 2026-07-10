@@ -33,6 +33,38 @@ public sealed class CinemaApiControllerTests : IClassFixture<CustomWebApplicatio
     }
 
     [Fact]
+    public async Task GetAllCinemas_FiltersByCity()
+    {
+        await _factory.ClearDatabaseAsync();
+        var zagrebCinema = await ApiTestData.CreateCinemaAsync(_factory, name: "Zagreb Cinema", city: "Zagreb");
+        var splitCinema = await ApiTestData.CreateCinemaAsync(_factory, name: "Split Cinema", city: "Split");
+
+        var response = await _client.GetAsync("/api/kina?city=Split");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cinemas = await response.Content.ReadFromJsonAsync<List<CinemaDTO>>();
+        cinemas.Should().NotBeNull();
+        cinemas.Should().ContainSingle(c => c.Id == splitCinema.Id);
+        cinemas.Should().NotContain(c => c.Id == zagrebCinema.Id);
+    }
+
+    [Fact]
+    public async Task SearchCinemas_ReturnsMatchingResultsOnly()
+    {
+        await _factory.ClearDatabaseAsync();
+        var matchingCinema = await ApiTestData.CreateCinemaAsync(_factory, name: "Aurora Cinema");
+        var nonMatchingCinema = await ApiTestData.CreateCinemaAsync(_factory, name: "Borealis Cinema");
+
+        var response = await _client.GetAsync("/api/kina/pretraga/Aurora");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cinemas = await response.Content.ReadFromJsonAsync<List<CinemaDTO>>();
+        cinemas.Should().NotBeNull();
+        cinemas.Should().ContainSingle(c => c.Id == matchingCinema.Id);
+        cinemas.Should().NotContain(c => c.Id == nonMatchingCinema.Id);
+    }
+
+    [Fact]
     public async Task GetCinemaById_ReturnsCinema_WhenCinemaExists()
     {
         await _factory.ClearDatabaseAsync();
@@ -134,6 +166,28 @@ public sealed class CinemaApiControllerTests : IClassFixture<CustomWebApplicatio
         var response = await _client.PutAsJsonAsync("/api/kina/9999", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PutCinema_ReturnsBadRequest_WhenEmailAlreadyExists()
+    {
+        await _factory.ClearDatabaseAsync();
+        var existingCinema = await ApiTestData.CreateCinemaAsync(
+            _factory,
+            name: "Existing Cinema",
+            email: "existing-cinema@example.com");
+        var cinemaToUpdate = await ApiTestData.CreateCinemaAsync(
+            _factory,
+            name: "Cinema To Update",
+            email: "update-cinema@example.com");
+        var request = CreateCinemaWriteDto("Updated Cinema");
+        request.Email = existingCinema.Email;
+
+        var response = await _client.PutAsJsonAsync($"/api/kina/{cinemaToUpdate.Id}", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var error = await ApiErrorTestHelper.ReadErrorMessageAsync(response);
+        error.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

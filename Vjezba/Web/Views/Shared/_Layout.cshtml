@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Kino Sustav</title>
+    <title>@ViewData["Title"] - KinoKlik</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/datepicker.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -21,11 +21,11 @@
             ["Cinema"] = "Kina",
             ["Customer"] = "Kupci",
             ["Hall"] = "Dvorane",
-            ["Movie"] = "Filmovi",
-            ["Screening"] = "Projekcije",
+            ["Movie"] = "Na programu",
+            ["Screening"] = "Raspored",
             ["Seat"] = "Sjedala",
             ["Ticket"] = "Ulaznice",
-            ["TicketBuilder"] = "Brza kupnja",
+            ["TicketBuilder"] = "Kupi ulaznicu",
             ["GlobalSearch"] = "Pretraga"
         };
 
@@ -63,20 +63,37 @@
 
     <header class="site-header">
         <div class="container d-flex flex-wrap align-items-center gap-3">
-            <a class="nav-brand" asp-area="" asp-controller="Home" asp-action="Index">Kino Sustav</a>
+            <a class="nav-brand" asp-area="" asp-controller="Home" asp-action="Index">KinoKlik</a>
             <nav class="site-nav" aria-label="Glavna navigacija">
                 <ul class="nav-menu">
-                    <li><a class="nav-link @(currentController == "Movie" ? "active" : "")" asp-controller="Movie" asp-action="Index">Filmovi</a></li>
-                    <li><a class="nav-link @(currentController == "Screening" ? "active" : "")" asp-controller="Screening" asp-action="Index">Projekcije</a></li>
+                    <li><a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">Početna</a></li>
+                    <li><a class="nav-link @(currentController == "Movie" ? "active" : "")" asp-controller="Movie" asp-action="Index">Na programu</a></li>
+                    <li><a class="nav-link @(currentController == "Screening" ? "active" : "")" asp-controller="Screening" asp-action="Index">Raspored</a></li>
                     <li><a class="nav-link @(currentController == "Cinema" ? "active" : "")" asp-controller="Cinema" asp-action="Index">Kina</a></li>
-                    <li><a class="nav-link @(currentController == "Hall" ? "active" : "")" asp-controller="Hall" asp-action="Index">Dvorane</a></li>
-                    <li><a class="nav-link @(currentController == "Seat" ? "active" : "")" asp-controller="Seat" asp-action="Index">Sjedala</a></li>
+                    <li><a class="nav-link nav-link--cta @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Kupi ulaznicu</a></li>
                     @if (canViewSensitiveNavigation)
                     {
-                        <li><a class="nav-link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">Kupci</a></li>
-                        <li><a class="nav-link @(currentController == "Ticket" ? "active" : "")" asp-controller="Ticket" asp-action="Index">Ulaznice</a></li>
+                        var isManagementActive =
+                            string.Equals(currentController, "Hall", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(currentController, "Seat", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(currentController, "Customer", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(currentController, "Ticket", StringComparison.OrdinalIgnoreCase);
+
+                        <li class="nav-menu__item nav-dropdown">
+                            <details class="nav-dropdown__details">
+                                <summary class="nav-link nav-dropdown__trigger @(isManagementActive ? "active" : "")">
+                                    Upravljanje
+                                    <span class="nav-dropdown__chevron" aria-hidden="true"></span>
+                                </summary>
+                                <ul class="nav-dropdown__menu" aria-label="Administrativna navigacija">
+                                    <li><a class="nav-dropdown__link @(currentController == "Hall" ? "active" : "")" asp-controller="Hall" asp-action="Index">Dvorane</a></li>
+                                    <li><a class="nav-dropdown__link @(currentController == "Seat" ? "active" : "")" asp-controller="Seat" asp-action="Index">Sjedala</a></li>
+                                    <li><a class="nav-dropdown__link @(currentController == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">Kupci</a></li>
+                                    <li><a class="nav-dropdown__link @(currentController == "Ticket" ? "active" : "")" asp-controller="Ticket" asp-action="Index">Ulaznice</a></li>
+                                </ul>
+                            </details>
+                        </li>
                     }
-                    <li><a class="nav-link @(currentController == "TicketBuilder" ? "active" : "")" asp-controller="TicketBuilder" asp-action="Index">Brza kupnja</a></li>
                 </ul>
             </nav>
             <form class="site-header__search global-search" role="search" method="get"
@@ -153,8 +170,29 @@
     </div>
 
     <footer class="site-footer">
-        <div class="container">
-            &copy; 2026 - Sustav za prodaju kino ulaznica
+        <div class="container site-footer__content">
+            <div class="site-footer__brand">
+                <a class="site-footer__logo" asp-controller="Home" asp-action="Index">KinoKlik</a>
+                <p>Filmovi, projekcije i jednostavna kupnja ulaznica na jednom mjestu.</p>
+            </div>
+
+            <nav class="site-footer__nav" aria-label="Navigacija u podnožju">
+                <h2>Istražite</h2>
+                <a asp-controller="Movie" asp-action="Index">Na programu</a>
+                <a asp-controller="Screening" asp-action="Index">Raspored projekcija</a>
+                <a asp-controller="Cinema" asp-action="Index">Kina i lokacije</a>
+            </nav>
+
+            <div class="site-footer__action">
+                <h2>Spremni za kino?</h2>
+                <p>Odaberite kino, film, termin i svoja sjedala.</p>
+                <a class="ui-btn ui-btn--primary ui-btn--sm" asp-controller="TicketBuilder" asp-action="Index">Kupi ulaznice</a>
+            </div>
+
+            <div class="site-footer__bottom">
+                <span>&copy; 2026 KinoKlik</span>
+                <span>Online kupnja kino ulaznica</span>
+            </div>
         </div>
     </footer>
 
