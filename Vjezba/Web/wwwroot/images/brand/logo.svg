@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1600" height="400" viewBox="0 0 1600 400"
+     role="img" aria-labelledby="title desc">
+  <title id="title">KinoKlik logo</title>
+  <desc id="desc">Filmska klapa sa slovom K i nazivom KinoKlik.</desc>
+
+  <defs>
+    <filter id="greenGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feFlood flood-color="#2FB86F" flood-opacity="0.40" result="glowColor"/>
+      <feComposite in="glowColor" in2="blur" operator="in" result="softGlow"/>
+      <feMerge>
+        <feMergeNode in="softGlow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <linearGradient id="greenGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#48D58A"/>
+      <stop offset="100%" stop-color="#2FB86F"/>
+    </linearGradient>
+
+    <linearGradient id="whiteGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E7ECEF"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(70 58)">
+    <g filter="url(#greenGlow)" fill="url(#greenGradient)">
+      <polygon points="90,40 185,12 226,42 132,70"/>
+      <polygon points="205,5 300,-22 341,8 247,36"/>
+      <polygon points="320,-30 415,-57 456,-27 362,1"/>
+
+      <polygon points="104,95 196,95 166,134 74,134"/>
+      <polygon points="221,95 313,95 283,134 191,134"/>
+      <polygon points="338,95 430,95 400,134 308,134"/>
+
+      <rect x="120" y="154" width="58" height="172" rx="2"/>
+      <polygon points="172,236 272,154 348,154 232,251"/>
+      <polygon points="210,247 350,326 268,326 172,268"/>
+    </g>
+
+    <g fill="#F3F6F8">
+      <circle cx="34" cy="62" r="10"/>
+      <circle cx="34" cy="112" r="10"/>
+      <circle cx="80" cy="112" r="10"/>
+    </g>
+  </g>
+
+  <g transform="translate(560 0)">
+    <text x="0" y="264"
+          font-family="Montserrat, Arial, Helvetica, sans-serif"
+          font-size="176"
+          font-weight="700"
+          letter-spacing="-8"
+          fill="url(#whiteGradient)">Kino</text>
+    <text x="392" y="264"
+          font-family="Montserrat, Arial, Helvetica, sans-serif"
+          font-size="176"
+          font-weight="700"
+          letter-spacing="-8"
+          fill="url(#greenGradient)"
+          filter="url(#greenGlow)">Klik</text>
+  </g>
+</svg>

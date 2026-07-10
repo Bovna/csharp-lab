@@ -9,7 +9,7 @@
 <div class="container py-4 animate-fade-in-up">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <div>
-            <h1 class="h3 mb-1" style="color: var(--color-accent); letter-spacing: 1px; text-transform: uppercase;">Popis kina</h1>
+            <h1 class="movie-catalog__title">Kina i lokacije</h1>
         </div>
         @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
         {
@@ -18,7 +18,7 @@
     </div>
 
     <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
-        <div class="cinema-card-header">Pretrazivanje</div>
+        <div class="cinema-card-header">Pronađite najbliže kino</div>
         <div class="cinema-card-body">
             <form asp-action="Search" method="get" class="ui-form entity-index-search"
                   data-ajax-search-form data-ajax-results-target="#cinema-index-results">

@@ -3,8 +3,9 @@
 
 @{
     ViewData["Title"] = "Početna";
+    ViewData["BodyClass"] = "home-page-body";
     ViewData["MetaDescription"] = "KinoKlik prikazuje istaknute filmove i brzo vodi do kupnje kino ulaznica.";
-    var featuredMovies = Model.MoviesNowShowing.Take(5).ToList();
+    var featuredMovies = Model.MoviesNowShowing.Take(6).ToList();
 }
 
 @functions {
@@ -66,7 +67,6 @@
 <div class="home-page home-page--cinema">
     <section class="home-hero home-hero--cinema animate-fade-in-up" aria-labelledby="homeHeroTitle">
         <div class="home-hero__content home-hero__content--solo">
-            <p class="home-hero__eyebrow">KinoKlik</p>
             <h1 id="homeHeroTitle" class="hero-title">Filmovi, projekcije i ulaznice na jednom mjestu</h1>
             <p class="hero-subtitle">Odaberite film, pronađite termin i rezervirajte svoje mjesto za nekoliko minuta.</p>
             <div class="hero-actions ui-actions ui-actions--stack-mobile">
@@ -74,135 +74,6 @@
                 <a class="ui-btn ui-btn--secondary hero-actions__secondary" asp-controller="Movie" asp-action="Index">Pregledaj filmove</a>
             </div>
         </div>
-    </section>
-
-    <section class="home-featured-carousel animate-fade-in-up"
-             aria-labelledby="featuredMoviesTitle"
-             data-home-featured-carousel>
-        <div class="home-section-head">
-            <div>
-                <p>Istaknuto</p>
-                <h2 id="featuredMoviesTitle">Filmovi vrijedni velikog platna</h2>
-            </div>
-        </div>
-
-        @if (featuredMovies.Any())
-        {
-            <div class="home-featured-carousel__shell">
-                @if (featuredMovies.Count > 1)
-                {
-                    <button class="home-featured-carousel__arrow home-featured-carousel__arrow--previous"
-                            type="button"
-                            aria-label="Prikaži prethodni istaknuti film"
-                            data-carousel-previous>
-                        <span aria-hidden="true">←</span>
-                    </button>
-                }
-
-                <div class="home-featured-carousel__viewport" aria-live="polite">
-                    @for (var index = 0; index < featuredMovies.Count; index++)
-                    {
-                        var movie = featuredMovies[index];
-                        var isActive = index == 0;
-
-                        <article class="home-featured-slide @GenreClass(movie.Genre) @(isActive ? "is-active" : "")"
-                                 aria-hidden="@(isActive ? "false" : "true")"
-                                 aria-label="Istaknuti film @movie.Title"
-                                 data-carousel-slide>
-                            <div class="home-featured-slide__poster">
-                                @if (!string.IsNullOrWhiteSpace(movie.PosterPath))
-                                {
-                                    <img class="home-featured-slide__image"
-                                         src="@movie.PosterPath"
-                                         alt="Poster filma @movie.Title"
-                                         loading="@(isActive ? "eager" : "lazy")" />
-                                }
-                                else
-                                {
-                                    <div class="home-poster-frame__fallback">
-                                        <span>@DisplayGenre(movie.Genre)</span>
-                                        <strong>@movie.Title</strong>
-                                        <small>@movie.AgeRating</small>
-                                    </div>
-                                }
-                            </div>
-
-                            <div class="home-featured-slide__body">
-                                <p class="home-feature-card__meta">Izdvojeno na programu</p>
-                                <h3>@movie.Title</h3>
-                                <div class="home-meta-row" aria-label="Informacije o filmu">
-                                    <span>@DisplayGenre(movie.Genre)</span>
-                                    <span>@movie.DurationMinutes min</span>
-                                    <span>@DisplayLanguage(movie.Language)</span>
-                                    <span>@movie.AgeRating</span>
-                                </div>
-                                <p class="home-featured-slide__description">@TrimDescription(movie.Description, 210)</p>
-
-                                @if (movie.NextScreening is not null)
-                                {
-                                    <p class="home-next-screening">
-                                        Najbliži termin:
-                                        <strong>@movie.NextScreening.StartTime.ToString("dd.MM. HH:mm")</strong>
-                                        <span>@movie.NextScreening.CinemaName</span>
-                                    </p>
-                                    <div class="ui-actions ui-actions--stack-mobile">
-                                        <a class="ui-btn ui-btn--primary"
-                                           tabindex="@(isActive ? null : "-1")"
-                                           asp-controller="TicketBuilder"
-                                           asp-action="Seats"
-                                           asp-route-cinemaId="@movie.NextScreening.CinemaId"
-                                           asp-route-movieId="@movie.Id"
-                                           asp-route-screeningId="@movie.NextScreening.Id">Odaberi sjedala</a>
-                                        <a class="ui-btn ui-btn--secondary"
-                                           tabindex="@(isActive ? null : "-1")"
-                                           asp-controller="Screening"
-                                           asp-action="Search"
-                                           asp-route-query="@movie.Title">Svi termini</a>
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="ui-actions ui-actions--stack-mobile">
-                                        <a class="ui-btn ui-btn--secondary"
-                                           tabindex="@(isActive ? null : "-1")"
-                                           asp-controller="Movie"
-                                           asp-action="Index">Pregledaj filmove</a>
-                                    </div>
-                                }
-                            </div>
-                        </article>
-                    }
-                </div>
-
-                @if (featuredMovies.Count > 1)
-                {
-                    <button class="home-featured-carousel__arrow home-featured-carousel__arrow--next"
-                            type="button"
-                            aria-label="Prikaži sljedeći istaknuti film"
-                            data-carousel-next>
-                        <span aria-hidden="true">→</span>
-                    </button>
-                }
-            </div>
-
-            @if (featuredMovies.Count > 1)
-            {
-                <div class="home-featured-carousel__dots" aria-label="Odabir istaknutog filma">
-                    @for (var index = 0; index < featuredMovies.Count; index++)
-                    {
-                        <button class="home-featured-carousel__dot @(index == 0 ? "is-active" : "")"
-                                type="button"
-                                aria-label="Prikaži film @(index + 1): @featuredMovies[index].Title"
-                                aria-current="@(index == 0 ? "true" : "false")"
-                                data-carousel-dot="@index"></button>
-                    }
-                </div>
-            }
-        }
-        else
-        {
-            <div class="ui-empty-state">Trenutačno nema filmova za prikaz.</div>
-        }
     </section>
 
     <section class="home-digest animate-fade-in-up" aria-labelledby="howItWorksTitle">
@@ -229,5 +100,85 @@
                 <p>Odaberite sjedala i dovršite kupnju kroz jednostavan, vođeni proces.</p>
             </article>
         </div>
+    </section>
+
+    <section class="home-featured animate-fade-in-up" aria-labelledby="featuredMoviesTitle">
+        <div class="home-section-head">
+            <div>
+                <p>Istaknuto</p>
+                <h2 id="featuredMoviesTitle">Istaknuti filmovi</h2>
+            </div>
+        </div>
+
+        @if (featuredMovies.Any())
+        {
+            <div class="home-movie-grid">
+                @foreach (var movie in featuredMovies)
+                {
+                    <article class="home-feature-card @GenreClass(movie.Genre)">
+                        <div class="home-feature-card__poster">
+                            @if (!string.IsNullOrWhiteSpace(movie.PosterPath))
+                            {
+                                <img class="home-feature-card__image"
+                                     src="@movie.PosterPath"
+                                     alt="Poster filma @movie.Title"
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="home-poster-frame__fallback">
+                                    <span>@DisplayGenre(movie.Genre)</span>
+                                    <strong>@movie.Title</strong>
+                                    <small>@movie.AgeRating</small>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="home-feature-card__body">
+                            <h3>@movie.Title</h3>
+                            <div class="home-meta-row" aria-label="Informacije o filmu">
+                                <span>@DisplayGenre(movie.Genre)</span>
+                                <span>@movie.DurationMinutes min</span>
+                                <span>@DisplayLanguage(movie.Language)</span>
+                                <span>@movie.AgeRating</span>
+                            </div>
+                            <p class="home-feature-card__description">@TrimDescription(movie.Description, 140)</p>
+
+                            @if (movie.NextScreening is not null)
+                            {
+                                <div class="home-card-screening">
+                                    <span>@movie.NextScreening.StartTime.ToString("dd.MM. HH:mm")</span>
+                                    <small>@movie.NextScreening.CinemaName</small>
+                                </div>
+                                <div class="ui-actions ui-actions--stack-mobile">
+                                    <a class="ui-btn ui-btn--primary"
+                                       asp-controller="TicketBuilder"
+                                       asp-action="Seats"
+                                       asp-route-cinemaId="@movie.NextScreening.CinemaId"
+                                       asp-route-movieId="@movie.Id"
+                                       asp-route-screeningId="@movie.NextScreening.Id">Odaberi sjedala</a>
+                                    <a class="ui-btn ui-btn--secondary"
+                                       asp-controller="Screening"
+                                       asp-action="Search"
+                                       asp-route-query="@movie.Title">Svi termini</a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="ui-actions ui-actions--stack-mobile">
+                                    <a class="ui-btn ui-btn--secondary"
+                                       asp-controller="Movie"
+                                       asp-action="Index">Pregledaj filmove</a>
+                                </div>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="ui-empty-state">Trenutačno nema filmova za prikaz.</div>
+        }
     </section>
 </div>

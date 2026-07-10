@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="512" height="512" viewBox="0 0 512 512"
+     role="img" aria-labelledby="title desc">
+  <title id="title">KinoKlik favicon</title>
+  <desc id="desc">Filmska klapa sa zelenim slovom K.</desc>
+
+  <defs>
+    <filter id="greenGlow" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feFlood flood-color="#2FB86F" flood-opacity="0.42" result="glowColor"/>
+      <feComposite in="glowColor" in2="blur" operator="in" result="softGlow"/>
+      <feMerge>
+        <feMergeNode in="softGlow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <linearGradient id="greenGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#48D58A"/>
+      <stop offset="100%" stop-color="#2FB86F"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(46 78)">
+    <g filter="url(#greenGlow)" fill="url(#greenGradient)">
+      <polygon points="74,54 160,28 195,55 109,81"/>
+      <polygon points="183,22 269,-4 304,23 218,49"/>
+      <polygon points="292,-10 378,-36 413,-9 327,17"/>
+
+      <polygon points="86,106 169,106 141,143 58,143"/>
+      <polygon points="193,106 276,106 248,143 165,143"/>
+      <polygon points="300,106 383,106 355,143 272,143"/>
+
+      <rect x="118" y="166" width="56" height="210" rx="2"/>
+      <polygon points="168,266 279,166 358,166 226,282"/>
+      <polygon points="210,278 362,376 276,376 168,304"/>
+    </g>
+
+    <g fill="#F3F6F8">
+      <circle cx="24" cy="72" r="10"/>
+      <circle cx="24" cy="122" r="10"/>
+      <circle cx="64" cy="122" r="10"/>
+    </g>
+  </g>
+</svg>

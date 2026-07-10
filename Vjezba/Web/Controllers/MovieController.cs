@@ -46,7 +46,10 @@ public class MovieController : BaseController
     [AllowAnonymous]
     public IActionResult Index(string? language, bool partial = false)
     {
-        var query = _dbContext.Movies.Where(m => m.DeletedAt == null).AsQueryable();
+        var query = _dbContext.Movies
+            .Include(m => m.Attachments)
+            .Where(m => m.DeletedAt == null)
+            .AsQueryable();
 
         ViewBag.Languages = _dbContext.Movies
             .Where(m => m.DeletedAt == null)
@@ -91,7 +94,10 @@ public class MovieController : BaseController
         ViewBag.SelectedLanguage = null;
         ViewBag.Search = query;
 
-        var moviesQuery = _dbContext.Movies.Where(movie => movie.DeletedAt == null).AsQueryable();
+        var moviesQuery = _dbContext.Movies
+            .Include(movie => movie.Attachments)
+            .Where(movie => movie.DeletedAt == null)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(language))
         {

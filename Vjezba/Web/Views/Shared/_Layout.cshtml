@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - KinoKlik</title>
+    <link rel="icon" type="image/svg+xml" href="~/images/brand/favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/datepicker.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Vjezba.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@ViewData["BodyClass"]">
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
@@ -63,7 +63,10 @@
 
     <header class="site-header">
         <div class="container d-flex flex-wrap align-items-center gap-3">
-            <a class="nav-brand" asp-area="" asp-controller="Home" asp-action="Index">KinoKlik</a>
+            <a class="nav-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="KinoKlik — početna">
+                <img class="nav-brand__logo" src="~/images/brand/logo.svg" asp-append-version="true"
+                     alt="" width="160" height="40" />
+            </a>
             <nav class="site-nav" aria-label="Glavna navigacija">
                 <ul class="nav-menu">
                     <li><a class="nav-link @(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">Početna</a></li>
@@ -171,28 +174,7 @@
 
     <footer class="site-footer">
         <div class="container site-footer__content">
-            <div class="site-footer__brand">
-                <a class="site-footer__logo" asp-controller="Home" asp-action="Index">KinoKlik</a>
-                <p>Filmovi, projekcije i jednostavna kupnja ulaznica na jednom mjestu.</p>
-            </div>
-
-            <nav class="site-footer__nav" aria-label="Navigacija u podnožju">
-                <h2>Istražite</h2>
-                <a asp-controller="Movie" asp-action="Index">Na programu</a>
-                <a asp-controller="Screening" asp-action="Index">Raspored projekcija</a>
-                <a asp-controller="Cinema" asp-action="Index">Kina i lokacije</a>
-            </nav>
-
-            <div class="site-footer__action">
-                <h2>Spremni za kino?</h2>
-                <p>Odaberite kino, film, termin i svoja sjedala.</p>
-                <a class="ui-btn ui-btn--primary ui-btn--sm" asp-controller="TicketBuilder" asp-action="Index">Kupi ulaznice</a>
-            </div>
-
-            <div class="site-footer__bottom">
-                <span>&copy; 2026 KinoKlik</span>
-                <span>Online kupnja kino ulaznica</span>
-            </div>
+            <p class="site-footer__copy">&copy; 2026 KinoKlik - Online kupnja kino ulaznica</p>
         </div>
     </footer>
 
