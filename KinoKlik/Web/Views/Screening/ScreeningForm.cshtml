@@ -1,0 +1,82 @@
+@model KinoKlik.Web.ViewModels.ScreeningFormViewModel
+
+@{
+    var isEdit = (ViewData["IsEdit"] as bool?) == true;
+    var startTimeName = Html.NameFor(m => m.StartTime).ToString();
+    var endTimeName = Html.NameFor(m => m.EndTime).ToString();
+    var startTimeValue = Model.StartTime == default
+        ? DateTime.Now.ToString("yyyy-MM-ddTHH:mm")
+        : Model.StartTime.ToString("yyyy-MM-ddTHH:mm");
+    var endTimeValue = Model.EndTime == default
+        ? DateTime.Now.AddHours(2).ToString("yyyy-MM-ddTHH:mm")
+        : Model.EndTime.ToString("yyyy-MM-ddTHH:mm");
+}
+
+<form asp-action="@(isEdit ? "Edit" : "Create")"
+      asp-route-id="@(isEdit ? Model.Id : null)"
+      method="post"
+      class="ui-form movie-form"
+      onsubmit="return CinemaUI.validateForm(this);">
+    @Html.AntiForgeryToken()
+
+    @if (isEdit)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
+
+    <div asp-validation-summary="ModelOnly" class="ui-validation-summary mb-3" aria-live="polite"></div>
+
+    <div class="mb-4">
+        <h5 class="ui-form__section-title">Vremenske postavke</h5>
+
+        <div class="ui-field">
+            <label asp-for="StartTime" class="ui-field__label">Pocetak <span style="color: var(--color-danger);">*</span></label>
+            @await Html.PartialAsync("_DatePicker", new ViewDataDictionary(ViewData)
+            {
+                { "Name", startTimeName },
+                { "Value", startTimeValue },
+                { "Type", "datetime-local" }
+            })
+            <span asp-validation-for="StartTime" class="ui-field__validation"></span>
+        </div>
+
+        <div class="ui-field">
+            <label asp-for="EndTime" class="ui-field__label">Zavrsetak <span style="color: var(--color-danger);">*</span></label>
+            @await Html.PartialAsync("_DatePicker", new ViewDataDictionary(ViewData)
+            {
+                { "Name", endTimeName },
+                { "Value", endTimeValue },
+                { "Type", "datetime-local" }
+            })
+            <span asp-validation-for="EndTime" class="ui-field__validation"></span>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="ui-form__section-title">Osnovne informacije</h5>
+
+        @await Html.PartialAsync("_AutocompleteSelect", Model.MovieSelector)
+        @await Html.PartialAsync("_AutocompleteSelect", Model.HallSelector)
+
+        <div class="ui-field ui-field--checkbox mt-3">
+            <label class="ui-field__label d-block mb-1">3D projekcija</label>
+            <label class="ui-field__checkbox-label">
+                <input asp-for="Is3D" type="checkbox" class="ui-field__checkbox" />
+                <span>Aktivna 3D projekcija</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="ui-actions ui-actions--end movie-form-actions">
+        @if (isEdit)
+        {
+            <button type="submit" class="ui-btn ui-btn--primary">Spremi promjene</button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="ui-btn ui-btn--secondary">Odustani</a>
+        }
+        else
+        {
+            <a asp-action="Index" class="ui-btn ui-btn--secondary">Odustani</a>
+            <button type="submit" class="ui-btn ui-btn--primary">Spremi projekciju</button>
+        }
+    </div>
+</form>

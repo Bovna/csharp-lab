@@ -12,11 +12,14 @@
 
 # Logs
 *.log
-.github/logs/
+**/log.txt
 **/agent_log.txt
 
 # Local temporary artifacts
 .tmp/
+
+# Retired coursework artifacts
+lab-[1-5]/
 
 # Local secrets and environment-specific configuration
 .env
@@ -24,9 +27,22 @@
 !.env.example
 appsettings.Production.json
 appsettings.Staging.json
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
 *.PublishSettings
+*.publishsettings
 *.pubxml
 *.pubxml.user
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+*.mdf
+*.ldf
+*.db
+*.sqlite*
 
 # Deployment and test outputs
 publish/
@@ -37,3 +53,7 @@ TestResults/
 **/wwwroot/uploads/
 .agents/
 .codex/
+.github/agents/
+.github/hooks/
+.github/logs/
+.github/skills/

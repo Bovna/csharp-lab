@@ -1,0 +1,12 @@
+@model List<KinoKlik.Model.Entities.Cinema>
+@if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && (ViewBag.Management == true))
+{
+<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Naziv</th><th>Grad</th><th>Adresa</th><th>E-pošta</th><th>Telefon</th><th></th></tr></thead><tbody>@foreach(var c in Model){<tr><td>@c.Id</td><td>@c.Name</td><td>@c.City</td><td>@c.Street @c.HouseNumber</td><td>@c.Email</td><td>@c.Phone</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@c.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
+}
+else
+{
+<section class="cinema-directory" data-ajax-search-results aria-live="polite">
+ <p>Prikazano kina: @Model.Count</p>
+ @if(Model.Any()){<div class="cinema-directory__grid">@foreach(var cinema in Model){<article class="cinema-directory__card"><p class="cinema-directory__city">@cinema.City</p><h2>@cinema.Name</h2><p>@cinema.Street @cinema.HouseNumber</p><dl><dt>E-posta</dt><dd>@cinema.Email</dd><dt>Telefon</dt><dd>@cinema.Phone</dd></dl><div class="ui-actions ui-actions--stack-mobile"><a class="ui-btn ui-btn--primary" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@cinema.Id">Odaberi film</a>@if(User.Identity?.IsAuthenticated==true){<a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@cinema.Id">Detalji</a>}</div></article>}</div>}else{<div class="ui-empty-state">Nema kina koja odgovaraju pretrazi.</div>}
+</section>
+}

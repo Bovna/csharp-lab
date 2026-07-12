@@ -1,0 +1,41 @@
+@model KinoKlik.Web.ViewModels.TicketBuilderMovieListViewModel
+@{
+    ViewData["Title"] = "Brza kupnja - Filmovi";
+}
+
+<div class="tb-cinema tb-page" data-ticket-builder-page data-current-step="2">
+    <div class="tb-header">
+        <h1>@Model.CinemaName</h1>
+        <p>Korak 2/5: odaberi film</p>
+    </div>
+
+    <div class="tb-step-line" data-ticket-builder-steps data-current-step="2" aria-label="Koraci brze kupnje">
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index"><span class="tb-step__number">1</span><span class="tb-step__label">Kino</span></a>
+        <span class="tb-step active" aria-current="step"><span class="tb-step__number">2</span><span class="tb-step__label">Film</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">3</span><span class="tb-step__label">Termin</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">4</span><span class="tb-step__label">Sjedalo</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">5</span><span class="tb-step__label">Potvrda</span></span>
+    </div>
+
+    @if (!Model.Movies.Any())
+    {
+        <div class="ui-empty-state" role="status">Nema dostupnih filmova za ovo kino.</div>
+    }
+    else
+    {
+        <div class="tb-panel">
+            <div class="tb-grid-cards">
+                @foreach (var movie in Model.Movies)
+                {
+                    <a class="tb-card-link"
+                       asp-controller="TicketBuilder" asp-action="Screenings" asp-route-cinemaId="@Model.CinemaId"
+                       asp-route-movieId="@movie.Id">
+                        <strong>@movie.Title</strong>
+                        <span>@movie.Genre | @movie.DurationMinutes min</span>
+                        <small>@movie.Language | @movie.AgeRating</small>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>

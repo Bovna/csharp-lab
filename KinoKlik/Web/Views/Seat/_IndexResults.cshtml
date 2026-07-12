@@ -1,0 +1,51 @@
+@model List<KinoKlik.Model.Entities.Seat>
+
+<div class="cinema-card animate-fade-in-up" data-ajax-search-results>
+    <div class="cinema-card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <span class="cinema-badge">Prikazano: @Model.Count</span>
+    </div>
+    <div class="cinema-card-body p-0">
+        <div class="cinema-table-wrapper cinema-table-wrapper--no-scroll">
+            <table class="ui-table entity-index-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Kino</th>
+                        <th>Dvorana</th>
+                        <th>Oznaka sjedala</th>
+                        <th>Tip sjedala</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var seat in Model)
+                        {
+                            <tr>
+                                <td class="text-muted">@seat.Id</td>
+                                <td>@(seat.Hall?.Cinema?.Name ?? "-")</td>
+                                <td>@(seat.Hall?.Name ?? "-")</td>
+                                <td>@seat.RowLabel@seat.SeatNumber</td>
+                                <td>@seat.SeatType</td>
+                                <td class="ui-table__actions">
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <a asp-action="Details" asp-route-id="@seat.Id" class="ui-btn ui-btn--secondary"
+                                           style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Detalji</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Nema rezultata pretrage.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

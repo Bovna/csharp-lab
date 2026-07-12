@@ -1,0 +1,19 @@
+@model KinoKlik.Web.ViewModels.MovieFormViewModel
+
+@{
+    ViewData["Title"] = "Dodaj film";
+    ViewData["IsEdit"] = false;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8 entity-form movie-page-form">
+            <div class="cinema-card animate-fade-in-up">
+                <div class="cinema-card-header">Dodaj novi film</div>
+                <div class="cinema-card-body">
+                    <partial name="MovieForm" model="Model" view-data="ViewData" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

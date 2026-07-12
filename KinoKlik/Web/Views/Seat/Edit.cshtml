@@ -1,0 +1,19 @@
+@model KinoKlik.Web.ViewModels.SeatFormViewModel
+
+@{
+    ViewData["Title"] = "Uredi sjedalo";
+    ViewData["IsEdit"] = true;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 entity-form">
+            <div class="cinema-card animate-fade-in-up">
+                <div class="cinema-card-header">Uredi sjedalo</div>
+                <div class="cinema-card-body">
+                    <partial name="SeatForm" model="Model" view-data="ViewData" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>

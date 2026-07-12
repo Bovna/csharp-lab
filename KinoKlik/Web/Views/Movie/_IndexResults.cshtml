@@ -1,0 +1,38 @@
+@model List<KinoKlik.Model.Entities.Movie>
+
+@if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && (ViewBag.Management == true))
+{
+<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Naslov</th><th>Žanr</th><th>Trajanje</th><th>Jezik</th><th>Dobna oznaka</th><th>Izlazak</th><th></th></tr></thead><tbody>@foreach(var movie in Model){<tr><td>@movie.Id</td><td title="@movie.Title">@movie.Title</td><td>@movie.Genre</td><td>@movie.DurationMinutes min</td><td>@movie.Language</td><td>@movie.AgeRating</td><td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@movie.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
+}
+else
+{
+<section class="movie-catalog" data-ajax-search-results aria-live="polite">
+    <div class="movie-catalog__summary">Prikazano filmova: @Model.Count</div>
+    @if (Model.Any())
+    {
+        <div class="movie-catalog__grid">
+            @foreach (var movie in Model)
+            {
+                var poster = movie.Attachments.OrderByDescending(a => a.CreatedAt).Select(a => a.FilePath).FirstOrDefault();
+                <article class="movie-catalog__card">
+                    <div class="movie-catalog__poster">
+                        @if (!string.IsNullOrWhiteSpace(poster))
+                        { <img src="@poster" alt="Poster filma @movie.Title" loading="lazy" /> }
+                        else { <span>@movie.Title</span> }
+                    </div>
+                    <div class="movie-catalog__body">
+                        <h2>@movie.Title</h2>
+                        <div class="movie-catalog__meta"><span>@movie.Genre</span><span>@movie.DurationMinutes min</span><span>@movie.Language</span><span>@movie.AgeRating</span></div>
+                        <p>@movie.Description</p>
+                        <div class="ui-actions ui-actions--stack-mobile">
+                            <a class="ui-btn ui-btn--primary" asp-controller="TicketBuilder" asp-action="Index">Kupi ulaznice</a>
+                            @if (User.Identity?.IsAuthenticated == true) { <a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@movie.Id">Detalji</a> }
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+    else { <div class="ui-empty-state">Nema filmova koji odgovaraju pretrazi.</div> }
+</section>
+}

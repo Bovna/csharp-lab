@@ -1,0 +1,61 @@
+@model List<KinoKlik.Model.Entities.Cinema>
+
+@{
+    ViewData["Title"] = "Kina";
+    var selectedCity = ViewBag.SelectedCity as string;
+    var search = ViewBag.Search as string;
+}
+
+<div class="py-4 animate-fade-in-up">
+    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
+        <div>
+            <h1 class="@(User.IsInRole("Admin") || User.IsInRole("Manager") ? "admin-index-title" : "movie-catalog__title")">@(User.IsInRole("Admin") || User.IsInRole("Manager") ? "Popis kina" : "Kina i lokacije")</h1>
+        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        {
+            <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novo kino</a>
+        }
+    </div>
+
+    <div class="cinema-card animate-fade-in-up mb-4" style="animation-delay: 0.05s;">
+        <div class="cinema-card-header">Pronađite najbliže kino</div>
+        <div class="cinema-card-body">
+            <form asp-action="Search" method="get" class="ui-form entity-index-search"
+                  data-ajax-search-form data-ajax-results-target="#cinema-index-results">
+                <input type="hidden" name="management" value="@(ViewBag.Management == true ? "true" : "false")" />
+                <div class="row g-4 align-items-end">
+                    <div class="col-12 col-lg-7">
+                        <div class="ui-field mb-0">
+                            <label for="cinemaSearch" class="ui-field__label">Naziv, grad ili adresa</label>
+                            <input id="cinemaSearch" name="query" value="@search" class="ui-field__input" type="search"
+                                   placeholder="Pretrazite kina..." autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-5">
+                        <div class="ui-field mb-0">
+                            <label for="city" class="ui-field__label">Grad</label>
+                            <select id="city" name="city" class="ui-field__input">
+                                <option value="">Svi gradovi</option>
+                                @foreach (var city in ViewBag.Cities as List<string> ?? new List<string>())
+                                {
+                                    if (string.Equals(selectedCity, city, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <option value="@city" selected="selected">@city</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@city">@city</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="cinema-index-results" data-ajax-search-results-container>
+        @await Html.PartialAsync("_IndexResults", Model)
+    </div>
+</div>

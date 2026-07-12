@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Aplikacija se pokreće";
+    ViewData["MetaDescription"] = "KinoKlik trenutačno pokreće demonstracijsku bazu podataka.";
+}
+
+<section class="home-hero home-hero--cinema animate-fade-in-up" aria-labelledby="databaseStartingTitle">
+    <div class="home-hero__content home-hero__content--solo">
+        <p class="home-section-kicker">Demo okruženje</p>
+        <h1 id="databaseStartingTitle" class="hero-title">Baza podataka se pokreće</h1>
+        <p class="hero-subtitle">
+            KinoKlik koristi štedljivo Azure demo okruženje. Prvo pokretanje nakon dulje neaktivnosti
+            može potrajati do jedne minute.
+        </p>
+        <div class="hero-actions ui-actions ui-actions--stack-mobile">
+            <a class="ui-btn ui-btn--primary" asp-controller="Home" asp-action="Index">Pokušaj ponovno</a>
+        </div>
+    </div>
+</section>

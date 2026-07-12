@@ -1,0 +1,32 @@
+@model List<KinoKlik.Model.Entities.Screening>
+
+@if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && (ViewBag.Management == true))
+{
+<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Film</th><th>Kino</th><th>Dvorana</th><th>Početak</th><th>Kraj</th><th>Format</th><th></th></tr></thead><tbody>@foreach(var s in Model){<tr><td>@s.Id</td><td>@s.Movie.Title</td><td>@s.Hall.Cinema.Name</td><td>@s.Hall.Name</td><td>@s.StartTime.ToString("dd.MM.yyyy HH:mm")</td><td>@s.EndTime.ToString("HH:mm")</td><td>@(s.Is3D ? "3D" : "2D")</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@s.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
+}
+else
+{
+<section class="schedule" data-ajax-search-results aria-live="polite">
+    <p class="schedule__summary">Prikazano projekcija: @Model.Count</p>
+    @if (Model.Any())
+    {
+        @foreach (var day in Model.OrderBy(s => s.StartTime).GroupBy(s => s.StartTime.Date))
+        {
+            <section class="schedule__day" aria-labelledby="schedule-@day.Key.ToString("yyyyMMdd")">
+                <h2 id="schedule-@day.Key.ToString("yyyyMMdd")">@day.Key.ToString("dddd, dd. MMMM", new System.Globalization.CultureInfo("hr-HR"))</h2>
+                <div class="schedule__list">
+                    @foreach (var screening in day)
+                    {
+                        <article class="schedule__item">
+                            <time class="schedule__time" datetime="@screening.StartTime.ToString("O")">@screening.StartTime.ToString("HH:mm")</time>
+                            <div class="schedule__content"><h3>@screening.Movie.Title</h3><p>@screening.Hall.Cinema.Name · @screening.Hall.Name</p><span>@(screening.Is3D ? "3D" : "2D")</span></div>
+                            <div class="ui-actions ui-actions--stack-mobile"><a class="ui-btn ui-btn--primary" asp-controller="TicketBuilder" asp-action="Seats" asp-route-cinemaId="@screening.Hall.CinemaId" asp-route-movieId="@screening.MovieId" asp-route-screeningId="@screening.Id">Odaberi sjedala</a>@if (User.Identity?.IsAuthenticated == true) { <a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@screening.Id">Detalji</a> }</div>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    }
+    else { <div class="ui-empty-state">Nema dostupnih projekcija za odabrane filtre.</div> }
+</section>
+}

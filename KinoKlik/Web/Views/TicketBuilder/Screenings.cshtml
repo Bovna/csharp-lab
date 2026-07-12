@@ -1,0 +1,48 @@
+@model KinoKlik.Web.ViewModels.TicketBuilderScreeningListViewModel
+@{
+    ViewData["Title"] = "Brza kupnja - Projekcije";
+}
+
+<div class="tb-cinema tb-page" data-ticket-builder-page data-current-step="3">
+    <div class="tb-header">
+        <h1>@Model.MovieTitle</h1>
+        <p>Korak 3/5: odaberi projekciju</p>
+    </div>
+
+    <div class="tb-step-line" data-ticket-builder-steps data-current-step="3" aria-label="Koraci brze kupnje">
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Index"><span class="tb-step__number">1</span><span class="tb-step__label">Kino</span></a>
+        <a class="tb-step is-link" asp-controller="TicketBuilder" asp-action="Movies"
+           asp-route-cinemaId="@Model.CinemaId"><span class="tb-step__number">2</span><span class="tb-step__label">Film</span></a>
+        <span class="tb-step active" aria-current="step"><span class="tb-step__number">3</span><span class="tb-step__label">Termin</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">4</span><span class="tb-step__label">Sjedalo</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">5</span><span class="tb-step__label">Potvrda</span></span>
+    </div>
+
+    @if (!Model.Screenings.Any())
+    {
+        <div class="ui-empty-state" role="status">Nema dostupnih projekcija za ovaj film u odabranom kinu.</div>
+    }
+    else
+    {
+        <div class="tb-panel">
+            <div class="tb-list">
+                @foreach (var screening in Model.Screenings)
+                {
+                    <a class="tb-list-item tb-compact-list-item" asp-controller="TicketBuilder" asp-action="Seats"
+                       asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId"
+                       asp-route-screeningId="@screening.Id">
+                        <div class="tb-screening-info">
+                            <div class="tb-screening-datetime">
+                                <span class="tb-date">@screening.StartTime.ToString("dd.MM.yyyy")</span>
+                                <strong class="tb-time">@screening.StartTime.ToString("HH:mm") -
+                                    @screening.EndTime.ToString("HH:mm")</strong>
+                            </div>
+
+                            <small class="tb-screening-hall">@screening.HallName @(screening.Is3D ? "| 3D" : "")</small>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>

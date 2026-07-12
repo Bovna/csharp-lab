@@ -1,0 +1,55 @@
+@model KinoKlik.Web.ViewModels.GlobalSearchPageViewModel
+
+@{
+    var groupedResults = Model.Results
+        .GroupBy(result => result.Category)
+        .ToList();
+}
+
+@if (string.IsNullOrWhiteSpace(Model.Query) || Model.Query.Length < Model.MinQueryLength)
+{
+    <div class="ui-empty-state global-search-page__empty">
+        <h2>Pretraga čeka pojam</h2>
+        <p>Pretraga počinje nakon najmanje @Model.MinQueryLength upisana znaka.</p>
+    </div>
+}
+else if (!Model.Results.Any())
+{
+    <div class="ui-empty-state global-search-page__empty">
+        <h2>Nema rezultata</h2>
+        <p>Promijenite pojam pretrage ili otvorite pregled filmova, kina i projekcija.</p>
+    </div>
+}
+else
+{
+    <p class="global-search-page__summary global-search-page__summary--results">
+        Pronađeno rezultata: <strong>@Model.Results.Count</strong> za pojam <strong>@Model.Query</strong>
+    </p>
+    <div class="global-search-page__groups">
+        @foreach (var group in groupedResults)
+        {
+            <section class="global-search-page__group" aria-labelledby="global-search-group-@group.Key">
+                <div class="global-search-page__group-head">
+                    <h2 id="global-search-group-@group.Key">@group.Key</h2>
+                    <span>@group.Count()</span>
+                </div>
+                <div class="global-search-page__results">
+                    @foreach (var result in group)
+                    {
+                        <a class="global-search-page__result global-search-page__result--@result.Kind"
+                           href="@result.Url">
+                            <span class="global-search-page__result-body">
+                                <span class="global-search-page__result-title">@result.Title</span>
+                                <span class="global-search-page__result-description">@result.Description</span>
+                                @if (!string.IsNullOrWhiteSpace(result.Meta))
+                                {
+                                    <span class="global-search-page__result-meta">@result.Meta</span>
+                                }
+                            </span>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+}

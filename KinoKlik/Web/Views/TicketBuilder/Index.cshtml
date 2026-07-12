@@ -1,0 +1,39 @@
+@model KinoKlik.Web.ViewModels.TicketBuilderCinemaListViewModel
+@{
+    ViewData["Title"] = "Brza kupnja - Kina";
+}
+
+<div class="tb-cinema tb-page" data-ticket-builder-page data-current-step="1">
+    <div class="tb-header">
+        <h1>Brza kupnja ulaznica</h1>
+        <p>Korak 1/5: odaberi kino</p>
+    </div>
+
+    <div class="tb-step-line" data-ticket-builder-steps data-current-step="1" aria-label="Koraci brze kupnje">
+        <span class="tb-step active" aria-current="step"><span class="tb-step__number">1</span><span class="tb-step__label">Kino</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">2</span><span class="tb-step__label">Film</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">3</span><span class="tb-step__label">Termin</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">4</span><span class="tb-step__label">Sjedalo</span></span>
+        <span class="tb-step is-disabled" aria-disabled="true"><span class="tb-step__number">5</span><span class="tb-step__label">Potvrda</span></span>
+    </div>
+
+    @if (!Model.Cinemas.Any())
+    {
+        <div class="ui-empty-state" role="status">Trenutačno nema dostupnih kina za rezervaciju.</div>
+    }
+    else
+    {
+        <div class="tb-panel">
+            <div class="tb-grid-cards">
+                @foreach (var cinema in Model.Cinemas)
+                {
+                    <a class="tb-card-link" asp-controller="TicketBuilder" asp-action="Movies" asp-route-cinemaId="@cinema.Id">
+                        <strong>@cinema.Name</strong>
+                        <span>@cinema.City</span>
+                        <small>@cinema.Street @cinema.HouseNumber</small>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
