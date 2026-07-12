@@ -524,7 +524,8 @@ public class MovieController : BaseController
             return false;
         }
 
-        originalFileName = Path.GetFileName(file.FileName);
+        var normalizedClientFileName = file.FileName.Replace('\\', '/');
+        originalFileName = Path.GetFileName(normalizedClientFileName);
 
         if (string.IsNullOrWhiteSpace(originalFileName))
         {
