@@ -38,53 +38,65 @@
          data-screening-id="@Model.ScreeningId">
         <div class="tb-screen">PLATNO</div>
 
-        <p class="tb-seat-scroll-hint">Pomaknite prikaz vodoravno kako biste vidjeli sva sjedala.</p>
+        @if (groupedSeats.Any())
+        {
+            <p class="tb-seat-scroll-hint">Pomaknite prikaz vodoravno kako biste vidjeli sva sjedala.</p>
 
-        <div class="tb-seat-grid" role="region" aria-label="Karta sjedala" tabindex="0">
-            @foreach (var row in groupedSeats)
-            {
-                <div class="tb-seat-row">
-                    <span class="tb-row-label">@row.Key</span>
+            <div class="tb-seat-grid" role="region" aria-label="Karta sjedala" tabindex="0">
+                @foreach (var row in groupedSeats)
+                {
+                    <div class="tb-seat-row">
+                        <span class="tb-row-label">@row.Key</span>
 
-                    @foreach (var seat in row.OrderBy(s => s.SeatNumber))
-                    {
-                        var status = Model.SeatStatuses.TryGetValue(seat.Id, out var seatStatus)
-                            ? seatStatus
-                            : "available";
-                        var seatTypeLower = seat.SeatType.ToLowerInvariant();
-                        var seatTypeClass = seatTypeLower switch
+                        @foreach (var seat in row.OrderBy(s => s.SeatNumber))
                         {
-                            "vip" => "seat-vip",
-                            "couple" => "seat-couple",
-                            _ => "seat-standard"
-                        };
-                        var isTaken = status == "taken";
-                        var statusClass = isTaken ? "seat-taken" : string.Empty;
-                        var statusLabel = isTaken ? "zauzeto" : "dostupno";
+                            var status = Model.SeatStatuses.TryGetValue(seat.Id, out var seatStatus)
+                                ? seatStatus
+                                : "available";
+                            var seatTypeLower = seat.SeatType.ToLowerInvariant();
+                            var seatTypeClass = seatTypeLower switch
+                            {
+                                "vip" => "seat-vip",
+                                "couple" => "seat-couple",
+                                _ => "seat-standard"
+                            };
+                            var isTaken = status == "taken";
+                            var statusClass = isTaken ? "seat-taken" : string.Empty;
+                            var statusLabel = isTaken ? "zauzeto" : "dostupno";
 
-                        <button type="button" class="tb-seat @seatTypeClass @statusClass" data-seat-id="@seat.Id"
-                                data-seat-label="@seat.RowLabel@seat.SeatNumber" data-seat-type="@seat.SeatType"
-                                data-seat-status="@status" data-is-3d="@(Model.Is3D ? "1" : "0")"
-                                aria-label="Sjedalo @seat.RowLabel@seat.SeatNumber, @seat.SeatType, @statusLabel"
-                                aria-pressed="false" aria-disabled="@(isTaken ? "true" : "false")">
-                            @seat.RowLabel@seat.SeatNumber
-                        </button>
-                    }
-                </div>
-            }
-        </div>
+                            <button type="button" class="tb-seat @seatTypeClass @statusClass" data-seat-id="@seat.Id"
+                                    data-seat-label="@seat.RowLabel@seat.SeatNumber" data-seat-type="@seat.SeatType"
+                                    data-seat-status="@status" data-is-3d="@(Model.Is3D ? "1" : "0")"
+                                    aria-label="Sjedalo @seat.RowLabel@seat.SeatNumber, @seat.SeatType, @statusLabel"
+                                    aria-pressed="false" aria-disabled="@(isTaken ? "true" : "false")">
+                                @seat.RowLabel@seat.SeatNumber
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
 
-        <div class="tb-legend">
-            <span><i class="tb-seat seat-standard"></i> Standard</span>
-            <span><i class="tb-seat seat-vip"></i> VIP</span>
-            <span><i class="tb-seat seat-couple"></i> Couple</span>
-            <span><i class="tb-seat seat-taken"></i> Zauzeto</span>
-        </div>
+            <div class="tb-legend">
+                <span><i class="tb-seat seat-standard"></i> Standard</span>
+                <span><i class="tb-seat seat-vip"></i> VIP</span>
+                <span><i class="tb-seat seat-couple"></i> Couple</span>
+                <span><i class="tb-seat seat-taken"></i> Zauzeto</span>
+            </div>
 
-        <div id="tb-price-panel" class="tb-price-panel" data-ticket-price-panel aria-live="polite" aria-atomic="true">
-            <div class="tb-price-panel__title">Korak 5: potvrda rezervacije</div>
-            <div class="tb-price-panel__value">Odaberi sjedalo za prikaz cijene.</div>
-            <div class="tb-price-panel__meta">Pregled cijene i gumb za nastavak pojavit ce se ovdje.</div>
-        </div>
+            <div id="tb-price-panel" class="tb-price-panel" data-ticket-price-panel aria-live="polite" aria-atomic="true">
+                <div class="tb-price-panel__title">Korak 5: potvrda rezervacije</div>
+                <div class="tb-price-panel__value">Odaberi sjedalo za prikaz cijene.</div>
+                <div class="tb-price-panel__meta">Pregled cijene i gumb za nastavak pojavit će se ovdje.</div>
+            </div>
+        }
+        else
+        {
+            <div class="ui-empty-state" role="status">
+                Za ovu dvoranu trenutačno nema dostupnih sjedala.
+                <a class="ui-btn ui-btn--secondary mt-3"
+                   asp-controller="TicketBuilder" asp-action="Screenings"
+                   asp-route-cinemaId="@Model.CinemaId" asp-route-movieId="@Model.MovieId">Odaberite drugi termin</a>
+            </div>
+        }
     </div>
 </div>

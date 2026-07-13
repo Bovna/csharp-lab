@@ -3109,7 +3109,11 @@ a:hover {
   right: 0;
   bottom: 0;
   display: none;
-  z-index: 1000;
+  z-index: 30000;
+}
+
+body.is-modal-open {
+  overflow: hidden;
 }
 
 .modal-confirm[aria-hidden="false"] {
@@ -5156,19 +5160,35 @@ input[type="checkbox"]:disabled {
   overflow: hidden;
   font-size: 0.88rem;
   font-weight: 800;
+  line-height: 1;
   text-overflow: ellipsis;
 }
 
 .site-account__role {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
   color: var(--color-accent);
   font-size: 0.74rem;
   font-weight: 700;
+  line-height: 1;
 }
 
 .site-account__role::before {
   content: "·";
   margin-right: 0.4rem;
   color: var(--color-text-muted);
+}
+
+.entity-hero__title,
+.entity-hero__subtitle,
+.entity-kpi__value,
+.cinema-details-list dd,
+.ticket-stub__details dd,
+.ticket-stub__number,
+.venue-address-board__value {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .site-account__chevron {
@@ -5253,12 +5273,24 @@ input[type="checkbox"]:disabled {
     margin: 0;
     order: initial;
   }
+
+  html.has-responsive-navigation .site-nav.is-open {
+    max-height: calc(100dvh - 11.5rem);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding-right: var(--spacing-1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 230, 118, 0.5) rgba(255, 255, 255, 0.06);
+  }
 }
 
-@media (max-width: 430px) {
+@media (max-width: 640px) {
   .site-account__role {
     display: none;
   }
+}
+
+@media (max-width: 430px) {
 
   .site-account__trigger {
     gap: 0.3rem;
@@ -5297,6 +5329,32 @@ input[type="checkbox"]:disabled {
     min-width: 60rem;
   }
 
+  .cinema-table-wrapper:focus-visible,
+  .cinema-table-wrapper--no-scroll:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .entity-index-table th:last-child,
+  .entity-index-table td.ui-table__actions {
+    position: sticky;
+    right: 0;
+    background: #151b17;
+    box-shadow: -10px 0 18px rgba(0, 0, 0, 0.28);
+  }
+
+  .entity-index-table th:last-child {
+    z-index: 3;
+  }
+
+  .entity-index-table td.ui-table__actions {
+    z-index: 2;
+  }
+
+  .entity-index-table tbody tr:hover td.ui-table__actions {
+    background: #202923;
+  }
+
   .cinema-table-wrapper::-webkit-scrollbar {
     height: 0.65rem;
   }
@@ -5308,6 +5366,18 @@ input[type="checkbox"]:disabled {
 }
 
 @media (max-width: 899px) {
+  .entity-form .cinema-card {
+    overflow: visible;
+  }
+
+  .entity-form .cinema-card-header {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .entity-form .cinema-card-body:last-child {
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+
   .entity-form .row {
     margin-inline: 0;
     row-gap: var(--spacing-3);
@@ -5331,6 +5401,33 @@ input[type="checkbox"]:disabled {
 
 /* Public card actions and featured media stay compact and visible on mobile. */
 @media (max-width: 767px) {
+  .site-main-container > main > .container {
+    width: 100%;
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .entity-form .cinema-card-body,
+  .auth-card-form .cinema-card-body {
+    padding: var(--spacing-3) !important;
+  }
+
+  .ui-field__input,
+  .global-search__input,
+  .cinema-datepicker__time-input {
+    font-size: 1rem;
+  }
+
+  .movie-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .movie-form-actions .ui-btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
   .schedule__item .ui-actions.ui-actions--stack-mobile,
   .cinema-directory__card .ui-actions.ui-actions--stack-mobile,
   .movie-catalog__body .ui-actions.ui-actions--stack-mobile {
@@ -5371,6 +5468,17 @@ input[type="checkbox"]:disabled {
   .home-digest-card:last-child:nth-child(odd) {
     justify-items: center;
     text-align: center;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tb-seat {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .tb-seat.seat-couple {
+    width: 3.5rem;
   }
 }
 

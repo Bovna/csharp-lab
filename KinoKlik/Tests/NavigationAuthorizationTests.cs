@@ -1,4 +1,6 @@
 using FluentAssertions;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace KinoKlik.Tests;
 
@@ -16,7 +18,7 @@ public sealed class NavigationAuthorizationTests : IClassFixture<CustomWebApplic
     {
         var response = await _factory.CreateClient().GetAsync("/");
 
-        var html = await response.Content.ReadAsStringAsync();
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         AssertPublicNavigation(html);
         AssertManagementNavigationIsHidden(html);
@@ -27,7 +29,7 @@ public sealed class NavigationAuthorizationTests : IClassFixture<CustomWebApplic
     {
         var response = await _factory.CreateAuthenticatedClient().GetAsync("/");
 
-        var html = await response.Content.ReadAsStringAsync();
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         AssertPublicNavigation(html);
         AssertManagementNavigationIsHidden(html);
@@ -50,6 +52,77 @@ public sealed class NavigationAuthorizationTests : IClassFixture<CustomWebApplic
         html.Should().Contain("href=\"/ulaznice");
     }
 
+    [Theory]
+    [InlineData("/filmovi/pretraga", "Na programu", "Filmovi")]
+    [InlineData("/projekcije/pretraga", "Raspored", "Projekcije")]
+    [InlineData("/kina", "Kina", null)]
+    public async Task Breadcrumb_UsesPublicLabel_ForPublicListing(
+        string path,
+        string expectedLabel,
+        string? unexpectedLabel)
+    {
+        var response = await _factory.CreateClient().GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var breadcrumb = ExtractBreadcrumb(await response.Content.ReadAsStringAsync());
+
+        breadcrumb.Should().Contain(">Početna<");
+        breadcrumb.Should().Contain($">{expectedLabel}<");
+        if (unexpectedLabel is not null)
+        {
+            breadcrumb.Should().NotContain($">{unexpectedLabel}<");
+        }
+    }
+
+    [Theory]
+    [InlineData("Admin", "/filmovi/pretraga?management=true", "Filmovi")]
+    [InlineData("Manager", "/filmovi/pretraga?management=true", "Filmovi")]
+    [InlineData("Admin", "/projekcije/pretraga?management=true", "Projekcije")]
+    [InlineData("Manager", "/projekcije/pretraga?management=true", "Projekcije")]
+    [InlineData("Admin", "/kina?management=true", "Kina")]
+    [InlineData("Manager", "/kina?management=true", "Kina")]
+    public async Task Breadcrumb_UsesManagementLabel_ForManagementListing(
+        string role,
+        string path,
+        string expectedLabel)
+    {
+        var response = await _factory.CreateAuthenticatedClient(role).GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var breadcrumb = ExtractBreadcrumb(await response.Content.ReadAsStringAsync());
+
+        breadcrumb.Should().Contain(">Početna<");
+        breadcrumb.Should().Contain($">{expectedLabel}<");
+    }
+
+    [Fact]
+    public async Task ManagementQuery_DoesNotExposeManagementPresentation_ToAnonymousUser()
+    {
+        var response = await _factory.CreateClient().GetAsync("/filmovi/pretraga?management=true");
+        response.EnsureSuccessStatusCode();
+
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        var breadcrumb = ExtractBreadcrumb(html);
+
+        breadcrumb.Should().Contain(">Na programu<");
+        breadcrumb.Should().NotContain(">Filmovi<");
+        html.Should().Contain("Pronađite svoj sljedeći film");
+        html.Should().NotContain("Popis filmova");
+    }
+
+    [Fact]
+    public async Task Footer_ContainsOnlyCinemaTicketingCopy()
+    {
+        var response = await _factory.CreateClient().GetAsync("/");
+        response.EnsureSuccessStatusCode();
+
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        html.Should().Contain("© 2026 KinoKlik - Online kupnja kino ulaznica");
+        html.Should().NotContain("Portfolio demo bez stvarne naplate");
+        html.Should().NotContain("Izvorni kod na GitHubu");
+    }
+
     private static void AssertPublicNavigation(string html)
     {
         html.Should().Contain("KinoKlik");
@@ -69,5 +142,16 @@ public sealed class NavigationAuthorizationTests : IClassFixture<CustomWebApplic
         html.Should().NotContain("href=\"/sjedala");
         html.Should().NotContain("href=\"/kupci");
         html.Should().NotContain("href=\"/ulaznice");
+    }
+
+    private static string ExtractBreadcrumb(string html)
+    {
+        var match = Regex.Match(
+            html,
+            "<ol[^>]*class=\"breadcrumb\"[^>]*>(.*?)</ol>",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        match.Success.Should().BeTrue("the shared layout should render a breadcrumb");
+        return match.Groups[1].Value;
     }
 }

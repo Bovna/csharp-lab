@@ -4,14 +4,15 @@
     ViewData["Title"] = "Kina";
     var selectedCity = ViewBag.SelectedCity as string;
     var search = ViewBag.Search as string;
+    var isManagementView = (User.IsInRole("Admin") || User.IsInRole("Manager")) && ViewBag.Management == true;
 }
 
 <div class="py-4 animate-fade-in-up">
     <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
         <div>
-            <h1 class="@(User.IsInRole("Admin") || User.IsInRole("Manager") ? "admin-index-title" : "movie-catalog__title")">@(User.IsInRole("Admin") || User.IsInRole("Manager") ? "Popis kina" : "Kina i lokacije")</h1>
+            <h1 class="@(isManagementView ? "admin-index-title" : "movie-catalog__title")">@(isManagementView ? "Popis kina" : "Kina i lokacije")</h1>
         </div>
-        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+        @if (isManagementView)
         {
             <a asp-action="Create" class="ui-btn ui-btn--primary">+ Dodaj novo kino</a>
         }

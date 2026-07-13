@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <a href="https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/"><strong>Otvori live demo</strong></a>
+  <a href="https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/"><strong>Live demo</strong></a>
   ·
-  <a href="https://github.com/Bovna/kinoklik/actions/workflows/main_cinema-bv.yml">Build i deploy</a>
+  <a href="https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/swagger">Swagger / OpenAPI</a>
   ·
-  <a href="https://github.com/Bovna/kinoklik/actions/workflows/secret-scan.yml">Secret scan</a>
+  <a href="docs/DEVELOPMENT.md">Razvojna dokumentacija</a>
 </p>
 
 [![Build and deploy](https://github.com/Bovna/kinoklik/actions/workflows/main_cinema-bv.yml/badge.svg)](https://github.com/Bovna/kinoklik/actions/workflows/main_cinema-bv.yml)
@@ -21,10 +21,10 @@
 [![Secret scan](https://github.com/Bovna/kinoklik/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/Bovna/kinoklik/actions/workflows/secret-scan.yml)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
 
-KinoKlik je portfolio projekt koji demonstrira razvoj i produkcijsko održavanje cjelovite ASP.NET Core MVC aplikacije. Anonimni korisnik može pregledavati filmove, kina i projekcije te proći tok rezervacije, dok su upravljanje podacima i promjene kroz API zaštićeni rolama.
+KinoKlik je portfolio projekt koji demonstrira razvoj i produkcijsko održavanje cjelovite ASP.NET Core MVC aplikacije. Posjetitelji mogu pregledavati filmove, kina i projekcije te proći cijeli tok rezervacije, dok su upravljanje podacima i promjene kroz API zaštićeni korisničkim rolama.
 
 > [!NOTE]
-> Aplikacija je demonstracijska: nema stvarne naplate, svi početni podaci su izmišljeni i u obrasce ne treba unositi stvarne osobne podatke.
+> Aplikacija je demonstracijska: nema stvarne naplate, svi početni podaci su izmišljeni i u obrasce ne treba unositi stvarne osobne podatke. Prvo otvaranje nakon dulje neaktivnosti može potrajati zbog Azure App Service Free plana i Azure SQL serverless baze.
 
 ## Isprobaj aplikaciju
 
@@ -32,24 +32,19 @@ KinoKlik je portfolio projekt koji demonstrira razvoj i produkcijsko održavanje
 2. Odaberi **Kupi ulaznicu**.
 3. Prođi tok kino → film → projekcija → sjedalo → potvrda.
 4. Za checkout koristi isključivo izmišljene podatke.
-5. Pregledaj javnu [OpenAPI dokumentaciju](https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/swagger).
 
-Administratorski i managerski pristup nisu javno objavljeni. Javni demo namjerno prikazuje korisnički tok bez dijeljenja privilegiranih produkcijskih računa.
+Administratorski i managerski računi nisu javno dostupni. Njihove mogućnosti i zaštićene rute mogu se pregledati kroz kod i javnu [OpenAPI dokumentaciju](https://cinema-bv-fuheftdfbyazaqea.italynorth-01.azurewebsites.net/swagger).
 
 ## Izdvojene mogućnosti
 
-- javni katalog filmova, kina i projekcija
-- globalna i AJAX pretraga te autocomplete kontrole
+- katalog filmova, kina i projekcija s globalnom i AJAX pretragom
 - vođeni booking u pet koraka sa sjedalom, cijenom i potvrdom
-- zaštita od dvostruke rezervacije i na aplikacijskoj i na SQL razini
-- ASP.NET Core Identity, opcionalna Google prijava i <code>Admin</code>/<code>Manager</code> autorizacija
+- zaštita od dvostruke rezervacije na aplikacijskoj i SQL razini
+- ASP.NET Core Identity, opcionalna Google prijava i `Admin`/`Manager` autorizacija
 - MVC sučelje i REST API s odvojenim DTO modelima
-- javni Swagger/OpenAPI pregled API ruta
-- soft delete za domenske podatke i upravljanje filmskim vizualima
-- integracijski testovi API-ja, autorizacije, pretrage, uploada, health checkova i cijelog booking toka
-- pravi SQL Server concurrency test filtriranog indeksa protiv dvostruke rezervacije
-- automatizirani build, test i Azure deploy uz provjeru zdravlja aplikacije
-- Application Insights telemetrija i automatsko skeniranje repozitorija za tajne
+- soft delete domenskih podataka i upravljanje filmskim vizualima
+- integracijski testovi API-ja, autorizacije, pretrage, uploada i cijelog booking toka
+- automatizirani build, test i Azure deploy uz nadzor i skeniranje repozitorija za tajne
 
 ## Tehnologije
 
@@ -64,7 +59,7 @@ Administratorski i managerski pristup nisu javno objavljeni. Javni demo namjerno
 
 ## Arhitektura
 
-~~~mermaid
+```mermaid
 flowchart LR
     browser[Web preglednik] --> web[Web<br/>MVC, Razor, API, Identity]
     web --> dal[DAL<br/>EF Core i migracije]
@@ -73,89 +68,40 @@ flowchart LR
     tests[Tests<br/>xUnit integracijski testovi] --> web
     actions[GitHub Actions] --> azure[Azure App Service]
     azure --> insights[Application Insights]
-~~~
+```
 
-Repozitorij je podijeljen na četiri projekta:
+Repozitorij sadrži četiri projekta:
 
-- <code>KinoKlik/Model</code> — domenski entiteti i enumeracije
-- <code>KinoKlik/DAL</code> — <code>CinemaDbContext</code>, konfiguracija baze, seed podaci i migracije
-- <code>KinoKlik/Web</code> — MVC sučelje, API kontroleri, Identity, booking i upload
-- <code>KinoKlik/Tests</code> — integracijski i sigurnosni testovi
-
-Među važnijim tehničkim odlukama su filtrirani jedinstveni SQL indeks za aktivnu rezervaciju sjedala, GUID kod potvrde, DTO modeli koji ne izlažu interne entitete te odvojeni readiness i liveness endpointi.
+- `KinoKlik/Model` — domenski entiteti i enumeracije
+- `KinoKlik/DAL` — EF Core kontekst, konfiguracija baze, seed podaci i migracije
+- `KinoKlik/Web` — MVC sučelje, API kontroleri, Identity, booking i upload
+- `KinoKlik/Tests` — integracijski, autorizacijski i sigurnosni testovi
 
 ## Lokalno pokretanje
 
-### Preduvjeti
+Potrebni su [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) i SQL Server ili SQL Server LocalDB.
 
-- .NET 8 SDK
-- SQL Server ili SQL Server LocalDB
-
-### Postavljanje
-
-~~~powershell
+```powershell
 dotnet tool restore --tool-manifest KinoKlik\Web\dotnet-tools.json
 dotnet restore KinoKlik\KinoKlik.sln
 dotnet ef database update --project KinoKlik\DAL\KinoKlik.DAL.csproj --startup-project KinoKlik\Web\KinoKlik.Web.csproj
 dotnet run --project KinoKlik\Web\KinoKlik.Web.csproj
-~~~
+```
 
-Zadani razvojni connection string koristi LocalDB. Za drugi SQL Server postavi <code>ConnectionStrings__CinemaDbContext</code> kroz environment varijablu ili .NET user secrets.
-
-### Razvojni administratorski račun
-
-Razvojne korisnike konfiguriraj izvan repozitorija:
-
-~~~powershell
-dotnet user-secrets set "SeedUsers:Admin:Email" "admin@example.test" --project KinoKlik\Web\KinoKlik.Web.csproj
-dotnet user-secrets set "SeedUsers:Admin:Password" "<strong-local-password>" --project KinoKlik\Web\KinoKlik.Web.csproj
-~~~
-
-Isti obrazac vrijedi za <code>SeedUsers:Manager:*</code>. OIB i JMBAG nisu obavezni; ako ih želiš koristiti u lokalnom demo računu, dostupni su opcionalni ključevi <code>SeedUsers:{Role}:OIB</code> i <code>SeedUsers:{Role}:JMBAG</code>. Razvojni seed korisnici kreiraju se samo u <code>Development</code> okruženju.
+Zadana razvojna konfiguracija koristi LocalDB. Drugi SQL Server, razvojni računi i ostale postavke opisani su u [razvojnoj dokumentaciji](docs/DEVELOPMENT.md).
 
 ## Testovi
 
-~~~powershell
+```powershell
 dotnet test KinoKlik\KinoKlik.sln --configuration Release
-~~~
+```
 
-Testni projekt provjerava javne i zaštićene API rute, autorizaciju po rolama, validacijske pogreške, pretragu, upload ograničenja, health endpoint, Swagger dokument, puni booking tok te sigurnosna pravila potvrde i rezervacije sjedala. Pravi SQL Server concurrency test automatski se izvršava u pull request CI-ju, a lokalno samo kada je postavljen <code>TEST_SQL_CONNECTION_STRING</code>.
+Testovi pokrivaju javne i zaštićene rute, autorizaciju, validaciju, pretragu, upload, health checkove, Swagger i cijeli booking tok.
 
-## Konfiguracija
+## Ograničenja demo aplikacije
 
-Produkcijske vrijednosti postavljaju se kroz Azure App Service Configuration i GitHub Secrets; stvarne vrijednosti ne pripadaju repozitoriju.
+- checkout simulira potvrdu rezervacije i nije spojen na payment provider
+- trenutačno je moguće rezervirati jedno sjedalo po kupnji
+- privilegirani produkcijski računi nisu javno dostupni
 
-| Ključ | Obavezno | Namjena |
-| --- | --- | --- |
-| <code>ConnectionStrings__CinemaDbContext</code> | da | SQL Server veza |
-| <code>ASPNETCORE_ENVIRONMENT</code> | na hostu | naziv okruženja |
-| <code>UploadStorage__RootPath</code> | ne | trajna lokacija za uploadane vizuale |
-| <code>UploadStorage__RequestPath</code> | ne | javna URL putanja, zadano <code>/uploads</code> |
-| <code>Authentication__Google__ClientId</code> | ne | Google prijava |
-| <code>Authentication__Google__ClientSecret</code> | ne | Google prijava |
-| <code>APPLICATIONINSIGHTS_CONNECTION_STRING</code> | ne | Azure telemetrija |
-
-## Deploy i nadzor
-
-GitHub Actions na promjenu aplikacije radi restore, Release build, testove i publish. Nakon uspješnog builda artefakt se deploya na Azure App Service, a workflow potvrđuje readiness preko <code>/health</code>.
-
-- <code>/health</code> — provjerava dostupnost baze i postoje li neprihvaćene migracije
-- <code>/health/live</code> — potvrđuje da ASP.NET proces radi bez provjere baze
-
-Migracije se namjerno ne izvršavaju automatski pri produkcijskom startupu. Prije deploya verzije s novom migracijom treba je zasebno primijeniti na ciljnu bazu.
-
-Azure SQL serverless baza može se nakon dulje neaktivnosti pokretati do približno jedne minute. Aplikacija zato dopušta do 90 sekundi za početno povezivanje i koristi EF Core transient retry, bez periodičnog keep-warm prometa.
-
-## Sigurnost i demo podaci
-
-- Produkcijski korisnici i lozinke ne seedaju se pri startupu.
-- Azure publish profil, connection stringovi i OAuth tajne pohranjuju se izvan Gita.
-- Gitleaks workflow skenira cijelu Git povijest pri svakom pushu na <code>main</code> i u pull requestovima.
-- Početni filmovi, kina, osobe i kontaktni podaci su izmišljeni.
-- Privilegirane role nisu dio javnog demo računa.
-
-## Trenutačna ograničenja
-
-- Checkout simulira potvrdu rezervacije; nije spojen na payment provider.
-- Aplikacija trenutačno podržava rezervaciju jednog sjedala po kupnji.
-- Uploadani vizuali zahtijevaju trajnu Azure pohranu kako bi preživjeli svaki deploy.
+Detalji konfiguracije, migracija, testnog SQL okruženja, deploya i nadzora nalaze se u [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).

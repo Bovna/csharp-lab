@@ -2,7 +2,7 @@
 
 @if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && (ViewBag.Management == true))
 {
-<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Naslov</th><th>Žanr</th><th>Trajanje</th><th>Jezik</th><th>Dobna oznaka</th><th>Izlazak</th><th></th></tr></thead><tbody>@foreach(var movie in Model){<tr><td>@movie.Id</td><td title="@movie.Title">@movie.Title</td><td>@movie.Genre</td><td>@movie.DurationMinutes min</td><td>@movie.Language</td><td>@movie.AgeRating</td><td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@movie.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
+<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper" role="region" aria-label="Popis filmova" tabindex="0"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Naslov</th><th>Žanr</th><th>Trajanje</th><th>Jezik</th><th>Dobna oznaka</th><th>Izlazak</th><th></th></tr></thead><tbody>@foreach(var movie in Model){<tr><td>@movie.Id</td><td title="@movie.Title">@movie.Title</td><td>@movie.Genre</td><td>@movie.DurationMinutes min</td><td>@movie.Language</td><td>@movie.AgeRating</td><td>@movie.ReleaseDate.ToString("dd.MM.yyyy")</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@movie.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
 }
 else
 {

@@ -19,6 +19,7 @@
     <link rel="icon" type="image/svg+xml" href="~/images/brand/favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components/datepicker.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/snake-game.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="@ViewData["BodyClass"]">
@@ -27,6 +28,7 @@
         var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
         var canViewSensitiveNavigation = User.IsInRole("Admin") || User.IsInRole("Manager");
         var isManagementQuery = string.Equals(Context.Request.Query["management"], "true", StringComparison.OrdinalIgnoreCase);
+        var isManagementView = canViewSensitiveNavigation && isManagementQuery;
 
         var uiControllerLabels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -62,6 +64,17 @@
         var currentControllerLabel = uiControllerLabels.TryGetValue(currentController, out var controllerLabel)
             ? controllerLabel
             : currentController;
+
+        if (isManagementView)
+        {
+            currentControllerLabel = currentController switch
+            {
+                "Movie" => "Filmovi",
+                "Screening" => "Projekcije",
+                "Cinema" => "Kina",
+                _ => currentControllerLabel
+            };
+        }
 
         var currentActionLabel = uiActionLabels.TryGetValue(currentAction, out var actionLabel)
             ? actionLabel
@@ -157,7 +170,11 @@
                     </li>
                     @if (!string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase)
+                            || (string.Equals(currentAction, "Search", StringComparison.OrdinalIgnoreCase)
+                                && (string.Equals(currentController, "Movie", StringComparison.OrdinalIgnoreCase)
+                                    || string.Equals(currentController, "Cinema", StringComparison.OrdinalIgnoreCase)
+                                    || string.Equals(currentController, "Screening", StringComparison.OrdinalIgnoreCase))))
                         {
                             <li class="breadcrumb-item active" aria-current="page">@currentControllerLabel</li>
                         }
@@ -176,7 +193,8 @@
                             };
 
                             <li class="breadcrumb-item">
-                                <a asp-area="" asp-controller="@currentController" asp-action="Index">@currentControllerLabel</a>
+                                <a asp-area="" asp-controller="@currentController" asp-action="Index"
+                                   asp-route-management="@(isManagementView ? "true" : null)">@currentControllerLabel</a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">@customActionLabel</li>
                         }
@@ -197,10 +215,7 @@
     <footer class="site-footer">
         <div class="container site-footer__content">
             <p class="site-footer__copy">
-                &copy; 2026 KinoKlik · Portfolio demo bez stvarne naplate ·
-                <a href="https://github.com/Bovna/kinoklik"
-                   target="_blank"
-                   rel="noopener noreferrer">Izvorni kod na GitHubu</a>
+                &copy; 2026 KinoKlik - Online kupnja kino ulaznica
             </p>
         </div>
     </footer>
@@ -221,6 +236,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/ui/autocomplete.js" asp-append-version="true"></script>
+    <script src="~/js/ui/snakeGame.js" asp-append-version="true"></script>
     <script src="~/js/ui/globalSearch.js" asp-append-version="true"></script>
     <script src="~/js/ui/ajaxSearch.js" asp-append-version="true"></script>
     <script src="~/js/ui/datepicker.js" asp-append-version="true"></script>

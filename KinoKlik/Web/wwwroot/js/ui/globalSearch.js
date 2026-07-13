@@ -1,4 +1,10 @@
 (function () {
+  const SECRET_QUERY = "bruh";
+
+  function isSecretQuery(value) {
+    return String(value || "").trim().toLocaleLowerCase("hr-HR") === SECRET_QUERY;
+  }
+
   function getValue(item, key, fallback) {
     const pascalKey = key.charAt(0).toUpperCase() + key.slice(1);
     return item[key] ?? item[pascalKey] ?? fallback ?? "";
@@ -57,6 +63,29 @@
   function clearResults(state) {
     state.results.innerHTML = "";
     setExpanded(state, false);
+  }
+
+  function openSecretGame(state) {
+    if (
+      !isSecretQuery(state.input.value) ||
+      !window.KinoKlikSnake ||
+      typeof window.KinoKlikSnake.open !== "function"
+    ) {
+      return false;
+    }
+
+    window.clearTimeout(state.timer);
+    if (state.abortController) {
+      state.abortController.abort();
+      state.abortController = null;
+    }
+
+    clearResults(state);
+    state.input.value = "";
+    setStatus(state, "Tajna projekcija je otvorena.");
+    window.KinoKlikSnake.open();
+    state.input.blur();
+    return true;
   }
 
   function goToResultsPage(state) {
@@ -214,6 +243,10 @@
         },
       });
 
+      if (state.input.value.trim() !== query || isSecretQuery(state.input.value)) {
+        return;
+      }
+
       if (!response.ok) {
         renderMessage(
           state,
@@ -226,10 +259,18 @@
       }
 
       const payload = await response.json();
+      if (state.input.value.trim() !== query || isSecretQuery(state.input.value)) {
+        return;
+      }
+
       const items = payload.results || payload.Results || [];
       renderResults(state, Array.isArray(items) ? items : [], query);
     } catch (error) {
       if (error && error.name === "AbortError") {
+        return;
+      }
+
+      if (state.input.value.trim() !== query || isSecretQuery(state.input.value)) {
         return;
       }
 
@@ -273,10 +314,21 @@
       timer: null,
       abortController: null,
       activeIndex: -1,
+      isComposing: false,
+      suppressSubmit: false,
     };
 
     root.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (state.suppressSubmit) {
+        state.suppressSubmit = false;
+        return;
+      }
+
+      if (openSecretGame(state)) {
+        return;
+      }
+
       goToResultsPage(state);
     });
 
@@ -286,6 +338,13 @@
 
       if (state.abortController) {
         state.abortController.abort();
+        state.abortController = null;
+      }
+
+      if (isSecretQuery(query)) {
+        clearResults(state);
+        setStatus(state, "Pritisnite Enter za tajnu projekciju.");
+        return;
       }
 
       if (query.length < state.minLength) {
@@ -306,8 +365,35 @@
       }
     });
 
+    input.addEventListener("compositionstart", () => {
+      state.isComposing = true;
+    });
+
+    input.addEventListener("compositionend", () => {
+      state.isComposing = false;
+      state.suppressSubmit = true;
+      window.setTimeout(() => {
+        state.suppressSubmit = false;
+      }, 0);
+    });
+
     input.addEventListener("keydown", (event) => {
       const options = getOptions(state);
+
+      if (event.isComposing || state.isComposing) {
+        if (event.key === "Enter") {
+          state.suppressSubmit = true;
+          window.setTimeout(() => {
+            state.suppressSubmit = false;
+          }, 0);
+        }
+        return;
+      }
+
+      if (event.key === "Enter" && openSecretGame(state)) {
+        event.preventDefault();
+        return;
+      }
 
       if (event.key === "Escape") {
         setExpanded(state, false);

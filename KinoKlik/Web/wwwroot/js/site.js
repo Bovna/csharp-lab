@@ -191,6 +191,7 @@ CinemaUI.showConfirm = function ({ title, body, onConfirm }) {
   const bodyEl = modal.querySelector(".modal-confirm__body");
   const btnCancel = modal.querySelector('[data-action="cancel"]');
   const btnConfirm = modal.querySelector('[data-action="confirm"]');
+  const backdrop = modal.querySelector(".modal-confirm__backdrop");
   const previouslyFocused = document.activeElement;
 
   if (titleEl) titleEl.textContent = title || "Potvrdite";
@@ -198,6 +199,7 @@ CinemaUI.showConfirm = function ({ title, body, onConfirm }) {
 
   modal.classList.add("is-visible");
   modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("is-modal-open");
   if (btnConfirm) {
     btnConfirm.focus();
   }
@@ -205,14 +207,45 @@ CinemaUI.showConfirm = function ({ title, body, onConfirm }) {
   const cleanup = () => {
     modal.classList.remove("is-visible");
     modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("is-modal-open");
     btnCancel.removeEventListener("click", handleCancel);
     btnConfirm.removeEventListener("click", handleConfirm);
+    backdrop?.removeEventListener("click", handleCancel);
+    document.removeEventListener("keydown", handleKeydown);
     if (previouslyFocused && typeof previouslyFocused.focus === "function") {
       previouslyFocused.focus();
     }
   };
 
   const handleCancel = () => cleanup();
+  const handleKeydown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cleanup();
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusable = Array.from(
+      modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+    );
+    if (!focusable.length) {
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
   const handleConfirm = () => {
     cleanup();
     if (onConfirm) onConfirm();
@@ -220,6 +253,8 @@ CinemaUI.showConfirm = function ({ title, body, onConfirm }) {
 
   btnCancel.addEventListener("click", handleCancel);
   btnConfirm.addEventListener("click", handleConfirm);
+  backdrop?.addEventListener("click", handleCancel);
+  document.addEventListener("keydown", handleKeydown);
 };
 
 function initNavigationMotion() {

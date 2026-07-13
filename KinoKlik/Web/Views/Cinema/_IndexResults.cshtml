@@ -1,7 +1,7 @@
 @model List<KinoKlik.Model.Entities.Cinema>
 @if ((User.IsInRole("Admin") || User.IsInRole("Manager")) && (ViewBag.Management == true))
 {
-<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Naziv</th><th>Grad</th><th>Adresa</th><th>E-pošta</th><th>Telefon</th><th></th></tr></thead><tbody>@foreach(var c in Model){<tr><td>@c.Id</td><td>@c.Name</td><td>@c.City</td><td>@c.Street @c.HouseNumber</td><td>@c.Email</td><td>@c.Phone</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@c.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
+<div class="cinema-card" data-ajax-search-results><div class="cinema-card-body p-0"><div class="cinema-table-wrapper" role="region" aria-label="Popis kina" tabindex="0"><table class="ui-table entity-index-table"><thead><tr><th>ID</th><th>Naziv</th><th>Grad</th><th>Adresa</th><th>E-pošta</th><th>Telefon</th><th></th></tr></thead><tbody>@foreach(var c in Model){<tr><td>@c.Id</td><td>@c.Name</td><td>@c.City</td><td>@c.Street @c.HouseNumber</td><td>@c.Email</td><td>@c.Phone</td><td class="ui-table__actions"><a class="ui-btn ui-btn--secondary" asp-action="Details" asp-route-id="@c.Id">Detalji</a></td></tr>}</tbody></table></div></div></div>
 }
 else
 {
